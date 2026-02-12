@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# KiCAD
+*-backups
+fp-info-cache
+*.bak
+*.pdf
+
+# Makefile build
+build
+build_exec
+
+# MRS build
+.mrs
+obj

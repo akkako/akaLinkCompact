@@ -1,0 +1,167 @@
+(footprint "SW_Side"
+	(version 20241229)
+	(generator "pcbnew")
+	(generator_version "9.0")
+	(layer "F.Cu")
+	(property "Reference" "REF**"
+		(at 0 1.2 0)
+		(layer "F.SilkS")
+		(hide yes)
+		(uuid "a719cf51-d20c-4a86-b17e-1aa8212dfe41")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "SW_Push"
+		(at 0 2.7 0)
+		(layer "F.Fab")
+		(uuid "1c12d7eb-c73c-45fe-8139-3ed06191d376")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "354f211a-0664-4f8f-b5ba-4556b2f711b6")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" "Push button switch, generic, two pins"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "cd77c6cb-4cba-4283-8118-74541a7ac64d")
+		(effects
+			(font
+				(size 1.27 1.27)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr through_hole)
+	(fp_line
+		(start -2.4 -1.7)
+		(end -2.4 -0.65)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "63fa1dd6-ee19-4987-875f-e91c0830ccb3")
+	)
+	(fp_line
+		(start -1.15 -0.65)
+		(end 1.1 -0.65)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "22627b4b-2859-47ae-a793-58ac32ea48fd")
+	)
+	(fp_line
+		(start 2.35 -1.7)
+		(end 2.35 -0.65)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "9fd62668-39fa-4ece-b7c3-19f8b55aa614")
+	)
+	(fp_rect
+		(start -3 -3.3)
+		(end 3 0.2)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(fill no)
+		(layer "Dwgs.User")
+		(uuid "d8fb78bc-fc1e-41c0-b1ac-75d8224e6c7c")
+	)
+	(fp_rect
+		(start -1 -4.4)
+		(end 1 -3.3)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(fill no)
+		(layer "Dwgs.User")
+		(uuid "53d16f43-e7af-4c80-b05a-403998552299")
+	)
+	(fp_rect
+		(start -3.05 -3)
+		(end 3.05 0.3)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.CrtYd")
+		(uuid "9338a41f-3efd-4272-a3b4-6a009c6a248b")
+	)
+	(pad "" np_thru_hole circle
+		(at -0.85 -1.9)
+		(size 0.75 0.75)
+		(drill 0.75)
+		(layers "*.Cu" "*.Mask")
+		(uuid "698ec14f-26e2-42ff-b2ef-da7b7a0c256d")
+	)
+	(pad "" np_thru_hole circle
+		(at 0.85 -1.9)
+		(size 0.75 0.75)
+		(drill 0.75)
+		(layers "*.Cu" "*.Mask")
+		(uuid "1253c688-11ab-43b7-86ed-7510d79218a6")
+	)
+	(pad "1" smd rect
+		(at -2.4 -2.425)
+		(size 0.65 1.05)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "d5ea067b-87a0-496f-bfc6-dc1b0c5f5c9b")
+	)
+	(pad "1" smd rect
+		(at -1.7 -0.6)
+		(size 0.65 1.2)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "d82aa66e-3621-4fcc-b25d-bf5f7836c8eb")
+	)
+	(pad "1" smd rect
+		(at 2.35 -2.425)
+		(size 0.65 1.05)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "591988de-c5a1-4b76-b993-e78a5e974aba")
+	)
+	(pad "2" smd rect
+		(at 1.7 -0.6)
+		(size 0.65 1.2)
+		(layers "F.Cu" "F.Mask" "F.Paste")
+		(uuid "d6615956-33da-4a08-bee9-cbddca1e2d71")
+	)
+	(embedded_fonts no)
+	(model "${KIPRJMOD}/3d/SW-SMD.step"
+		(offset
+			(xyz 2.35 2.86 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz -0 -0 -0)
+		)
+	)
+)
