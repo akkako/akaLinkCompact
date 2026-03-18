@@ -8,7 +8,6 @@
 #define HID_CUSTOM_REPORT_DESC_SIZE 53
 
 #define USBD_WINUSB_VENDOR_CODE 0x20
-#define USBD_WEBUSB_VENDOR_CODE 0x21
 
 #define USBD_BULK_ENABLE 1
 #define USBD_WINUSB_ENABLE 1
@@ -25,16 +24,15 @@
 
 #define USBD_NUM_DEV_CAPABILITIES (USBD_WINUSB_ENABLE)
 
-#define USBD_WEBUSB_DESC_LEN 24
 #define USBD_WINUSB_DESC_LEN 28
 
 #define USBD_BOS_WTOTALLENGTH (0x05 + \
                                USBD_WINUSB_DESC_LEN * USBD_WINUSB_ENABLE)
 
-#define USB_CONFIG_SIZE (9 + CMSIS_DAP_INTERFACE_SIZE + CDC_ACM_DESCRIPTOR_LEN + \
+#define USB_CONFIG_SIZE (9 + CMSIS_DAP_INTERFACE_SIZE + CDC_ACM_DESCRIPTOR_LEN * 2 + \
                          CONFIG_CHERRYDAP_USE_CUSTOM_HID * CUSTOM_HID_LEN)
 
-#define INTF_NUM (1 + 2 + CONFIG_CHERRYDAP_USE_CUSTOM_HID)
+#define INTF_NUM (1 + 2 * 2 + CONFIG_CHERRYDAP_USE_CUSTOM_HID)
 
 __ALIGN_BEGIN const uint8_t USBD_WinUSBDescriptorSetDescriptor[] = {
     WBVAL(WINUSB_DESCRIPTOR_SET_HEADER_SIZE), /* wLength */
@@ -111,7 +109,7 @@ __ALIGN_BEGIN const uint8_t USBD_BinaryObjectStoreDescriptor[] = {
     /************** Descriptor of Custom interface *****************/                                                                \
     0x09,                                               /* bLength: Interface Descriptor size */                                     \
     USB_DESCRIPTOR_TYPE_INTERFACE,                  /* bDescriptorType: Interface descriptor type */                                 \
-    0X03,                                           /* bInterfaceNumber: Number of Interface */                                      \
+    0X05,                                           /* bInterfaceNumber: Number of Interface */                                      \
     0x00,                                           /* bAlternateSetting: Alternate setting */                                       \
     0x02,                                           /* bNumEndpoints */                                                              \
     0x03,                                           /* bInterfaceClass: HID */                                                       \
@@ -153,7 +151,8 @@ static const uint8_t config_descriptor[] = {
     USB_ENDPOINT_DESCRIPTOR_INIT(DAP_OUT_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
     /* Endpoint IN 1 */
     USB_ENDPOINT_DESCRIPTOR_INIT(DAP_IN_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
-    CDC_ACM_DESCRIPTOR_INIT(0x01, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, DAP_PACKET_SIZE, 0x00),
+    CDC_ACM_DESCRIPTOR_INIT(0x01, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, DAP_PACKET_SIZE, 0x04),
+    CDC_ACM_DESCRIPTOR_INIT(0x03, RTT_INT_EP, RTT_OUT_EP, RTT_IN_EP, DAP_PACKET_SIZE, 0x05),
 #if CONFIG_CHERRYDAP_USE_CUSTOM_HID
     HID_DESC(),
 #endif
@@ -167,7 +166,8 @@ static const uint8_t other_speed_config_descriptor[] = {
     USB_ENDPOINT_DESCRIPTOR_INIT(DAP_OUT_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
     /* Endpoint IN 1 */
     USB_ENDPOINT_DESCRIPTOR_INIT(DAP_IN_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
-    CDC_ACM_DESCRIPTOR_INIT(0x01, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, DAP_PACKET_SIZE, 0x00),
+    CDC_ACM_DESCRIPTOR_INIT(0x01, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, DAP_PACKET_SIZE, 0x04),
+    CDC_ACM_DESCRIPTOR_INIT(0x03, RTT_INT_EP, RTT_OUT_EP, RTT_IN_EP, DAP_PACKET_SIZE, 0x05),
 #if CONFIG_CHERRYDAP_USE_CUSTOM_HID
     HID_DESC(),
 #endif
@@ -214,7 +214,8 @@ char *string_descriptors[] = {
     "akako",              /* Manufacturer */
     "akaLink CMSIS-DAP",  /* Product */
     "0123456789ABCDEF",   /* Serial Number */
-};
+    "USB CDC <-> UART",
+    "USB CDC <-> RTT"};
 
 static const uint8_t device_quality_descriptor[] = {
     USB_DEVICE_QUALIFIER_DESCRIPTOR_INIT(USB_2_1, 0x00, 0x00, 0x00, 0x01),
@@ -416,6 +417,46 @@ void usbd_cdc_acm_bulk_in(uint8_t busid, uint8_t ep, uint32_t nbytes)
     }
 }
 
+void usbd_cdc_rtt_bulk_out(uint8_t busid, uint8_t ep, uint32_t nbytes)
+{
+    (void)busid;
+    chry_ringbuffer_write(&g_usbrx, usb_tmpbuffer, nbytes);
+    if (chry_ringbuffer_get_free(&g_usbrx) >= DAP_PACKET_SIZE)
+    {
+        usbd_ep_start_read(0, RTT_OUT_EP, usb_tmpbuffer, DAP_PACKET_SIZE);
+    }
+    else
+    {
+        usbrx_idle_flag = 1;
+    }
+}
+
+void usbd_cdc_rtt_bulk_in(uint8_t busid, uint8_t ep, uint32_t nbytes)
+{
+    (void)busid;
+    uint32_t size;
+    uint8_t *buffer;
+
+    chry_ringbuffer_linear_read_done(&g_uartrx, nbytes);
+    if ((nbytes % DAP_PACKET_SIZE) == 0 && nbytes)
+    {
+        /* send zlp */
+        usbd_ep_start_write(0, RTT_IN_EP, NULL, 0);
+    }
+    else
+    {
+        if (chry_ringbuffer_get_used(&g_uartrx))
+        {
+            buffer = chry_ringbuffer_linear_read_setup(&g_uartrx, &size);
+            usbd_ep_start_write(0, RTT_IN_EP, buffer, size);
+        }
+        else
+        {
+            usbtx_idle_flag = 1;
+        }
+    }
+}
+
 void usbd_hid_custom_notify_handler(uint8_t busid, uint8_t event, void *arg)
 {
     (void)busid;
@@ -447,6 +488,14 @@ struct usbd_endpoint cdc_in_ep = {
     .ep_addr = CDC_IN_EP,
     .ep_cb = usbd_cdc_acm_bulk_in};
 
+struct usbd_endpoint rtt_out_ep = {
+    .ep_addr = RTT_OUT_EP,
+    .ep_cb = usbd_cdc_rtt_bulk_out};
+
+struct usbd_endpoint rtt_in_ep = {
+    .ep_addr = RTT_IN_EP,
+    .ep_cb = usbd_cdc_rtt_bulk_in};
+
 #if CONFIG_CHERRYDAP_USE_CUSTOM_HID
 struct usbd_endpoint hid_custom_in_ep = {
     .ep_addr = HID_IN_EP,
@@ -462,6 +511,8 @@ struct usbd_endpoint hid_custom_out_ep = {
 struct usbd_interface dap_intf;
 struct usbd_interface intf1;
 struct usbd_interface intf2;
+struct usbd_interface intf3;
+struct usbd_interface intf4;
 #if CONFIG_CHERRYDAP_USE_CUSTOM_HID
 struct usbd_interface hid_intf;
 #endif
@@ -504,6 +555,12 @@ void chry_dap_init(uint8_t busid, uint32_t reg_base)
     usbd_add_interface(0, usbd_cdc_acm_init_intf(0, &intf2));
     usbd_add_endpoint(0, &cdc_out_ep);
     usbd_add_endpoint(0, &cdc_in_ep);
+
+    /*!< rtt */
+    usbd_add_interface(0, usbd_cdc_acm_init_intf(0, &intf3));
+    usbd_add_interface(0, usbd_cdc_acm_init_intf(0, &intf4));
+    usbd_add_endpoint(0, &rtt_out_ep);
+    usbd_add_endpoint(0, &rtt_in_ep);
 
 #if CONFIG_CHERRYDAP_USE_CUSTOM_HID
     /*!< hid */

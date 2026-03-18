@@ -156,7 +156,7 @@ extern "C"
      * @brief 设置 TMSO 引脚为高电平
      *
      */
-    static inline void drv_gpio_set_tmso(void)
+    static inline void drv_gpio_set_tms(void)
     {
         GPIO_SetBits(GPIOB, GPIO_Pin_15);
     }
@@ -165,11 +165,75 @@ extern "C"
      * @brief 设置 TMSO 引脚为低电平
      *
      */
-    static inline void drv_gpio_reset_tmso(void)
+    static inline void drv_gpio_reset_tms(void)
     {
         GPIO_ResetBits(GPIOB, GPIO_Pin_15);
     }
 
+    /**
+     * @brief 读取 TRST 引脚状态
+     *
+     * @return uint32_t 0: 低电平, 1: 高电平
+     */
+    static inline uint32_t drv_gpio_trst_read(void)
+    {
+        return GPIO_ReadOutputDataBit(GPIOC, GPIO_Pin_6);
+    }
+
+    /**
+     * @brief 读取 SRST 引脚状态
+     *
+     * @return uint32_t 0: 低电平, 1: 高电平
+     */
+    static inline uint32_t drv_gpio_srst_read(void)
+    {
+        return GPIO_ReadOutputDataBit(GPIOC, GPIO_Pin_8);
+    }
+
+    /**
+     * @brief 读取 TMSI 引脚状态
+     *
+     * @return uint32_t 0: 低电平, 1: 高电平
+     */
+    static inline uint32_t drv_gpio_tms_read(void)
+    {
+        return GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_15);
+    }
+
+    /**
+     * @brief 读取 TCK 引脚状态
+     *
+     * @return uint32_t 0: 低电平, 1: 高电平
+     */
+    static inline uint32_t drv_gpio_tck_read(void)
+    {
+        return GPIO_ReadOutputDataBit(GPIOB, GPIO_Pin_13);
+    }
+
+    /**
+     * @brief 读取 TDI 引脚状态
+     *
+     * @return uint32_t 0: 低电平, 1: 高电平
+     */
+    static inline uint32_t drv_gpio_tdi_read(void)
+    {
+        return GPIO_ReadOutputDataBit(GPIOB, GPIO_Pin_10);
+    }
+
+    /**
+     * @brief 读取 TDO 引脚状态
+     *
+     * @return uint32_t 0: 低电平, 1: 高电平
+     */
+    static inline uint32_t drv_gpio_tdo_read(void)
+    {
+        return GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_11);
+    }
+
+    void drv_gpio_tms_io_out(void);
+    void drv_gpio_tms_io_in(void);
+
+    void drv_gpio_init_misc(void);
     void drv_gpio_init_as_hiz(void);
     void drv_gpio_init_as_jtag(void);
     void drv_gpio_init_as_swd_uart(void);

@@ -18,13 +18,18 @@
 #define CDC_OUT_EP 0x03
 #define CDC_INT_EP 0x84
 
+// RTT 端点
+#define RTT_IN_EP  0x85
+#define RTT_OUT_EP 0x05
+#define RTT_INT_EP 0x86
+
 // HID 控制端点
-#define HID_IN_EP  0x85
-#define HID_OUT_EP 0x05
+#define HID_IN_EP  0x87
+#define HID_OUT_EP 0x07
 
 #define USBD_VID           0x0D28
 #define USBD_PID           0x0204
-#define USBD_MAX_POWER     500
+#define USBD_MAX_POWER     250
 #define USBD_LANGID_STRING 1033
 
 #ifdef CONFIG_USB_HS
@@ -43,9 +48,11 @@
 #define HID_PACKET_SIZE 64
 #endif
 
-#define CONFIG_UARTRX_RINGBUF_SIZE (8 * 1024)
-#define CONFIG_USBRX_RINGBUF_SIZE  (8 * 1024)
+#define CONFIG_UARTRX_RINGBUF_SIZE (4 * 1024)
+#define CONFIG_USBRX_RINGBUF_SIZE  (4 * 1024)
 
+#define CONFIG_RTT_UARTRX_RINGBUF_SIZE (4 * 1024)
+#define CONFIG_RTT_USBRX_RINGBUF_SIZE  (4 * 1024)
 
 #ifndef CONFIG_CHERRYDAP_USE_CUSTOM_HID
 #define CONFIG_CHERRYDAP_USE_CUSTOM_HID 0

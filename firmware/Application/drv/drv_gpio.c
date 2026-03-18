@@ -13,16 +13,16 @@
 // | TDO      | PB11     | JTAG_TDO   | UART_RXD   | UART3_RXD |
 // | SWDIR    | PB12     | N/A(HIGH)  | SWDIR      | GPIO      |
 // | TCK      | PB13     | JTAG_TCK   | SWCLK      | SPI2_SCLK |
-// | TMSI     | PB14     | N/A(INPUT) | SWDI       | SPI2_MISO |
-// | TMSO     | PB15     | JTAG_TMS   | SWDO       | SPI2_MOSI |
+// | RSVD     | PB14     | N/A        | N/A        |           |
+// | TMSO     | PB15     | JTAG_TMS   | SWDIO      | SPI2_MOSI |
 // |          |          |            |            |           |
 // -------------------------------------------------------------
 
 /**
- * @brief 设置 TMSO 引脚为 IO 输出模式
+ * @brief 设置 TMS 引脚为 IO 输出模式
  *
  */
-static inline void drv_gpio_tmso_io_out(void)
+void drv_gpio_tms_io_out(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     GPIO_InitStruct.GPIO_Pin = GPIO_Pin_15;
@@ -32,10 +32,10 @@ static inline void drv_gpio_tmso_io_out(void)
 }
 
 /**
- * @brief 设置 TMSO 引脚为 IO 输入模式
+ * @brief 设置 TMS 引脚为 IO 输入模式
  *
  */
-static inline void drv_gpio_tmso_io_in(void)
+void drv_gpio_tms_io_in(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     GPIO_InitStruct.GPIO_Pin = GPIO_Pin_15;
@@ -44,44 +44,6 @@ static inline void drv_gpio_tmso_io_in(void)
     GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 
-/**
- * @brief 设置 TMSO 引脚为 SPI 输出模式
- *
- */
-static inline void drv_gpio_tmso_spi_out(void)
-{
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_15;
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOB, &GPIO_InitStruct);
-}
-
-/**
- * @brief 设置 TMSI 引脚为 SPI 输入模式
- *
- */
-static inline void drv_gpio_tmsi_spi_in(void)
-{
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_14;
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOB, &GPIO_InitStruct);
-}
-
-/**
- * @brief 设置 TMSI 引脚为 IO 输入模式
- *
- */
-static inline void drv_gpio_tmsi_io_in(void)
-{
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_14;
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOB, &GPIO_InitStruct);
-}
 
 /**
  * @brief 初始化其他 GPIO 引脚
@@ -121,6 +83,12 @@ void drv_gpio_init_misc(void)
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+    // 配置 RSVD 为浮空输入
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_14;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AIN;
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOB, &GPIO_InitStruct);
+
     // 配置 LED 为低电平
     drv_gpio_reset_led();
     // 配置 5VEN 为低电平
@@ -144,8 +112,7 @@ void drv_gpio_init_as_jtag(void)
     // | TDI      | PB10     | JTAG_TDI   | Output     |
     // | TDO      | PB11     | JTAG_TDO   | Input      |
     // | TCK      | PB13     | JTAG_TCK   | Output     |
-    // | TMSI     | PB14     | N/A(INPUT) | Input      |
-    // | TMSO     | PB15     | JTAG_TMS   | Output     |
+    // | TMS      | PB15     | JTAG_TMS   | Output     |
     // -------------------------------------------------
 
     // 配置 TRST 为推挽输出
@@ -161,22 +128,15 @@ void drv_gpio_init_as_jtag(void)
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    // 配置 TMSI 为浮空输入
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_14;
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOB, &GPIO_InitStruct);
-
     // 配置 TRST, SRST 为高电平
     drv_gpio_set_trst();
     drv_gpio_set_srst();
     // 配置 SWDIR 为高电平
     drv_gpio_set_swdir();
-    // 配置 TDI, TDO, TCK, TMSO 为高电平
+    // 配置 TDI, TCK, TMS 为高电平
     drv_gpio_set_tdi();
-    drv_gpio_set_tdo();
     drv_gpio_set_tck();
-    drv_gpio_set_tmso();
+    drv_gpio_set_tms();
 }
 
 /**
@@ -185,6 +145,51 @@ void drv_gpio_init_as_jtag(void)
  */
 void drv_gpio_init_as_swd_uart(void)
 {
+    // -------------------------------------------------
+    // | Pin name | Pin loc  | Function   | Config     |
+    // | -------- | -------- | ---------- | ---------- |
+    // | TRST     | PC6      | Reserved   | Input      |
+    // | TDI      | PB10     | UART TXD   | Output     |
+    // | TDO      | PB11     | UART RXD   | Input      |
+    // | TCK      | PB13     | SWCLK      | Output     |
+    // | TMS      | PB15     | SWDO       | Output     |
+    // -------------------------------------------------
+
+    // 配置 TRST 为浮空输入
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    // 配置 TDI 为复用推挽输出
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_10;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF_PP;
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    // 配置 TDO 为复用浮空输入
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_11;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    // 配置 TCK 为复用推挽输出
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_13;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF_PP;
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    // 配置 TMS 为推挽输出
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_15;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    drv_gpio_set_srst();
+    drv_gpio_set_tck();
+    drv_gpio_set_swdir();
+    drv_gpio_set_tms();
 }
 
 /**
@@ -196,12 +201,11 @@ void drv_gpio_init_as_hiz(void)
     // -------------------------------------------------
     // | Pin name | Pin loc  | Function   | Config     |
     // | -------- | -------- | ---------- | ---------- |
-    // | TRST     | PC6      | Reserved   | Input     |
-    // | TDI      | PB10     | Reserved   | Input     |
+    // | TRST     | PC6      | Reserved   | Input      |
+    // | TDI      | PB10     | Reserved   | Input      |
     // | TDO      | PB11     | Reserved   | Input      |
-    // | TCK      | PB13     | Reserved   | Input     |
-    // | TMSI     | PB14     | Reserved   | Input      |
-    // | TMSO     | PB15     | Reserved   | Input     |
+    // | TCK      | PB13     | Reserved   | Input      |
+    // | TMS      | PB15     | Reserved   | Input      |
     // -------------------------------------------------
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -212,8 +216,8 @@ void drv_gpio_init_as_hiz(void)
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-    // 配置 TDI, TDO, TCK, TMSO, TMSI 为浮空输入
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_13 | GPIO_Pin_15 | GPIO_Pin_14;
+    // 配置 TDI, TDO, TCK, TMS 为浮空输入
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_13 | GPIO_Pin_15;
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOB, &GPIO_InitStruct);
