@@ -8,7 +8,9 @@ OPT = -O2
 LTO = #-flto
 
 # 检测操作系统
-OS := $(shell uname -s)
+# OS := $(shell uname -s)
+
+OS = Windows_NT
 
 # 编译临时文件目录
 BUILD_DIR = build
@@ -80,7 +82,7 @@ else ifeq ($(OS),Linux)
 
 else ifeq ($(OS),Windows_NT)
 # GCC_PATH = C:/MounRiver/MounRiver_Studio2/resources/app/resources/win32/components/WCH/Toolchain/RISC-V Embedded GCC12/bin
-# GCC_PATH = D:/_tools/MRS/MounRiver_Studio2/resources/app/resources/win32/components/WCH/Toolchain/RISC-V Embedded GCC12/bin
+GCC_PATH = D:/_tools/MRS/MounRiver_Studio2/resources/app/resources/win32/components/WCH/Toolchain/RISC-V Embedded GCC12/bin
 else
 $(error Unsupported OS)
 endif

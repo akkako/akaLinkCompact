@@ -1,0 +1,5 @@
+{
+    "files.associations": {
+        "ch32v30x_rcc.h": "c"
+    }
+}
