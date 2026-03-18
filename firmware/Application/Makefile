@@ -8,9 +8,9 @@ OPT = -O2
 LTO = #-flto
 
 # 检测操作系统
-# OS := $(shell uname -s)
+OS := $(shell uname -s)
 
-OS = Windows_NT
+# OS = Windows_NT
 
 # 编译临时文件目录
 BUILD_DIR = build
@@ -121,7 +121,7 @@ MCU = $(CPU) $(FPU) $(FLOAT-ABI)
 # -mcmodel=medany
 
 # link script
-LDSCRIPT = ./sys/CH32V305CC.ld
+LDSCRIPT = ./sys/CH32V305FB.ld
 
 
 

@@ -15,11 +15,11 @@
 
 #define CONFIG_USB_PRINTF(...) rt_kprintf(__VA_ARGS__)
 #else
-#define CONFIG_USB_PRINTF(...) printf(__VA_ARGS__)
+#define CONFIG_USB_PRINTF(...) // printf(__VA_ARGS__)
 #endif
 
 #ifndef CONFIG_USB_DBG_LEVEL
-#define CONFIG_USB_DBG_LEVEL USB_DBG_LOG
+#define CONFIG_USB_DBG_LEVEL USB_DBG_INFO
 #endif
 
 /* Enable print with color */

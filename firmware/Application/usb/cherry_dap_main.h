@@ -9,18 +9,18 @@
 #include "DAP_config.h"
 #include "DAP.h"
 
+// DAP WinUSB 端点
 #define DAP_IN_EP  0x81
 #define DAP_OUT_EP 0x02
 
+// CDC ACM 端点
 #define CDC_IN_EP  0x83
 #define CDC_OUT_EP 0x03
 #define CDC_INT_EP 0x84
 
-#define MSC_IN_EP  0x85
-#define MSC_OUT_EP 0x05
-
-#define HID_IN_EP  0x86
-#define HID_OUT_EP 0x06
+// HID 控制端点
+#define HID_IN_EP  0x85
+#define HID_OUT_EP 0x05
 
 #define USBD_VID           0x0D28
 #define USBD_PID           0x0204
@@ -46,9 +46,6 @@
 #define CONFIG_UARTRX_RINGBUF_SIZE (8 * 1024)
 #define CONFIG_USBRX_RINGBUF_SIZE  (8 * 1024)
 
-#ifndef CONFIG_CHERRYDAP_USE_MSC
-#define CONFIG_CHERRYDAP_USE_MSC 0
-#endif
 
 #ifndef CONFIG_CHERRYDAP_USE_CUSTOM_HID
 #define CONFIG_CHERRYDAP_USE_CUSTOM_HID 0
@@ -59,7 +56,7 @@ extern "C"
 {
 #endif
 
-extern char serial_number_dynamic[36];
+extern char serial_number_dynamic[18];
 
 extern struct usbd_interface hid_intf;
 extern chry_ringbuffer_t g_uartrx;
