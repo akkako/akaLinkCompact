@@ -6,6 +6,8 @@
 fp-info-cache
 *.bak
 *.pdf
+production
+fabrication-*
 
 # Makefile build
 build

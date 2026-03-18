@@ -1,8 +1,8 @@
 
 #include "ch32v30x.h"
 
-// #define SYSTEM_CLOCK_144MHz
-#define SYSTEM_CLOCK_192MHz
+#define SYSTEM_CLOCK_144MHz
+// #define SYSTEM_CLOCK_192MHz
 // #define SYSTEM_CLOCK_216MHz
 // #define SYSTEM_CLOCK_240MHz
 
@@ -20,13 +20,13 @@ static void SetSysClock(void);
 
 void SystemInit(void)
 {
-    // Set internal VDD LDO to 1.0V
-    EXTEN->EXTEN_CTR = (EXTEN->EXTEN_CTR | (EXTEN_LDO_TRIM));
-    // Wait for stable
-    for(uint32_t i = 0; i < 10000; i++)
-    {
-        asm("nop");
-    }
+    // // Set internal VDD LDO to 1.0V
+    // EXTEN->EXTEN_CTR = (EXTEN->EXTEN_CTR | (EXTEN_LDO_TRIM));
+    // // Wait for stable
+    // for(uint32_t i = 0; i < 10000; i++)
+    // {
+    //     asm("nop");
+    // }
 
     RCC->CTLR |= (uint32_t)0x00000001;
     RCC->CFGR0 &= (uint32_t)0xF0FF0000;

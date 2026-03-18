@@ -4540,18 +4540,6 @@
 		(uuid 6c142b62-06f6-4a17-88ef-5dde71fdffe8)
 	)
 	(rectangle
-		(start 139.7 143.51)
-		(end 172.72 193.04)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(fill
-			(type none)
-		)
-		(uuid a7851fc5-2d61-46f0-b9a7-745b819bf68a)
-	)
-	(rectangle
 		(start 16.51 16.51)
 		(end 91.44 85.09)
 		(stroke
@@ -4675,6 +4663,17 @@
 		)
 		(uuid "4bb87383-4673-4319-8c2a-01a62d279a52")
 	)
+	(text "UART3_RX"
+		(exclude_from_sim no)
+		(at 165.1 49.53 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "60d6268c-e57b-46e7-ab61-2095d1b1b038")
+	)
 	(text "SPI2_MISO"
 		(exclude_from_sim no)
 		(at 165.1 57.15 0)
@@ -4710,18 +4709,16 @@
 		)
 		(uuid "ae629804-0ee2-45df-9206-49425578d1b3")
 	)
-	(text "Sense"
+	(text "UART3_TX"
 		(exclude_from_sim no)
-		(at 140.97 146.05 0)
+		(at 165.1 46.99 0)
 		(effects
 			(font
-				(size 3 3)
-				(thickness 0.6)
-				(bold yes)
+				(size 1.27 1.27)
 			)
-			(justify left top)
+			(justify left bottom)
 		)
-		(uuid "c5b8ff61-d165-4c9c-9d65-9059ccb11d0c")
+		(uuid "b480448e-bbb3-438c-906e-cf2a7e50963c")
 	)
 	(text "MCU"
 		(exclude_from_sim no)
@@ -4737,7 +4734,7 @@
 		(uuid "f16b3e89-175b-4931-8007-283da0dec6d1")
 	)
 	(junction
-		(at 161.29 171.45)
+		(at 266.7 140.97)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "0a7b6c74-e2b9-4a1f-b3fd-74908d32fded")
@@ -4821,7 +4818,7 @@
 		(uuid "66854371-0bc8-4844-a7fd-d03197b43f9c")
 	)
 	(junction
-		(at 240.03 137.16)
+		(at 227.33 137.16)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "68c00abf-870c-478a-98e7-462cf695bb37")
@@ -5166,7 +5163,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 171.45) (xy 161.29 171.45)
+			(xy 257.81 140.97) (xy 266.7 140.97)
 		)
 		(stroke
 			(width 0)
@@ -5196,7 +5193,7 @@
 	)
 	(wire
 		(pts
-			(xy 161.29 171.45) (xy 161.29 172.72)
+			(xy 266.7 140.97) (xy 266.7 142.24)
 		)
 		(stroke
 			(width 0)
@@ -5256,7 +5253,7 @@
 	)
 	(wire
 		(pts
-			(xy 232.41 137.16) (xy 240.03 137.16)
+			(xy 219.71 137.16) (xy 227.33 137.16)
 		)
 		(stroke
 			(width 0)
@@ -5416,7 +5413,7 @@
 	)
 	(wire
 		(pts
-			(xy 261.62 137.16) (xy 252.73 137.16)
+			(xy 248.92 137.16) (xy 240.03 137.16)
 		)
 		(stroke
 			(width 0)
@@ -6016,7 +6013,7 @@
 	)
 	(wire
 		(pts
-			(xy 240.03 137.16) (xy 240.03 139.7)
+			(xy 227.33 137.16) (xy 227.33 139.7)
 		)
 		(stroke
 			(width 0)
@@ -6076,7 +6073,7 @@
 	)
 	(wire
 		(pts
-			(xy 245.11 137.16) (xy 240.03 137.16)
+			(xy 232.41 137.16) (xy 227.33 137.16)
 		)
 		(stroke
 			(width 0)
@@ -6156,7 +6153,7 @@
 	)
 	(wire
 		(pts
-			(xy 220.98 144.78) (xy 232.41 144.78)
+			(xy 208.28 144.78) (xy 219.71 144.78)
 		)
 		(stroke
 			(width 0)
@@ -6396,7 +6393,7 @@
 	)
 	(wire
 		(pts
-			(xy 161.29 170.18) (xy 161.29 171.45)
+			(xy 266.7 139.7) (xy 266.7 140.97)
 		)
 		(stroke
 			(width 0)
@@ -6486,7 +6483,7 @@
 	)
 	(wire
 		(pts
-			(xy 152.4 171.45) (xy 152.4 172.72)
+			(xy 257.81 140.97) (xy 257.81 142.24)
 		)
 		(stroke
 			(width 0)
@@ -6825,7 +6822,7 @@
 		(uuid "838a090d-3754-4629-9b92-ecf5000079fe")
 	)
 	(label "O_SRST"
-		(at 261.62 137.16 180)
+		(at 248.92 137.16 180)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -6955,7 +6952,7 @@
 		(uuid "bc4ac4e9-2b5a-42bb-89a7-508ecf7937ff")
 	)
 	(label "ADCV"
-		(at 152.4 171.45 0)
+		(at 257.81 140.97 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -6975,7 +6972,7 @@
 		(uuid "cd8e4589-0c27-47da-b5e3-9ca7c8f76601")
 	)
 	(label "SRST"
-		(at 220.98 144.78 0)
+		(at 208.28 144.78 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -9871,7 +9868,7 @@
 	)
 	(symbol
 		(lib_id "akaLinkCompact:GND")
-		(at 161.29 180.34 0)
+		(at 266.7 149.86 0)
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
@@ -9881,7 +9878,7 @@
 		(fields_autoplaced yes)
 		(uuid "46bc2c85-15b5-4975-ba06-9c821ef21e59")
 		(property "Reference" "#PWR0106"
-			(at 161.29 186.69 0)
+			(at 266.7 156.21 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9890,7 +9887,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 161.29 185.42 0)
+			(at 266.7 154.94 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9898,7 +9895,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 161.29 180.34 0)
+			(at 266.7 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9907,7 +9904,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 161.29 180.34 0)
+			(at 266.7 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -9916,7 +9913,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 161.29 180.34 0)
+			(at 266.7 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12073,7 +12070,7 @@
 	)
 	(symbol
 		(lib_id "akaLinkCompact:VCC")
-		(at 161.29 162.56 0)
+		(at 266.7 132.08 0)
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
@@ -12083,7 +12080,7 @@
 		(fields_autoplaced yes)
 		(uuid "93b8303c-ccd8-47fb-bbe2-5f92d143fc9a")
 		(property "Reference" "#PWR0184"
-			(at 161.29 166.37 0)
+			(at 266.7 135.89 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12092,7 +12089,7 @@
 			)
 		)
 		(property "Value" "VCC"
-			(at 161.29 157.48 0)
+			(at 266.7 127 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12100,7 +12097,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 161.29 162.56 0)
+			(at 266.7 132.08 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12109,7 +12106,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 161.29 162.56 0)
+			(at 266.7 132.08 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12118,7 +12115,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"VCC\""
-			(at 161.29 162.56 0)
+			(at 266.7 132.08 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12140,7 +12137,7 @@
 	)
 	(symbol
 		(lib_id "akaLinkCompact:R")
-		(at 248.92 137.16 270)
+		(at 236.22 137.16 270)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -12149,7 +12146,7 @@
 		(fields_autoplaced yes)
 		(uuid "94599dae-791d-437f-a9a5-9f68f22906e1")
 		(property "Reference" "R125"
-			(at 248.92 130.81 90)
+			(at 236.22 130.81 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12157,7 +12154,7 @@
 			)
 		)
 		(property "Value" "22R"
-			(at 248.92 133.35 90)
+			(at 236.22 133.35 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12165,7 +12162,7 @@
 			)
 		)
 		(property "Footprint" "akaLinkCompact:R_0603_1608Metric"
-			(at 248.92 135.382 90)
+			(at 236.22 135.382 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12174,7 +12171,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 248.92 137.16 0)
+			(at 236.22 137.16 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12183,7 +12180,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 248.92 137.16 0)
+			(at 236.22 137.16 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12192,7 +12189,7 @@
 			)
 		)
 		(property "Sim.Device" ""
-			(at 248.92 137.16 90)
+			(at 236.22 137.16 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12201,7 +12198,7 @@
 			)
 		)
 		(property "精度" ""
-			(at 248.92 137.16 90)
+			(at 236.22 137.16 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12210,7 +12207,7 @@
 			)
 		)
 		(property "耐压" ""
-			(at 248.92 137.16 90)
+			(at 236.22 137.16 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12392,7 +12389,7 @@
 	)
 	(symbol
 		(lib_id "akaLinkCompact:VCC")
-		(at 224.79 137.16 90)
+		(at 212.09 137.16 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -12401,7 +12398,7 @@
 		(fields_autoplaced yes)
 		(uuid "99d053ae-551f-4577-bb9c-8ee016eb74f0")
 		(property "Reference" "#PWR0210"
-			(at 228.6 137.16 0)
+			(at 215.9 137.16 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12410,7 +12407,7 @@
 			)
 		)
 		(property "Value" "VCC"
-			(at 220.98 137.1599 90)
+			(at 208.28 137.1599 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12419,7 +12416,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 224.79 137.16 0)
+			(at 212.09 137.16 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12428,7 +12425,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 224.79 137.16 0)
+			(at 212.09 137.16 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12437,7 +12434,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"VCC\""
-			(at 224.79 137.16 0)
+			(at 212.09 137.16 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12923,7 +12920,7 @@
 	)
 	(symbol
 		(lib_id "akaLinkCompact:GND")
-		(at 240.03 149.86 0)
+		(at 227.33 149.86 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -12931,7 +12928,7 @@
 		(dnp no)
 		(uuid "9e9b2dc7-f9cd-45b7-8269-07d55e5f1525")
 		(property "Reference" "#PWR0212"
-			(at 240.03 156.21 0)
+			(at 227.33 156.21 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12940,7 +12937,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 240.03 154.94 0)
+			(at 227.33 154.94 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12948,7 +12945,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 240.03 149.86 0)
+			(at 227.33 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12957,7 +12954,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 240.03 149.86 0)
+			(at 227.33 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12966,7 +12963,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 240.03 149.86 0)
+			(at 227.33 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13217,7 +13214,7 @@
 	)
 	(symbol
 		(lib_id "akaLinkCompact:R")
-		(at 161.29 176.53 0)
+		(at 266.7 146.05 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -13226,7 +13223,7 @@
 		(fields_autoplaced yes)
 		(uuid "a2b6307e-b4a9-4206-b394-3fd17404ca24")
 		(property "Reference" "R133"
-			(at 163.83 175.2599 0)
+			(at 269.24 144.7799 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13235,7 +13232,7 @@
 			)
 		)
 		(property "Value" "10K"
-			(at 163.83 177.7999 0)
+			(at 269.24 147.3199 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13244,7 +13241,7 @@
 			)
 		)
 		(property "Footprint" "akaLinkCompact:R_0603_1608Metric"
-			(at 159.512 176.53 90)
+			(at 264.922 146.05 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13253,7 +13250,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 161.29 176.53 0)
+			(at 266.7 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13262,7 +13259,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 161.29 176.53 0)
+			(at 266.7 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13271,7 +13268,7 @@
 			)
 		)
 		(property "Sim.Device" ""
-			(at 161.29 176.53 0)
+			(at 266.7 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13280,7 +13277,7 @@
 			)
 		)
 		(property "精度" ""
-			(at 161.29 176.53 0)
+			(at 266.7 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13289,7 +13286,7 @@
 			)
 		)
 		(property "耐压" ""
-			(at 161.29 176.53 0)
+			(at 266.7 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13314,7 +13311,7 @@
 	)
 	(symbol
 		(lib_id "akaLinkCompact:C")
-		(at 152.4 176.53 0)
+		(at 257.81 146.05 0)
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
@@ -13324,7 +13321,7 @@
 		(fields_autoplaced yes)
 		(uuid "a55f17b8-c541-4325-bf18-dd46a23d1b28")
 		(property "Reference" "C103"
-			(at 148.59 175.2599 0)
+			(at 254 144.7799 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13333,7 +13330,7 @@
 			)
 		)
 		(property "Value" "0.1uF"
-			(at 148.59 177.7999 0)
+			(at 254 147.3199 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13342,7 +13339,7 @@
 			)
 		)
 		(property "Footprint" "akaLinkCompact:C_0603_1608Metric"
-			(at 151.4348 180.34 0)
+			(at 256.8448 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13351,7 +13348,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 152.4 176.53 0)
+			(at 257.81 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13360,7 +13357,7 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
-			(at 152.4 176.53 0)
+			(at 257.81 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13369,7 +13366,7 @@
 			)
 		)
 		(property "Sim.Device" ""
-			(at 152.4 176.53 0)
+			(at 257.81 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13378,7 +13375,7 @@
 			)
 		)
 		(property "精度" ""
-			(at 152.4 176.53 0)
+			(at 257.81 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -13387,7 +13384,7 @@
 			)
 		)
 		(property "耐压" ""
-			(at 152.4 176.53 0)
+			(at 257.81 146.05 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14500,7 +14497,7 @@
 	)
 	(symbol
 		(lib_id "akaLinkCompact:R")
-		(at 228.6 137.16 90)
+		(at 215.9 137.16 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -14509,7 +14506,7 @@
 		(fields_autoplaced yes)
 		(uuid "cfa137ae-2014-4cbf-8dc0-b833de8c4700")
 		(property "Reference" "R124"
-			(at 228.6 130.81 90)
+			(at 215.9 130.81 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14517,7 +14514,7 @@
 			)
 		)
 		(property "Value" "10K"
-			(at 228.6 133.35 90)
+			(at 215.9 133.35 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14525,7 +14522,7 @@
 			)
 		)
 		(property "Footprint" "akaLinkCompact:R_0603_1608Metric"
-			(at 228.6 138.938 90)
+			(at 215.9 138.938 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14534,7 +14531,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 228.6 137.16 0)
+			(at 215.9 137.16 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14543,7 +14540,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 228.6 137.16 0)
+			(at 215.9 137.16 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14552,7 +14549,7 @@
 			)
 		)
 		(property "Sim.Device" ""
-			(at 228.6 137.16 90)
+			(at 215.9 137.16 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14561,7 +14558,7 @@
 			)
 		)
 		(property "精度" ""
-			(at 228.6 137.16 90)
+			(at 215.9 137.16 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14570,7 +14567,7 @@
 			)
 		)
 		(property "耐压" ""
-			(at 228.6 137.16 90)
+			(at 215.9 137.16 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14679,7 +14676,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "CH32V30xFxPx"
+		(property "Value" "CH32V305FBP6"
 			(at 139.3033 36.83 0)
 			(effects
 				(font
@@ -14946,7 +14943,7 @@
 	)
 	(symbol
 		(lib_id "akaLinkCompact:R")
-		(at 161.29 166.37 0)
+		(at 266.7 135.89 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -14955,7 +14952,7 @@
 		(fields_autoplaced yes)
 		(uuid "d3b13427-5068-4ec0-b25b-5dc32404a144")
 		(property "Reference" "R117"
-			(at 163.83 165.0999 0)
+			(at 269.24 134.6199 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14964,7 +14961,7 @@
 			)
 		)
 		(property "Value" "10K"
-			(at 163.83 167.6399 0)
+			(at 269.24 137.1599 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14973,7 +14970,7 @@
 			)
 		)
 		(property "Footprint" "akaLinkCompact:R_0603_1608Metric"
-			(at 159.512 166.37 90)
+			(at 264.922 135.89 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14982,7 +14979,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 161.29 166.37 0)
+			(at 266.7 135.89 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -14991,7 +14988,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 161.29 166.37 0)
+			(at 266.7 135.89 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15000,7 +14997,7 @@
 			)
 		)
 		(property "Sim.Device" ""
-			(at 161.29 166.37 0)
+			(at 266.7 135.89 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15009,7 +15006,7 @@
 			)
 		)
 		(property "精度" ""
-			(at 161.29 166.37 0)
+			(at 266.7 135.89 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15018,7 +15015,7 @@
 			)
 		)
 		(property "耐压" ""
-			(at 161.29 166.37 0)
+			(at 266.7 135.89 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15823,7 +15820,7 @@
 	)
 	(symbol
 		(lib_id "akaLinkCompact:AO3400A")
-		(at 237.49 144.78 0)
+		(at 224.79 144.78 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -15832,7 +15829,7 @@
 		(fields_autoplaced yes)
 		(uuid "e8fe4576-0604-44ac-aae5-1ec36840c2b0")
 		(property "Reference" "Q104"
-			(at 243.84 143.5099 0)
+			(at 231.14 143.5099 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15841,7 +15838,7 @@
 			)
 		)
 		(property "Value" "AO3400A"
-			(at 243.84 146.0499 0)
+			(at 231.14 146.0499 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15850,7 +15847,7 @@
 			)
 		)
 		(property "Footprint" "akaLinkCompact:SOT-23"
-			(at 242.57 146.685 0)
+			(at 229.87 146.685 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15861,7 +15858,7 @@
 			)
 		)
 		(property "Datasheet" "http://www.aosmd.com/pdfs/datasheet/AO3400A.pdf"
-			(at 242.57 148.59 0)
+			(at 229.87 148.59 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15871,7 +15868,7 @@
 			)
 		)
 		(property "Description" "30V Vds, 5.7A Id, N-Channel MOSFET, SOT-23"
-			(at 237.49 144.78 0)
+			(at 224.79 144.78 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15880,7 +15877,7 @@
 			)
 		)
 		(property "Sim.Device" ""
-			(at 237.49 144.78 0)
+			(at 224.79 144.78 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15889,7 +15886,7 @@
 			)
 		)
 		(property "精度" ""
-			(at 237.49 144.78 0)
+			(at 224.79 144.78 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -15898,7 +15895,7 @@
 			)
 		)
 		(property "耐压" ""
-			(at 237.49 144.78 0)
+			(at 224.79 144.78 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16384,7 +16381,7 @@
 	)
 	(symbol
 		(lib_id "akaLinkCompact:GND")
-		(at 152.4 180.34 0)
+		(at 257.81 149.86 0)
 		(mirror y)
 		(unit 1)
 		(exclude_from_sim no)
@@ -16394,7 +16391,7 @@
 		(fields_autoplaced yes)
 		(uuid "f29e56b6-6c5c-445e-b8cc-f7b59ed388c7")
 		(property "Reference" "#PWR0109"
-			(at 152.4 186.69 0)
+			(at 257.81 156.21 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16403,7 +16400,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 152.4 185.42 0)
+			(at 257.81 154.94 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16411,7 +16408,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 152.4 180.34 0)
+			(at 257.81 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16420,7 +16417,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 152.4 180.34 0)
+			(at 257.81 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -16429,7 +16426,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 152.4 180.34 0)
+			(at 257.81 149.86 0)
 			(effects
 				(font
 					(size 1.27 1.27)

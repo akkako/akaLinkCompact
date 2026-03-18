@@ -11,8 +11,8 @@ void drv_print_init(void)
     *(DEBUG_DATA0_ADDRESS) = 0;
 }
 
-// __attribute__((used)) int _write(int fd, char *buf, int size)
-int drv_print_send(char *buf, int size)
+__attribute__((used)) int _write(int fd, char *buf, int size)
+// int drv_print_send(char *buf, int size)
 {
     int i = 0;
 
