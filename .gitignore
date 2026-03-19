@@ -16,3 +16,8 @@ build_exec
 # MRS build
 .mrs
 obj
+
+# software
+__pycache__
+dist
+*.spec

@@ -14,7 +14,7 @@
 // | SWDIR    | PB12     | N/A(HIGH)  | SWDIR      | GPIO      |
 // | TCK      | PB13     | JTAG_TCK   | SWCLK      | SPI2_SCLK |
 // | RSVD     | PB14     | N/A        | N/A        |           |
-// | TMSO     | PB15     | JTAG_TMS   | SWDIO      | SPI2_MOSI |
+// | TMS      | PB15     | JTAG_TMS   | SWDIO      | SPI2_MOSI |
 // |          |          |            |            |           |
 // -------------------------------------------------------------
 
