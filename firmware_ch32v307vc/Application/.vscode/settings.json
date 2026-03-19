@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "ch32v30x_rcc.h": "c",
+        "climits": "c",
+        "cmath": "c",
+        "compare": "c",
+        "cstdarg": "c",
+        "cstdio": "c",
+        "cstdlib": "c",
+        "type_traits": "c",
+        "swd_host.h": "c",
+        "hscope.h": "c"
+    }
+}
