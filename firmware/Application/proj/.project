@@ -56,6 +56,11 @@
       <type>2</type>
       <location>PARENT-2-PROJECT_LOC/Middleware</location>
     </link>
+    <link>
+      <name>hscope</name>
+      <type>2</type>
+      <location>PARENT-1-PROJECT_LOC/hscope</location>
+    </link>
   </linkedResources>
   <filteredResources>
     <filter>

@@ -45,6 +45,10 @@
 			{
 				"name": "Middleware",
 				"location": "../../Middleware"
+			},
+			{
+				"name": "hscope",
+				"location": "../hscope"
 			}
 		],
 		"removedResources": [
@@ -79,7 +83,7 @@
 					"${project}/Middleware/CherryUSB/class/dfu"
 				],
 				"optimization": {
-					"level": "optimize",
+					"level": "fast",
 					"message_length": true,
 					"char_is_signed": true,
 					"function_sections": true,
@@ -90,7 +94,7 @@
 					"disable_builtin": false,
 					"single_precision_constants": false,
 					"position_independent_code": false,
-					"link_time_optimizer": false,
+					"link_time_optimizer": true,
 					"disable_loop_invariant_move": false,
 					"optimize_unused_sections_declared_as_high_code": false,
 					"code_generation_without_hardware_floating": false,
@@ -155,7 +159,8 @@
 						"do_not_search_system_directories": false,
 						"preprocess_only": false,
 						"defined_symbols": [
-							"CONFIG_USB_HS"
+							"CONFIG_USB_HS",
+							"CONFIG_CHERRYDAP_USE_CUSTOM_HID"
 						],
 						"undefined_symbols": []
 					},
@@ -172,7 +177,8 @@
 							"${project}/../../Middleware/CherryUSB/class/msc",
 							"${project}/../../Middleware/CherryUSB/class/cdc",
 							"${project}/../../Middleware/CherryUSB/port/ch32/ch32hs",
-							"${project}/../../Middleware/CherryRB"
+							"${project}/../../Middleware/CherryRB",
+							"${project}/../hscope"
 						],
 						"include_system_paths": [],
 						"include_files": []
@@ -266,7 +272,7 @@
 						"do_not_use_syscalls": true,
 						"verbose": false,
 						"use_wch_printffloat": false,
-						"use_wch_printf": false,
+						"use_wch_printf": true,
 						"use_iqmath": false,
 						"other_linker_flags": ""
 					}
@@ -304,7 +310,7 @@
 						"do_not_use_syscalls": true,
 						"verbose": false,
 						"use_wch_printffloat": false,
-						"use_wch_printf": false,
+						"use_wch_printf": true,
 						"use_iqmath": false,
 						"other_linker_flags": ""
 					}
@@ -315,7 +321,7 @@
 				},
 				"createFlash": {
 					"enabled": true,
-					"outputFileFormat": "ihex",
+					"outputFileFormat": "ihexAndbinary",
 					"copy_only_section_text": false,
 					"copy_only_section_data": false,
 					"copy_only_sections": [],
@@ -661,7 +667,7 @@
 		"address": "0x08000000",
 		"target_path": "obj\\akaLink.hex",
 		"clkSpeed": "High",
-		"debug_interface_mode": "",
+		"debug_interface_mode": "1-wire serial",
 		"erase": false,
 		"program": true,
 		"verify": true,

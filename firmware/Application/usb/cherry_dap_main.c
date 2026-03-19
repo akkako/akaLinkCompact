@@ -1,4 +1,5 @@
 #include "cherry_dap_main.h"
+#include <stdio.h>
 
 #define CMSIS_DAP_INTERFACE_SIZE (9 + 7 + 7)
 #define CUSTOM_HID_LEN (9 + 9 + 7 + 7)
@@ -184,7 +185,7 @@ const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
     0x15, 0x00,       /*   LOGICAL_MINIMUM (0) */
     0x25, 0xff,       /*LOGICAL_MAXIMUM (255) */
     0x75, 0x08,       /*   REPORT_SIZE (8) */
-    0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
+    0x96, 0x3f, 0x00, /*   REPORT_COUNT (63) */
     0x81, 0x02,       /*   INPUT (Data,Var,Abs) */
     /* <___________________________________________________> */
     0x85, 0x01,       /*   REPORT ID (0x01) */
@@ -192,7 +193,7 @@ const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
     0x15, 0x00,       /*   LOGICAL_MINIMUM (0) */
     0x25, 0xff,       /*   LOGICAL_MAXIMUM (255) */
     0x75, 0x08,       /*   REPORT_SIZE (8) */
-    0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
+    0x96, 0x3f, 0x00, /*   REPORT_COUNT (63) */
     0x91, 0x02,       /*   OUTPUT (Data,Var,Abs) */
 
     /* <___________________________________________________> */
@@ -201,7 +202,7 @@ const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
     0x15, 0x00,       /*   LOGICAL_MINIMUM (0) */
     0x25, 0xff,       /*   LOGICAL_MAXIMUM (255) */
     0x75, 0x08,       /*   REPORT_SIZE (8) */
-    0x96, 0xff, 0x03, /*   REPORT_COUNT (1023) */
+    0x96, 0x3f, 0x00, /*   REPORT_COUNT (63) */
     0xb1, 0x02,       /*   FEATURE (Data,Var,Abs) */
     /* USER CODE END 0 */
     0xC0 /*     END_COLLECTION	             */
@@ -285,6 +286,12 @@ USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t uartrx_ringbuffer[CONFIG_UARTRX_R
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t usbrx_ringbuffer[CONFIG_USBRX_RINGBUF_SIZE];
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t usb_tmpbuffer[DAP_PACKET_SIZE];
 
+#if CONFIG_CHERRYDAP_USE_CUSTOM_HID
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t hid_rx_buffer[HID_PACKET_SIZE];
+USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t hid_tx_buffer[HID_PACKET_SIZE];
+static volatile uint8_t hid_busy_flag = 0;
+#endif
+
 static volatile uint8_t usbrx_idle_flag = 0;
 static volatile uint8_t usbtx_idle_flag = 0;
 static volatile uint8_t uarttx_idle_flag = 0;
@@ -302,6 +309,9 @@ void usbd_event_handler(uint8_t busid, uint8_t event)
         usbtx_idle_flag = 0;
         uarttx_idle_flag = 0;
         config_uart_transfer = 0;
+#if CONFIG_CHERRYDAP_USE_CUSTOM_HID
+        hid_busy_flag = 0;
+#endif
         break;
     case USBD_EVENT_CONNECTED:
         break;
@@ -318,6 +328,9 @@ void usbd_event_handler(uint8_t busid, uint8_t event)
         usbd_ep_start_read(0, DAP_OUT_EP, USB_Request[0], DAP_PACKET_SIZE);
         usbd_ep_start_read(0, CDC_OUT_EP, usb_tmpbuffer, DAP_PACKET_SIZE);
 
+#if CONFIG_CHERRYDAP_USE_CUSTOM_HID
+        usbd_ep_start_read(0, HID_OUT_EP, hid_rx_buffer, HID_PACKET_SIZE);
+#endif
         break;
     case USBD_EVENT_SET_REMOTE_WAKEUP:
         break;
@@ -457,20 +470,87 @@ void usbd_cdc_rtt_bulk_in(uint8_t busid, uint8_t ep, uint32_t nbytes)
     }
 }
 
+#if CONFIG_CHERRYDAP_USE_CUSTOM_HID
 void usbd_hid_custom_notify_handler(uint8_t busid, uint8_t event, void *arg)
 {
     (void)busid;
+    (void)event;
+    (void)arg;
+    printf("hid_notify: event = %d\n", event);
 }
 
 void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     (void)busid;
+    (void)ep;
+
+    printf("actual out len:%d\r\n", (unsigned int)nbytes);
+
+    for (uint32_t i = 0; i < nbytes; i++)
+    {
+        printf("%02x ", hid_rx_buffer[i]);
+    }
+    printf("\r\n");
+
+    hid_tx_buffer[0] = 0x02; /* IN: report id */
+
+    if (hid_rx_buffer[0] == 0x01 && hid_rx_buffer[1] == 0x05)
+    {
+        if (hid_rx_buffer[2] == 0x01)
+        {
+            hscope_enable();
+            uint8_t len = sprintf(&hid_tx_buffer[2], "HScope Enable\r\n");
+            hid_tx_buffer[1] = len;
+        }
+        else if (hid_rx_buffer[2] == 0x02)
+        {
+            hscope_disable();
+            uint8_t len = sprintf(&hid_tx_buffer[2], "HScope Disable\r\n");
+            hid_tx_buffer[1] = len;
+        }
+        else if (hid_rx_buffer[2] == 0x03)
+        {
+            uint32_t addr = hid_rx_buffer[3] << 24;
+            addr |= hid_rx_buffer[4] << 16;
+            addr |= hid_rx_buffer[5] << 8;
+            addr |= hid_rx_buffer[6];
+            hscope_set_addr(addr);
+            uint8_t len = sprintf(&hid_tx_buffer[2], "HScope Set Addr: 0x%04x\r\n", addr);
+            hid_tx_buffer[1] = len;
+        }
+        else if (hid_rx_buffer[2] == 0x04)
+        {
+            uint32_t data = hscope_get_data();
+            uint8_t len = sprintf(&hid_tx_buffer[2], "HScope Get Data: 0x%04x\r\n", data);
+            hid_tx_buffer[1] = len;
+        }
+        else
+        {
+            uint8_t len = sprintf(&hid_tx_buffer[2], "HID Unsupported Command\r\n");
+            hid_tx_buffer[1] = len;
+        }
+    }
+    else
+    {
+        uint8_t len = sprintf(&hid_tx_buffer[2], "HID Wrong Command\r\n");
+        hid_tx_buffer[1] = len;
+    }
+
+    usbd_ep_start_read(busid, ep, hid_rx_buffer, HID_PACKET_SIZE);
+    usbd_ep_start_write(busid, HID_IN_EP, hid_tx_buffer, nbytes);
 }
 
 void usbd_hid_custom_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
 {
     (void)busid;
+    (void)ep;
+    (void)nbytes;
+
+    hid_busy_flag = 0;
+
+    printf("actual in len:%d\r\n", (unsigned int)nbytes);
 }
+#endif
 
 struct usbd_endpoint dap_out_ep = {
     .ep_addr = DAP_OUT_EP,

@@ -43,7 +43,7 @@
 #endif
 
 #ifdef CONFIG_USB_HS
-#define HID_PACKET_SIZE 1024
+#define HID_PACKET_SIZE 64
 #else
 #define HID_PACKET_SIZE 64
 #endif

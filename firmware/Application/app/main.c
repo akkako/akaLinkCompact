@@ -5,6 +5,7 @@
 #include "drv_systick.h"
 #include <stdio.h>
 #include "drv_gpio.h"
+#include "hscope.h"
 
 void chry_dap_init(uint8_t busid, uint32_t reg_base);
 void chry_dap_handle(void);
@@ -24,6 +25,7 @@ int main (void) {
     {
 		chry_dap_handle();
         chry_dap_usb2uart_handle();
+        hscope_process();
 	}
     return 0;
 }

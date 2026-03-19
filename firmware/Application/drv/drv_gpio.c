@@ -18,17 +18,31 @@
 // |          |          |            |            |           |
 // -------------------------------------------------------------
 
+// SWDIR -- PB12
+// SWCK -- PB13
+// SWDI -- PB14
+// SWDO -- PB15
+
+#define SWCK_PIN (13 - 8)
+#define SWDI_PIN (14 - 8)
+#define SWDO_PIN (15 - 8)
+
+#define PIN_CFG_CLR(x) (0xF << (4 * (x)))
+#define PIN_CFG_IN(x) (0x4 << (4 * (x)))
+#define PIN_CFG_OUT(x) (0x3 << (4 * (x)))
+#define PIN_CFG_AFOUT(x) (0xB << (4 * (x)))
+#define PIN_CFG_AFIN(x) (0x4 << (4 * (x)))
+
 /**
  * @brief 设置 TMS 引脚为 IO 输出模式
  *
  */
 void drv_gpio_tms_io_out(void)
 {
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_15;
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOB, &GPIO_InitStruct);
+    register uint32_t temp = GPIOB->CFGHR;
+    temp &= ~(uint32_t)(PIN_CFG_CLR (SWDO_PIN));
+    temp |= (uint32_t)(PIN_CFG_OUT (SWDO_PIN));
+    GPIOB->CFGHR = temp;
 }
 
 /**
@@ -37,11 +51,10 @@ void drv_gpio_tms_io_out(void)
  */
 void drv_gpio_tms_io_in(void)
 {
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_15;
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOB, &GPIO_InitStruct);
+    register uint32_t temp = GPIOB->CFGHR;
+    temp &= ~(uint32_t)(PIN_CFG_CLR (SWDO_PIN));
+    temp |= (uint32_t)(PIN_CFG_IN (SWDO_PIN));
+    GPIOB->CFGHR = temp;
 }
 
 
@@ -174,9 +187,9 @@ void drv_gpio_init_as_swd_uart(void)
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    // 配置 TCK 为复用推挽输出
+    // 配置 TCK 为推挽输出
     GPIO_InitStruct.GPIO_Pin = GPIO_Pin_13;
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF_PP;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(GPIOB, &GPIO_InitStruct);
 

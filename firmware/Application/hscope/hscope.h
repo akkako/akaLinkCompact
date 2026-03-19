@@ -3,17 +3,21 @@
 
 #include <stdint.h>
 
-int8_t hscope_init (uint32_t swd_speed, uint32_t fetch_speed);
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
-int8_t hscope_connect (void);
+    void hscope_enable(void);
+    void hscope_disable(void);
+    void hscope_process(void);
+    void hscope_set_addr(uint32_t addr);
+    uint32_t hscope_get_data(void);
 
-int8_t hscope_start_fetch (void);
+    uint8_t hscope_read_mem_32bit(uint32_t addr, uint32_t *result);
 
-int8_t hscope_fetch_data (void);
-
-int8_t hscope_disconnect (void);
-
-
-void hscope_test (void);
+#ifdef __cplusplus
+}
+#endif
 
 #endif
