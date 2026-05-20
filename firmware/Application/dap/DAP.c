@@ -3,7 +3,7 @@
 #include "DAP_Port.h"
 #include "DAP.h"
 
-// ��� DAP_PACKET_SIZE �Ƿ�Ϲ�
+// 检查 DAP_PACKET_SIZE 是否合规
 #if (DAP_PACKET_SIZE < 64U)
 #error "Minimum Packet Size is 64!"
 #endif
@@ -11,7 +11,7 @@
 #error "Maximum Packet Size is 32768!"
 #endif
 
-// ��� DAP_PACKET_COUNT �Ƿ�Ϲ�
+// 检查 DAP_PACKET_COUNT 是否合规
 #if (DAP_PACKET_COUNT < 2U)
 #error "Minimum Packet Count is 2!"
 #endif
