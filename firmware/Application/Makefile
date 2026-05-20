@@ -3,12 +3,14 @@ TARGET = akaLink_Compact_App
 # 调试信息
 DEBUG = 1
 # 优化等级
-OPT = -O2
+OPT = -Ofast
 # 链接时优化
-LTO = #-flto
+LTO = -flto
 
 # 检测操作系统
-OS := $(shell uname -s)
+# OS := $(shell uname -s)
+
+
 
 # 编译临时文件目录
 BUILD_DIR = build
@@ -17,8 +19,6 @@ EXEC_DIR = build_exec
 
 # C源文件宏定义
 C_DEFS += -DCONFIG_USB_HS
-C_DEFS += -DCONFIG_CHERRYDAP_USE_CUSTOM_HID
-#C_DEFS += -DCONFIG_CHERRYDAP_USE_MSC 
 
 # C头文件目录
 C_INCLUDES += -Iapp/
@@ -44,12 +44,9 @@ C_SOURCES += $(wildcard ../Drivers/src/*.c)
 C_SOURCES += $(wildcard app/*.c)
 C_SOURCES += $(wildcard drv/*.c)
 C_SOURCES += $(wildcard usb/*.c)
-C_SOURCES += $(wildcard hscope/*.c)
 C_SOURCES += $(wildcard dap/*.c)
 
 C_SOURCES += $(wildcard ../Middleware/CherryRB/*.c)
-C_SOURCES += $(wildcard ../Middleware/CherryUSB/class/msc/*.c)
-C_SOURCES += $(wildcard ../Middleware/CherryUSB/class/hid/*.c)
 C_SOURCES += $(wildcard ../Middleware/CherryUSB/class/cdc/*.c)
 C_SOURCES += $(wildcard ../Middleware/CherryUSB/port/ch32/ch32hs/*.c)
 C_SOURCES += $(wildcard ../Middleware/CherryUSB/core/*.c)
@@ -126,7 +123,7 @@ LDSCRIPT = ./sys/CH32V305FB.ld
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) $(LTO) -Wall -fdata-sections -ffunction-sections
 
-CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) $(LTO) -Wall -msmall-data-limit=8 -msave-restore -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common
+CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) $(LTO) -Wall -ffunction-sections -fdata-sections
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2 

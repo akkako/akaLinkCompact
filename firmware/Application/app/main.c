@@ -1,6 +1,6 @@
 
 #include "ch32v30x_misc.h"
-
+#include "drv_gpio.h"
 #include "drv_print.h"
 #include "drv_systick.h"
 #include "drv_usb2uart.h"
@@ -19,7 +19,7 @@ int main (void) {
 	drv_usb2uart_init();
 
 	chry_dap_init(0, 0);
-    printf("System Init\r\n");
+    //printf("System Init\r\n");
 
 	while(1)
     {

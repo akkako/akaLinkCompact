@@ -28,18 +28,11 @@
 
 #define INTF_NUM (1 + 2)
 
-#define MSC_INTF_NUM (3)
-
-#define WEBUSB_INTF_NUM (3)
-
-#define WEBUSB_URL_STRINGS \
-    'c', 'h', 'e', 'r', 'r', 'y', 'd', 'a', 'p', '.', 'c', 'h', 'e', 'r', 'r', 'y', '-', 'e', 'm', 'b', 'e', 'd', 'd', 'e', 'd', '.', 'o', 'r', 'g',
-
 __ALIGN_BEGIN const uint8_t USBD_WinUSBDescriptorSetDescriptor[] = {
-    WBVAL (WINUSB_DESCRIPTOR_SET_HEADER_SIZE),   /* wLength */
-    WBVAL (WINUSB_SET_HEADER_DESCRIPTOR_TYPE),   /* wDescriptorType */
-    0x00, 0x00, 0x03, 0x06, /* >= Win 8.1 */     /* dwWindowsVersion*/
-    WBVAL (USBD_WINUSB_DESC_SET_LEN),            /* wDescriptorSetTotalLength */
+    WBVAL (WINUSB_DESCRIPTOR_SET_HEADER_SIZE),  /* wLength */
+    WBVAL (WINUSB_SET_HEADER_DESCRIPTOR_TYPE),  /* wDescriptorType */
+    0x00, 0x00, 0x03, 0x06, /* >= Win 8.1 */    /* dwWindowsVersion*/
+    WBVAL (USBD_WINUSB_DESC_SET_LEN),           /* wDescriptorSetTotalLength */
 #if USBD_BULK_ENABLE
     WBVAL (WINUSB_FUNCTION_SUBSET_HEADER_SIZE), /* wLength */
     WBVAL (WINUSB_SUBSET_HEADER_FUNCTION_TYPE), /* wDescriptorType */
@@ -78,14 +71,30 @@ __ALIGN_BEGIN const uint8_t USBD_BinaryObjectStoreDescriptor[] = {
     0x10,                           /* bDescriptorType */
     USB_DEVICE_CAPABILITY_PLATFORM, /* bDevCapabilityType */
     0x00,                           /* bReserved */
-    0xDF, 0x60, 0xDD, 0xD8,         /* PlatformCapabilityUUID */
-    0x89, 0x45, 0xC7, 0x4C,
-    0x9C, 0xD2, 0x65, 0x9D,
-    0x9E, 0x64, 0x8A, 0x9F,
-    0x00, 0x00, 0x03, 0x06, /* >= Win 8.1 */ /* dwWindowsVersion*/
-    WBVAL (USBD_WINUSB_DESC_SET_LEN),        /* wDescriptorSetTotalLength */
-    USBD_WINUSB_VENDOR_CODE,                 /* bVendorCode */
-    0,                                       /* bAltEnumCode */
+    0xDF,
+    0x60,
+    0xDD,
+    0xD8, /* PlatformCapabilityUUID */
+    0x89,
+    0x45,
+    0xC7,
+    0x4C,
+    0x9C,
+    0xD2,
+    0x65,
+    0x9D,
+    0x9E,
+    0x64,
+    0x8A,
+    0x9F,
+    0x00,
+    0x00,
+    0x03,
+    0x06,
+    /* >= Win 8.1 */                  /* dwWindowsVersion*/
+    WBVAL (USBD_WINUSB_DESC_SET_LEN), /* wDescriptorSetTotalLength */
+    USBD_WINUSB_VENDOR_CODE,          /* bVendorCode */
+    0,                                /* bAltEnumCode */
 #endif
 };
 
@@ -102,9 +111,6 @@ static const uint8_t config_descriptor[] = {
     /* Endpoint IN 1 */
     USB_ENDPOINT_DESCRIPTOR_INIT (DAP_IN_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
     CDC_ACM_DESCRIPTOR_INIT (0x01, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, DAP_PACKET_SIZE, 0x00),
-#if USBD_WEBUSB_ENABLE
-    USB_INTERFACE_DESCRIPTOR_INIT (WEBUSB_INTF_NUM, 0x00, 0x00, 0xff, 0x00, 0x00, 0x04),
-#endif
 };
 
 static const uint8_t other_speed_config_descriptor[] = {
@@ -116,17 +122,14 @@ static const uint8_t other_speed_config_descriptor[] = {
     /* Endpoint IN 1 */
     USB_ENDPOINT_DESCRIPTOR_INIT (DAP_IN_EP, USB_ENDPOINT_TYPE_BULK, DAP_PACKET_SIZE, 0x00),
     CDC_ACM_DESCRIPTOR_INIT (0x01, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, DAP_PACKET_SIZE, 0x00),
-#if USBD_WEBUSB_ENABLE
-    USB_INTERFACE_DESCRIPTOR_INIT (WEBUSB_INTF_NUM, 0x00, 0x00, 0xff, 0x00, 0x00, 0x04),
-#endif
 };
 
 char serial_number_dynamic[36] = "123456789ABCDEF";  // Dynamic serial number
 
 char *string_descriptors[] = {
     (char[]){0x09, 0x04}, /* Langid */
-    "CherryUSB", /* Manufacturer */
-    "CherryUSB CMSIS-DAP", /* Product */
+    "ARM", /* Manufacturer */
+    "akaLink CMSIS-DAP", /* Product */
     "123456789ABCDEF", /* Serial Number */
 };
 
@@ -306,7 +309,7 @@ void usbd_cdc_acm_bulk_in (uint8_t busid, uint8_t ep, uint32_t nbytes) {
     uint32_t size;
     uint8_t *buffer;
 
-    printf ("usb tx data fin: %u\r\n", nbytes);
+    // printf ("usb tx data fin: %u\r\n", nbytes);
 
     // clear the data already has been sent
     chry_ringbuffer_linear_read_done (&g_uartrx, nbytes);
@@ -496,7 +499,7 @@ void chry_dap_usb2uart_handle (void) {
             /* start first transfer */
             buffer = chry_ringbuffer_linear_read_setup (&g_uartrx, &size);
             usbd_ep_start_write (0, CDC_IN_EP, buffer, size);
-            printf ("usb tx start: %u\r\n", size);
+            // printf ("usb tx start: %u\r\n", size);
         }
     }
 
