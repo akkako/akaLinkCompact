@@ -64,7 +64,7 @@
   PIN_TCK_SET();                        \
   PIN_DELAY()
 
-#define PIN_DELAY() PIN_DELAY_SLOW(DAP_Data.clock_delay)
+#define PIN_DELAY() //PIN_DELAY_SLOW(DAP_Data.clock_delay)
 
 
 #if (DAP_JTAG != 0)
@@ -257,7 +257,7 @@ JTAG_IR_Function(Fast)
 JTAG_TransferFunction(Fast)
 
 #undef  PIN_DELAY
-#define PIN_DELAY() PIN_DELAY_SLOW(DAP_Data.clock_delay)
+#define PIN_DELAY() //PIN_DELAY_SLOW(DAP_Data.clock_delay)
 JTAG_IR_Function(Slow)
 JTAG_TransferFunction(Slow)
 

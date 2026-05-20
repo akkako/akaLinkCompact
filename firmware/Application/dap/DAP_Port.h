@@ -70,11 +70,21 @@ __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString (char *str) {
 
 #define SWD_GPIO GPIOB
 #define JTAG_GPIO GPIOB
+#define JTRST_GPIO GPIOC
+#define SRST_GPIO GPIOC
 
 #define SWDIR_PIN GPIO_Pin_12
 #define SWDI_PIN GPIO_Pin_14
 #define SWDO_PIN GPIO_Pin_15
 #define SWCK_PIN GPIO_Pin_13
+
+#define JTCK_PIN SWCK_PIN
+#define JTMS_PIN SWDO_PIN
+#define JTDI_PIN GPIO_Pin_10
+#define JTDO_PIN GPIO_Pin_11
+#define JTRST_PIN GPIO_Pin_6
+
+#define SRST_PIN GPIO_Pin_8
 
 #define SWCK_BIT_PIN (13 - 8)
 #define SWDI_BIT_PIN (14 - 8)
@@ -120,7 +130,7 @@ __STATIC_INLINE uint32_t TIMESTAMP_GET (void) {
     nRESET --> 开漏输出/高电平
 */
 __STATIC_INLINE void PORT_JTAG_SETUP (void) {
-    ;
+    
 }
 
 /** 初始化配置 SWD 引脚，并配置默认输出电平
@@ -132,7 +142,6 @@ __STATIC_INLINE void PORT_JTAG_SETUP (void) {
     nRESET --> 开漏输出/高电平
 */
 __STATIC_INLINE void PORT_SWD_SETUP (void) {
-    RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOA, ENABLE);
 
     GPIO_SetBits (SWD_GPIO, SWCK_PIN | SWDO_PIN);
     GPIO_InitTypeDef GPIO_InitStruct;
@@ -278,7 +287,7 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT (uint32_t bit) {
  * @return 电平状态
  */
 __STATIC_FORCEINLINE uint32_t PIN_TDI_IN (void) {
-    return (0U);
+    return GPIO_ReadOutputDataBit(JTAG_GPIO, JTDI_PIN);
 }
 
 /**
@@ -288,18 +297,25 @@ __STATIC_FORCEINLINE uint32_t PIN_TDI_IN (void) {
  * @return None
  */
 __STATIC_FORCEINLINE void PIN_TDI_OUT (uint32_t bit) {
-    ;
+    if (bit)
+    {
+        GPIO_SetBits(JTAG_GPIO, JTDI_PIN);
+    }
+    else
+    {
+        GPIO_ResetBits(JTAG_GPIO, JTDI_PIN);
+    }
 }
 
 // TDO 引脚 ---------------------------------------------
 
 /**
- * @brief 读取 TDO 引脚输出电平
+ * @brief 读取 TDO 引脚输入电平
  *
  * @return 电平状态
  */
 __STATIC_FORCEINLINE uint32_t PIN_TDO_IN (void) {
-    return (0U);
+    return GPIO_ReadInputDataBit(JTAG_GPIO, JTDO_PIN);
 }
 
 // nTRST 引脚 -------------------------------------------
@@ -310,7 +326,7 @@ __STATIC_FORCEINLINE uint32_t PIN_TDO_IN (void) {
  * @return 电平状态
  */
 __STATIC_FORCEINLINE uint32_t PIN_nTRST_IN (void) {
-    return (0U);
+    return GPIO_ReadOutputDataBit(JTRST_GPIO, JTRST_PIN);
 }
 
 /**
@@ -320,7 +336,14 @@ __STATIC_FORCEINLINE uint32_t PIN_nTRST_IN (void) {
  * @return None
  */
 __STATIC_FORCEINLINE void PIN_nTRST_OUT (uint32_t bit) {
-    ;
+    if (bit)
+    {
+        GPIO_SetBits(JTRST_GPIO, JTRST_PIN);
+    }
+    else
+    {
+        GPIO_ResetBits(JTRST_GPIO, JTRST_PIN);
+    }   
 }
 
 // nRESET 引脚 ------------------------------------------
@@ -331,7 +354,7 @@ __STATIC_FORCEINLINE void PIN_nTRST_OUT (uint32_t bit) {
  * @return 电平状态
  */
 __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN (void) {
-    return (0U);
+    return (!GPIO_ReadOutputDataBit(SRST_GPIO, SRST_PIN));
 }
 
 /**
@@ -341,7 +364,14 @@ __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN (void) {
  * @return None
  */
 __STATIC_FORCEINLINE void PIN_nRESET_OUT (uint32_t bit) {
-    ;
+    if (bit)
+    {
+        GPIO_ResetBits(SRST_GPIO, SRST_PIN);
+    }
+    else
+    {
+        GPIO_SetBits(SRST_GPIO, SRST_PIN);
+    }
 }
 
 // LED 引脚 ------------------------------------------
