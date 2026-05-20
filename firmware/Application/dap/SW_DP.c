@@ -52,13 +52,23 @@ static inline uint8_t GetParity (uint32_t data) {
 void SWJ_Sequence (uint32_t count, const uint8_t *data) {
     uint32_t val;
     uint32_t n;
-    // uint8_t dummy[64] = {0};
+    uint32_t spi_transmit_bytes = 0;
+    uint32_t spi_transmit_remain_bits = 0;
+    uint8_t dummy[64] = {0};
 
-    // drv_spi_gpio_mux_spi();
-    // drv_spi_dma_transmit ((uint8_t *)&data, (uint8_t *)&dummy, count / 8);
-    // drv_spi_dma_wait();
-    // drv_spi_gpio_mux_gpio_out();
 
+    spi_transmit_remain_bits = count % 8;
+
+    if (count > 8) {
+        spi_transmit_bytes = count / 8;
+        drv_spi_gpio_mux_spi();
+        drv_spi_dma_transmit ((uint8_t *)data, (uint8_t *)&dummy, spi_transmit_bytes);
+        drv_spi_dma_wait();
+        drv_spi_gpio_mux_gpio_out();
+    }
+
+    count = spi_transmit_remain_bits;
+    data += spi_transmit_bytes;
 
     val = 0U;
     n = 0U;
@@ -89,7 +99,6 @@ void SWD_Sequence (uint32_t info, const uint8_t *swdo, uint8_t *swdi) {
     uint32_t val;
     uint32_t bit;
     uint32_t n, k;
-
 
     n = info & SWD_SEQUENCE_CLK;
     if (n == 0U) {
@@ -546,7 +555,7 @@ static uint8_t SWD_Read_SPI (uint8_t request, uint32_t *data) {
         parity = GetParity (val);
 
         /* ¶ÁÐ£ÑéÎ» */
-        SW_READ_BIT (ack1);
+        SW_READ_BIT_OPT (ack1);
 
         if ((parity ^ ack1) & 1U) {
             ack = DAP_TRANSFER_ERROR;

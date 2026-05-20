@@ -152,13 +152,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// #include "cmsis_compiler.h"
-
 // DAP Data structure
 typedef struct {
     uint8_t transfer_abort; // Transfer Abort Flag
     uint8_t debug_port;        // Debug Port
-    uint8_t padding[2];
+    uint8_t fast_clock;        // Fastest clock with no delay
+    uint8_t padding;
     uint32_t timestamp;        // Last captured Timestamp
 
     struct {                   // Transfer Configuration

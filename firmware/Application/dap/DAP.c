@@ -19,10 +19,6 @@
 #error "Maximum Packet Count is 255!"
 #endif
 
-// Clock Macros
-#define MAX_SWJ_CLOCK(delay_cycles) \
-    ((CPU_CLOCK / 2U) / (IO_PORT_WRITE_CYCLES + delay_cycles))
-
 DAP_Data_t DAP_Data;  // DAP Data
 
 static const char DAP_FW_Ver[] = DAP_FW_VER;

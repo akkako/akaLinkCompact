@@ -1,15 +1,15 @@
 
 #include "ch32v30x.h"
 
-#define SYSTEM_CLOCK_144MHz
-// #define SYSTEM_CLOCK_168MHz
+// #define SYSTEM_CLOCK_144MHz
+// #define SYSTEM_CLOCK_156MHz
 // #define SYSTEM_CLOCK_192MHz
-// #define SYSTEM_CLOCK_216MHz
+#define SYSTEM_CLOCK_216MHz
 
 #ifdef SYSTEM_CLOCK_144MHz
 uint32_t SystemCoreClock = 144000000;
-#elif defined SYSTEM_CLOCK_168MHz
-uint32_t SystemCoreClock = 168000000;
+#elif defined SYSTEM_CLOCK_156MHz
+uint32_t SystemCoreClock = 156000000;
 #elif defined SYSTEM_CLOCK_192MHz
 uint32_t SystemCoreClock = 192000000;
 #elif defined SYSTEM_CLOCK_216MHz
@@ -83,8 +83,8 @@ static void SetSysClock(void)
 #else
 #ifdef SYSTEM_CLOCK_144MHz
         RCC->CFGR0 |= (uint32_t)(RCC_PLLSRC_HSE | RCC_PLLXTPRE_HSE | RCC_PLLMULL12_EXTEN);
-#elif defined SYSTEM_CLOCK_168MHz
-        RCC->CFGR0 |= (uint32_t)(RCC_PLLSRC_HSE | RCC_PLLXTPRE_HSE | RCC_PLLMULL14_EXTEN);
+#elif defined SYSTEM_CLOCK_156MHz
+        RCC->CFGR0 |= (uint32_t)(RCC_PLLSRC_HSE | RCC_PLLXTPRE_HSE | RCC_PLLMULL13_EXTEN);
 #elif defined SYSTEM_CLOCK_192MHz
         RCC->CFGR0 |= (uint32_t)(RCC_PLLSRC_HSE | RCC_PLLXTPRE_HSE | RCC_PLLMULL16_EXTEN);
 #elif defined SYSTEM_CLOCK_216MHz
