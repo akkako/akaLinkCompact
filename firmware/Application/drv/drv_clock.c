@@ -2,18 +2,32 @@
 #include "ch32v30x.h"
 
 #define SYSTEM_CLOCK_144MHz
+// #define SYSTEM_CLOCK_168MHz
 // #define SYSTEM_CLOCK_192MHz
+// #define SYSTEM_CLOCK_216MHz
 
 #ifdef SYSTEM_CLOCK_144MHz
 uint32_t SystemCoreClock = 144000000;
+#elif defined SYSTEM_CLOCK_168MHz
+uint32_t SystemCoreClock = 168000000;
 #elif defined SYSTEM_CLOCK_192MHz
 uint32_t SystemCoreClock = 192000000;
+#elif defined SYSTEM_CLOCK_216MHz
+uint32_t SystemCoreClock = 216000000;
 #endif
 
 static void SetSysClock(void);
 
 void SystemInit(void)
 {
+    // Set internal VDD LDO to 1.0V
+    EXTEN->EXTEN_CTR = (EXTEN->EXTEN_CTR | (EXTEN_LDO_TRIM));
+    // Wait for stable
+    for(uint32_t i = 0; i < 10000; i++)
+    {
+        asm("nop");
+    }
+
     RCC->CTLR |= (uint32_t)0x00000001;
     RCC->CFGR0 &= (uint32_t)0xF0FF0000;
     RCC->CTLR &= (uint32_t)0xFEF6FFFF;
@@ -69,8 +83,12 @@ static void SetSysClock(void)
 #else
 #ifdef SYSTEM_CLOCK_144MHz
         RCC->CFGR0 |= (uint32_t)(RCC_PLLSRC_HSE | RCC_PLLXTPRE_HSE | RCC_PLLMULL12_EXTEN);
+#elif defined SYSTEM_CLOCK_168MHz
+        RCC->CFGR0 |= (uint32_t)(RCC_PLLSRC_HSE | RCC_PLLXTPRE_HSE | RCC_PLLMULL14_EXTEN);
 #elif defined SYSTEM_CLOCK_192MHz
         RCC->CFGR0 |= (uint32_t)(RCC_PLLSRC_HSE | RCC_PLLXTPRE_HSE | RCC_PLLMULL16_EXTEN);
+#elif defined SYSTEM_CLOCK_216MHz
+        RCC->CFGR0 |= (uint32_t)(RCC_PLLSRC_HSE | RCC_PLLXTPRE_HSE | RCC_PLLMULL18_EXTEN);
 #endif
 #endif
 

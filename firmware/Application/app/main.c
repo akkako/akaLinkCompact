@@ -3,9 +3,7 @@
 
 #include "drv_print.h"
 #include "drv_systick.h"
-#include <stdio.h>
-#include "drv_gpio.h"
-#include "hscope.h"
+#include "drv_usb2uart.h"
 
 void chry_dap_init(uint8_t busid, uint32_t reg_base);
 void chry_dap_handle(void);
@@ -17,6 +15,8 @@ int main (void) {
     drv_systick_init();
     drv_gpio_init_misc();
     drv_gpio_init_as_hiz();
+	
+	drv_usb2uart_init();
 
 	chry_dap_init(0, 0);
     printf("System Init\r\n");
@@ -25,7 +25,6 @@ int main (void) {
     {
 		chry_dap_handle();
         chry_dap_usb2uart_handle();
-        hscope_process();
 	}
     return 0;
 }

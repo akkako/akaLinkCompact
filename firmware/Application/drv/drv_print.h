@@ -1,6 +1,8 @@
 #ifndef __DRV_PRINT_H__
 #define __DRV_PRINT_H__
 
+#include <stdio.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
