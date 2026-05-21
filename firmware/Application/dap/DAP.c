@@ -19,7 +19,7 @@
 #error "Maximum Packet Count is 255!"
 #endif
 
-DAP_Data_t DAP_Data; 
+DAP_Data_t DAP_Data;
 
 static const char DAP_FW_Ver[] = DAP_FW_VER;
 
@@ -93,10 +93,10 @@ static uint8_t DAP_Info (uint8_t id, uint8_t *info) {
 //   return:   number of bytes in response (lower 16 bits)
 //             number of bytes in request (upper 16 bits)
 static uint32_t DAP_Delay (const uint8_t *request, uint8_t *response) {
-    uint32_t delay;
+    // uint32_t delay;
 
-    delay = (uint32_t)(*(request + 0)) |
-            (uint32_t)(*(request + 1) << 8);
+    // delay = (uint32_t)(*(request + 0)) |
+    //         (uint32_t)(*(request + 1) << 8);
     //  delay *= ((144000000 / 1000000U) + (DELAY_SLOW_CYCLES - 1U)) / DELAY_SLOW_CYCLES;
 
     // PIN_DELAY_SLOW (delay);
@@ -577,6 +577,7 @@ static uint32_t DAP_SWD_Transfer (const uint8_t *request, uint8_t *response) {
     uint32_t match_retry;
     uint32_t retry;
     uint32_t data;
+    uint32_t header;
 #if (TIMESTAMP_CLOCK != 0U)
     uint32_t timestamp;
 #endif
@@ -607,12 +608,15 @@ static uint32_t DAP_SWD_Transfer (const uint8_t *request, uint8_t *response) {
                 if ((request_value & (DAP_TRANSFER_APnDP | DAP_TRANSFER_MATCH_VALUE)) == DAP_TRANSFER_APnDP) {
                     // Read previous AP data and post next AP read
                     do {
-                        response_value = SWD_Read (request_value, &data);
+                        header = (0x01) | ((request_value & 0x0F) << 1) | ((((request_value >> 0) + (request_value >> 1) + (request_value >> 2) + (request_value >> 3)) & 0x01) << 5) | (1 << 7);
+                        response_value = SWD_Read (header, &data);
                     } while ((response_value == DAP_TRANSFER_WAIT) && retry-- && !DAP_Data.transfer_abort);
                 } else {
                     // Read previous AP data
                     do {
-                        response_value = SWD_Read (DP_RDBUFF | DAP_TRANSFER_RnW, &data);
+                        request_value = (DP_RDBUFF | DAP_TRANSFER_RnW);
+                        header = (0x01) | ((request_value & 0x0F) << 1) | ((((request_value >> 0) + (request_value >> 1) + (request_value >> 2) + (request_value >> 3)) & 0x01) << 5) | (1 << 7);
+                        response_value = SWD_Read (header, &data);
                     } while ((response_value == DAP_TRANSFER_WAIT) && retry-- && !DAP_Data.transfer_abort);
                     post_read = 0U;
                 }
@@ -649,7 +653,8 @@ static uint32_t DAP_SWD_Transfer (const uint8_t *request, uint8_t *response) {
                     // Post AP read
                     retry = DAP_Data.transfer.retry_count;
                     do {
-                        response_value = SWD_Read (request_value, NULL);
+                        header = (0x01) | ((request_value & 0x0F) << 1) | ((((request_value >> 0) + (request_value >> 1) + (request_value >> 2) + (request_value >> 3)) & 0x01) << 5) | (0 << 6) | (1 << 7);
+                        response_value = SWD_Read (header, NULL);
                     } while ((response_value == DAP_TRANSFER_WAIT) && retry-- && !DAP_Data.transfer_abort);
                     if (response_value != DAP_TRANSFER_OK) {
                         break;
@@ -659,7 +664,8 @@ static uint32_t DAP_SWD_Transfer (const uint8_t *request, uint8_t *response) {
                     // Read register until its value matches or retry counter expires
                     retry = DAP_Data.transfer.retry_count;
                     do {
-                        response_value = SWD_Read (request_value, &data);
+                        header = (0x01) | ((request_value & 0x0F) << 1) | ((((request_value >> 0) + (request_value >> 1) + (request_value >> 2) + (request_value >> 3)) & 0x01) << 5) | (0 << 6) | (1 << 7);
+                        response_value = SWD_Read (header, &data);
                     } while ((response_value == DAP_TRANSFER_WAIT) && retry-- && !DAP_Data.transfer_abort);
                     if (response_value != DAP_TRANSFER_OK) {
                         break;
@@ -679,7 +685,8 @@ static uint32_t DAP_SWD_Transfer (const uint8_t *request, uint8_t *response) {
                     if (post_read == 0U) {
                         // Post AP read
                         do {
-                            response_value = SWD_Read (request_value, NULL);
+                            header = (0x01) | ((request_value & 0x0F) << 1) | ((((request_value >> 0) + (request_value >> 1) + (request_value >> 2) + (request_value >> 3)) & 0x01) << 5) | (0 << 6) | (1 << 7);
+                            response_value = SWD_Read (header, NULL);
                         } while ((response_value == DAP_TRANSFER_WAIT) && retry-- && !DAP_Data.transfer_abort);
                         if (response_value != DAP_TRANSFER_OK) {
                             break;
@@ -699,7 +706,8 @@ static uint32_t DAP_SWD_Transfer (const uint8_t *request, uint8_t *response) {
                 } else {
                     // Read DP register
                     do {
-                        response_value = SWD_Read (request_value, &data);
+                        header = (0x01) | ((request_value & 0x0F) << 1) | ((((request_value >> 0) + (request_value >> 1) + (request_value >> 2) + (request_value >> 3)) & 0x01) << 5) | (0 << 6) | (1 << 7);
+                        response_value = SWD_Read (header, &data);
                     } while ((response_value == DAP_TRANSFER_WAIT) && retry-- && !DAP_Data.transfer_abort);
                     if (response_value != DAP_TRANSFER_OK) {
                         break;
@@ -728,7 +736,10 @@ static uint32_t DAP_SWD_Transfer (const uint8_t *request, uint8_t *response) {
                 // Read previous data
                 retry = DAP_Data.transfer.retry_count;
                 do {
-                    response_value = SWD_Write (DP_RDBUFF | DAP_TRANSFER_RnW, &data);
+                    request_value = (DP_RDBUFF | DAP_TRANSFER_RnW);
+                    header = (0x01) | ((request_value & 0x0F) << 1) | ((((request_value >> 0) + (request_value >> 1) + (request_value >> 2) + (request_value >> 3)) & 0x01) << 5) | (1 << 7);
+                    response_value = SWD_Write (header, &data);
+
                 } while ((response_value == DAP_TRANSFER_WAIT) && retry-- && !DAP_Data.transfer_abort);
                 if (response_value != DAP_TRANSFER_OK) {
                     break;
@@ -754,7 +765,8 @@ static uint32_t DAP_SWD_Transfer (const uint8_t *request, uint8_t *response) {
                 // Write DP/AP register
                 retry = DAP_Data.transfer.retry_count;
                 do {
-                    response_value = SWD_Write (request_value, &data);
+                    header = (0x01) | ((request_value & 0x0F) << 1) | ((((request_value >> 0) + (request_value >> 1) + (request_value >> 2) + (request_value >> 3)) & 0x01) << 5) | (0 << 6) | (1 << 7);
+                    response_value = SWD_Write (header, &data);
                 } while ((response_value == DAP_TRANSFER_WAIT) && retry-- && !DAP_Data.transfer_abort);
                 if (response_value != DAP_TRANSFER_OK) {
                     break;
@@ -798,7 +810,9 @@ static uint32_t DAP_SWD_Transfer (const uint8_t *request, uint8_t *response) {
             // Read previous data
             retry = DAP_Data.transfer.retry_count;
             do {
-                response_value = SWD_Read (DP_RDBUFF | DAP_TRANSFER_RnW, &data);
+                request_value = (DP_RDBUFF | DAP_TRANSFER_RnW);
+                header = (0x01) | ((request_value & 0x0F) << 1) | ((((request_value >> 0) + (request_value >> 1) + (request_value >> 2) + (request_value >> 3)) & 0x01) << 5) | (1 << 7);
+                response_value = SWD_Read (header, &data);
             } while ((response_value == DAP_TRANSFER_WAIT) && retry-- && !DAP_Data.transfer_abort);
             if (response_value != DAP_TRANSFER_OK) {
                 goto end;
@@ -812,7 +826,9 @@ static uint32_t DAP_SWD_Transfer (const uint8_t *request, uint8_t *response) {
             // Check last write
             retry = DAP_Data.transfer.retry_count;
             do {
-                response_value = SWD_Read (DP_RDBUFF | DAP_TRANSFER_RnW, NULL);
+                request_value = (DP_RDBUFF | DAP_TRANSFER_RnW);
+                header = (0x01) | ((request_value & 0x0F) << 1) | ((((request_value >> 0) + (request_value >> 1) + (request_value >> 2) + (request_value >> 3)) & 0x01) << 5) | (1 << 7);
+                response_value = SWD_Read (header, &data);
             } while ((response_value == DAP_TRANSFER_WAIT) && retry-- && !DAP_Data.transfer_abort);
         }
     }
@@ -1175,6 +1191,7 @@ static uint32_t DAP_SWD_TransferBlock (const uint8_t *request, uint8_t *response
     uint8_t *response_head;
     uint32_t retry;
     uint32_t data;
+    uint8_t header;
 
     response_count = 0U;
     response_value = 0U;
@@ -1201,7 +1218,8 @@ static uint32_t DAP_SWD_TransferBlock (const uint8_t *request, uint8_t *response
             // Post AP read
             retry = DAP_Data.transfer.retry_count;
             do {
-                response_value = SWD_Read (request_value, NULL);
+                header = (0x01) | ((request_value & 0x0F) << 1) | ((((request_value >> 0) + (request_value >> 1) + (request_value >> 2) + (request_value >> 3)) & 0x01) << 5) | (0 << 6) | (1 << 7);
+                response_value = SWD_Read (header, NULL);
             } while ((response_value == DAP_TRANSFER_WAIT) && retry-- && !DAP_Data.transfer_abort);
             if (response_value != DAP_TRANSFER_OK) {
                 goto end;
@@ -1215,7 +1233,8 @@ static uint32_t DAP_SWD_TransferBlock (const uint8_t *request, uint8_t *response
             }
             retry = DAP_Data.transfer.retry_count;
             do {
-                response_value = SWD_Read (request_value, &data);
+                header = (0x01) | ((request_value & 0x0F) << 1) | ((((request_value >> 0) + (request_value >> 1) + (request_value >> 2) + (request_value >> 3)) & 0x01) << 5) | (0 << 6) | (1 << 7);
+                response_value = SWD_Read (header, &data);
             } while ((response_value == DAP_TRANSFER_WAIT) && retry-- && !DAP_Data.transfer_abort);
             if (response_value != DAP_TRANSFER_OK) {
                 goto end;
@@ -1241,7 +1260,8 @@ static uint32_t DAP_SWD_TransferBlock (const uint8_t *request, uint8_t *response
             // Write DP/AP register
             retry = DAP_Data.transfer.retry_count;
             do {
-                response_value = SWD_Write (request_value, &data);
+                header = (0x01) | ((request_value & 0x0F) << 1) | ((((request_value >> 0) + (request_value >> 1) + (request_value >> 2) + (request_value >> 3)) & 0x01) << 5) | (0 << 6) | (1 << 7);
+                response_value = SWD_Write (header, &data);
             } while ((response_value == DAP_TRANSFER_WAIT) && retry-- && !DAP_Data.transfer_abort);
             if (response_value != DAP_TRANSFER_OK) {
                 goto end;
@@ -1251,7 +1271,8 @@ static uint32_t DAP_SWD_TransferBlock (const uint8_t *request, uint8_t *response
         // Check last write
         retry = DAP_Data.transfer.retry_count;
         do {
-            response_value = SWD_Read (DP_RDBUFF | DAP_TRANSFER_RnW, NULL);
+            header = (0x01) | (((DP_RDBUFF | DAP_TRANSFER_RnW) & 0x0F) << 1) | (((((DP_RDBUFF | DAP_TRANSFER_RnW) >> 0) + ((DP_RDBUFF | DAP_TRANSFER_RnW) >> 1) + ((DP_RDBUFF | DAP_TRANSFER_RnW) >> 2) + ((DP_RDBUFF | DAP_TRANSFER_RnW) >> 3)) & 0x01) << 5) | (0 << 6) | (1 << 7);
+            response_value = SWD_Read (header, NULL);
         } while ((response_value == DAP_TRANSFER_WAIT) && retry-- && !DAP_Data.transfer_abort);
     }
 
@@ -1429,7 +1450,9 @@ static uint32_t DAP_SWD_WriteAbort (const uint8_t *request, uint8_t *response) {
            (uint32_t)(*(request + 4) << 24);
 
     // Write Abort register
-    SWD_Write (DP_ABORT, &data);
+
+    // SWD_Write (DP_ABORT, &data);
+    SWD_Write (0x81, &data);
 
     *response = DAP_OK;
     return (1U);

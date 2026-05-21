@@ -131,44 +131,35 @@ void SWD_Sequence_Fast (uint32_t info, const uint8_t *swdo, uint8_t *swdi) {
 
 #if (DAP_SWD != 0)
 
-static uint8_t SWD_Read_SPI (uint8_t request, uint32_t *data) {
+static uint8_t SWD_Read_SPI (uint8_t header, uint32_t *data) {
     register uint32_t ack = 0;
     register uint32_t ack1 = 0;
     register uint32_t ack2 = 0;
     register uint8_t parity;
     register uint8_t turn = DAP_Data.swd_conf.turnaround;
-    register uint8_t header = 0;
 
     uint32_t val = 0;
     uint32_t dummy = 0xFFFFFFFF;
 
-    parity = (request >> 0) + (request >> 1) + (request >> 2) + (request >> 3);
-
-    header = (0x01)                    /* Start Bit */
-             | ((request & 0x0F) << 1) /* APnDP, RnW, A2, A3 Bit */
-             | ((parity & 0x01) << 5)  /* Parity Bit */
-             | (0 << 6)                /* Stop Bit */
-             | (1 << 7);               /* Park Bit */
-
-    /* ·¢ËÍ 8 bit °üÍ· */
+    /* å‘é€ 8 bit åŒ…å¤´ */
     drv_spi_gpio_mux_spi();
     drv_spi_tx (header);
     drv_spi_gpio_mux_gpio_in();
 
-    /* ·½Ïò×ª»» */
+    /* æ–¹å‘è½¬æ¢ */
     PIN_SWDIR_INPUT();
     for (uint8_t n = turn; n; n--) {
         SW_CLOCK_CYCLE();
     }
 
-    /* ¶ÁÈ¡Ä¿±ê ACK */
+    /* è¯»å–ç›®æ ‡ ACK */
     ack = SW_READ_BIT_OPT();
     ack1 = SW_READ_BIT_OPT();
     ack2 = SW_READ_BIT_OPT();
     ack = (ack2 << 2) | (ack1 << 1) | (ack);
 
     if (ack == DAP_TRANSFER_OK) {
-        /* ¶ÁÊı¾İ */
+        /* è¯»æ•°æ® */
         drv_spi_gpio_mux_spi();
         drv_spi_dma_transmit ((uint8_t *)&dummy, (uint8_t *)&val, 4);
         drv_spi_dma_wait();
@@ -176,7 +167,7 @@ static uint8_t SWD_Read_SPI (uint8_t request, uint32_t *data) {
 
         parity = GetParity (val);
 
-        /* ¶ÁĞ£ÑéÎ» */
+        /* è¯»æ ¡éªŒä½ */
         ack1 = SW_READ_BIT_OPT();
 
         if ((parity ^ ack1) & 1U) {
@@ -184,14 +175,14 @@ static uint8_t SWD_Read_SPI (uint8_t request, uint32_t *data) {
         }
         *data = val;
 
-        /* ·½Ïòµ÷×ª */
+        /* æ–¹å‘è°ƒè½¬ */
         for (uint8_t n = turn; n; n--) {
             SW_CLOCK_CYCLE();
         }
         PIN_SWDIO_OUT_ENABLE();
         PIN_SWDIR_OUTPUT();
 
-        /* ´«Êä¿ÕÏĞÊ±ÖÓ */
+        /* ä¼ è¾“ç©ºé—²æ—¶é’Ÿ */
         uint8_t n = DAP_Data.transfer.idle_cycles;
         if (n) {
             PIN_SWDIO_OUT (0U);
@@ -200,12 +191,12 @@ static uint8_t SWD_Read_SPI (uint8_t request, uint32_t *data) {
             }
         }
 
-        /* SWDIO Êä³ö¸ßµçÆ½ */
+        /* SWDIO è¾“å‡ºé«˜ç”µå¹³ */
         PIN_SWDIO_OUT (1U);
         return ((uint8_t)ack);
     }
 
-    // »Ø¸´ WAIT »òÕß FAULT
+    // å›å¤ WAIT æˆ–è€… FAULT
     else if ((ack == DAP_TRANSFER_WAIT) || (ack == DAP_TRANSFER_FAULT)) {
 
         /* WAIT or FAULT response */
@@ -236,49 +227,40 @@ static uint8_t SWD_Read_SPI (uint8_t request, uint32_t *data) {
     return ((uint8_t)ack);
 }
 
-static uint8_t SWD_Write_SPI (uint8_t request, uint32_t *data) {
+static uint8_t SWD_Write_SPI (uint8_t header, uint32_t *data) {
     register uint32_t ack;
     register uint32_t ack1 = 0;
     register uint32_t ack2 = 0;
     register uint8_t parity;
     register uint8_t turn = DAP_Data.swd_conf.turnaround;
-    register uint8_t header = 0;
 
     uint32_t val = *data;
     uint32_t dummy = 0xFFFFFFFF;
 
-    parity = (request >> 0) + (request >> 1) + (request >> 2) + (request >> 3);
-
-    header = (0x01)                    /* Start Bit */
-             | ((request & 0x0F) << 1) /* APnDP, RnW, A2, A3 Bit */
-             | ((parity & 0x01) << 5)  /* Parity Bit */
-             | (0 << 6)                /* Stop Bit */
-             | (1 << 7);               /* Park Bit */
-
-    /* ·¢ËÍ 8 bit °üÍ· */
+    /* å‘é€ 8 bit åŒ…å¤´ */
     drv_spi_gpio_mux_spi();
     drv_spi_tx (header);
     drv_spi_gpio_mux_gpio_in();
 
-    /* ·½Ïò×ª»» */
+    /* æ–¹å‘è½¬æ¢ */
     PIN_SWDIR_INPUT();
     for (uint8_t n = turn; n; n--) {
         SW_CLOCK_CYCLE();
     }
 
-    /* ¶ÁÈ¡Ä¿±ê ACK */
+    /* è¯»å–ç›®æ ‡ ACK */
     ack = SW_READ_BIT_OPT();
     ack1 = SW_READ_BIT_OPT();
     ack2 = SW_READ_BIT_OPT();
     ack = (ack2 << 2) | (ack1 << 1) | (ack);
 
     if (ack == DAP_TRANSFER_OK) {
-        /* ·½Ïòµ÷×ª */
+        /* æ–¹å‘è°ƒè½¬ */
         for (uint8_t n = turn; n; n--) {
             SW_CLOCK_CYCLE();
         }
 
-        /* Ğ´ 32 Î»Êı¾İ */
+        /* å†™ 32 ä½æ•°æ® */
         drv_spi_gpio_mux_spi();
         PIN_SWDIR_OUTPUT();
 
@@ -286,10 +268,10 @@ static uint8_t SWD_Write_SPI (uint8_t request, uint32_t *data) {
         parity = GetParity (val);
         drv_spi_dma_wait();
         drv_spi_gpio_mux_gpio_out();
-        /* Ğ´Ğ£ÑéÎ» */
+        /* å†™æ ¡éªŒä½ */
         SW_WRITE_BIT (parity);
 
-        /* ´«Êä¿ÕÏĞÊ±ÖÓ */
+        /* ä¼ è¾“ç©ºé—²æ—¶é’Ÿ */
         uint8_t n = DAP_Data.transfer.idle_cycles;
         if (n) {
             PIN_SWDIO_OUT (0U);
@@ -298,7 +280,7 @@ static uint8_t SWD_Write_SPI (uint8_t request, uint32_t *data) {
             }
         }
 
-        /* SWDIO ÇĞ»»Êä³ö */
+        /* SWDIO åˆ‡æ¢è¾“å‡º */
         PIN_SWDIO_OUT (1U);
         return ((uint8_t)ack);
     } else if ((ack == DAP_TRANSFER_WAIT) || (ack == DAP_TRANSFER_FAULT)) {
@@ -329,39 +311,39 @@ static uint8_t SWD_Write_SPI (uint8_t request, uint32_t *data) {
 }
 
 /**
- * @brief ²úÉú SWD ĞòÁĞÊ±Ğò
- * @param info Ê±Ğò²ÎÊı£¬³¤¶È£¨Î»Êı£©
- * @param swdo SWD Êä³öÊı¾İ
- * @param swdi SWD ÊäÈëÊı¾İ
+ * @brief äº§ç”Ÿ SWD åºåˆ—æ—¶åº
+ * @param info æ—¶åºå‚æ•°ï¼Œé•¿åº¦ï¼ˆä½æ•°ï¼‰
+ * @param swdo SWD è¾“å‡ºæ•°æ®
+ * @param swdi SWD è¾“å…¥æ•°æ®
  */
 void SWD_Sequence (uint32_t info, const uint8_t *swdo, uint8_t *swdi) {
     SWD_Sequence_Fast (info, swdo, swdi);
 }
 
 /**
- * @brief ²úÉú SWJ ĞòÁĞÊ±Ğò
- * @param count SWJ ĞòÁĞ³¤¶È£¨Î»Êı£©
- * @param data SWJ ĞòÁĞÊı¾İ
+ * @brief äº§ç”Ÿ SWJ åºåˆ—æ—¶åº
+ * @param count SWJ åºåˆ—é•¿åº¦ï¼ˆä½æ•°ï¼‰
+ * @param data SWJ åºåˆ—æ•°æ®
  */
 void SWJ_Sequence (uint32_t count, const uint8_t *data) {
     SWJ_Sequence_Fast (count, data);
 }
 
 /**
- * @brief SWD ¶Á²Ù×÷
- * @param request ÇëÇóÀàĞÍ
- * @param data ¶ÁÊı¾İÖ¸Õë
- * @return ACK Öµ
+ * @brief SWD è¯»æ“ä½œ
+ * @param request è¯·æ±‚ç±»å‹
+ * @param data è¯»æ•°æ®æŒ‡é’ˆ
+ * @return ACK å€¼
  */
 uint8_t SWD_Read (uint32_t request, uint32_t *data) {
     return SWD_Read_SPI (request, data);
 }
 
 /**
- * @brief SWD Ğ´²Ù×÷
- * @param request ÇëÇóÀàĞÍ
- * @param data Ğ´Êı¾İÖ¸Õë
- * @return ACK Öµ
+ * @brief SWD å†™æ“ä½œ
+ * @param request è¯·æ±‚ç±»å‹
+ * @param data å†™æ•°æ®æŒ‡é’ˆ
+ * @return ACK å€¼
  */
 uint8_t SWD_Write (uint32_t request, uint32_t *data) {
     return SWD_Write_SPI (request, data);
