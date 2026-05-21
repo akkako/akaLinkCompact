@@ -19,13 +19,13 @@
 #error "Maximum Packet Count is 255!"
 #endif
 
-DAP_Data_t DAP_Data;  // DAP Data
+DAP_Data_t DAP_Data; 
 
 static const char DAP_FW_Ver[] = DAP_FW_VER;
 
 // Common clock delay calculation routine
 //   clock:    requested SWJ frequency in Hertz
-__attribute__ ((weak)) void Set_Clock_Delay (uint32_t clock) {
+void Set_Clock_Delay (uint32_t clock) {
     drv_spi_init (clock);
 }
 
@@ -97,9 +97,9 @@ static uint32_t DAP_Delay (const uint8_t *request, uint8_t *response) {
 
     delay = (uint32_t)(*(request + 0)) |
             (uint32_t)(*(request + 1) << 8);
-    delay *= ((144000000 / 1000000U) + (DELAY_SLOW_CYCLES - 1U)) / DELAY_SLOW_CYCLES;
+    //  delay *= ((144000000 / 1000000U) + (DELAY_SLOW_CYCLES - 1U)) / DELAY_SLOW_CYCLES;
 
-    PIN_DELAY_SLOW (delay);
+    // PIN_DELAY_SLOW (delay);
 
     *response = DAP_OK;
     return ((2U << 16) | 1U);

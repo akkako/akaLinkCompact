@@ -100,13 +100,18 @@ __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString (char *str) {
  * @return None
  */
 __STATIC_INLINE void DAP_SETUP (void) {
-    RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOC, ENABLE);
     GPIO_InitTypeDef GPIO_InitStruct;
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
     GPIO_InitStruct.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
     GPIO_Init (GPIOC, &GPIO_InitStruct);
     GPIO_ResetBits (GPIOC, GPIO_Pin_8 | GPIO_Pin_9);
+
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStruct.GPIO_Pin = SWDIR_PIN;
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init (SWD_GPIO, &GPIO_InitStruct);
+    GPIO_ResetBits (SWD_GPIO, SWDIR_PIN);
 }
 
 /**
@@ -130,7 +135,25 @@ __STATIC_INLINE uint32_t TIMESTAMP_GET (void) {
     nRESET --> 开漏输出/高电平
 */
 __STATIC_INLINE void PORT_JTAG_SETUP (void) {
-    
+    GPIO_SetBits (SWD_GPIO, SWDIR_PIN);
+
+    GPIO_InitTypeDef GPIO_InitStruct;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStruct.GPIO_Pin = JTCK_PIN | JTMS_PIN | JTDI_PIN;
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init (JTAG_GPIO, &GPIO_InitStruct);
+    GPIO_SetBits (JTAG_GPIO, JTCK_PIN | JTMS_PIN | JTDI_PIN);
+
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStruct.GPIO_Pin = JTRST_PIN;
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init (JTRST_GPIO, &GPIO_InitStruct);
+    GPIO_SetBits (JTRST_GPIO, JTRST_PIN);
+
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IPU;
+    GPIO_InitStruct.GPIO_Pin = SWDI_PIN | JTDO_PIN;
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init (SWD_GPIO, &GPIO_InitStruct);
 }
 
 /** 初始化配置 SWD 引脚，并配置默认输出电平
@@ -152,7 +175,7 @@ __STATIC_INLINE void PORT_SWD_SETUP (void) {
     GPIO_SetBits (SWD_GPIO, SWCK_PIN | SWDO_PIN | SWDIR_PIN);
 
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IPU;
-    GPIO_InitStruct.GPIO_Pin = SWDI_PIN;
+    GPIO_InitStruct.GPIO_Pin = SWDI_PIN | JTDI_PIN | JTDO_PIN;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init (SWD_GPIO, &GPIO_InitStruct);
 
@@ -170,10 +193,13 @@ __STATIC_INLINE void PORT_SWD_SETUP (void) {
 __STATIC_INLINE void PORT_OFF (void) {
     GPIO_InitTypeDef GPIO_InitStruct;
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IPU;
-    GPIO_InitStruct.GPIO_Pin = SWCK_PIN | SWDO_PIN;
+    GPIO_InitStruct.GPIO_Pin = SWCK_PIN | SWDO_PIN | JTDI_PIN | JTDO_PIN;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init (SWD_GPIO, &GPIO_InitStruct);
     GPIO_ResetBits (SWD_GPIO, SWDIR_PIN);
+
+    GPIO_InitStruct.GPIO_Pin = JTRST_PIN;
+    GPIO_Init (JTRST_GPIO, &GPIO_InitStruct);
 }
 
 // SWCLK/TCK 引脚 -------------------------------------
@@ -287,7 +313,7 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT (uint32_t bit) {
  * @return 电平状态
  */
 __STATIC_FORCEINLINE uint32_t PIN_TDI_IN (void) {
-    return GPIO_ReadOutputDataBit(JTAG_GPIO, JTDI_PIN);
+    return GPIO_ReadOutputDataBit (JTAG_GPIO, JTDI_PIN);
 }
 
 /**
@@ -297,13 +323,10 @@ __STATIC_FORCEINLINE uint32_t PIN_TDI_IN (void) {
  * @return None
  */
 __STATIC_FORCEINLINE void PIN_TDI_OUT (uint32_t bit) {
-    if (bit)
-    {
-        GPIO_SetBits(JTAG_GPIO, JTDI_PIN);
-    }
-    else
-    {
-        GPIO_ResetBits(JTAG_GPIO, JTDI_PIN);
+    if (bit & 0x01) {
+        GPIO_SetBits (JTAG_GPIO, JTDI_PIN);
+    } else {
+        GPIO_ResetBits (JTAG_GPIO, JTDI_PIN);
     }
 }
 
@@ -315,7 +338,7 @@ __STATIC_FORCEINLINE void PIN_TDI_OUT (uint32_t bit) {
  * @return 电平状态
  */
 __STATIC_FORCEINLINE uint32_t PIN_TDO_IN (void) {
-    return GPIO_ReadInputDataBit(JTAG_GPIO, JTDO_PIN);
+    return GPIO_ReadInputDataBit (JTAG_GPIO, JTDO_PIN);
 }
 
 // nTRST 引脚 -------------------------------------------
@@ -326,7 +349,7 @@ __STATIC_FORCEINLINE uint32_t PIN_TDO_IN (void) {
  * @return 电平状态
  */
 __STATIC_FORCEINLINE uint32_t PIN_nTRST_IN (void) {
-    return GPIO_ReadOutputDataBit(JTRST_GPIO, JTRST_PIN);
+    return GPIO_ReadOutputDataBit (JTRST_GPIO, JTRST_PIN);
 }
 
 /**
@@ -336,14 +359,11 @@ __STATIC_FORCEINLINE uint32_t PIN_nTRST_IN (void) {
  * @return None
  */
 __STATIC_FORCEINLINE void PIN_nTRST_OUT (uint32_t bit) {
-    if (bit)
-    {
-        GPIO_SetBits(JTRST_GPIO, JTRST_PIN);
+    if (bit & 0x01) {
+        GPIO_SetBits (JTRST_GPIO, JTRST_PIN);
+    } else {
+        GPIO_ResetBits (JTRST_GPIO, JTRST_PIN);
     }
-    else
-    {
-        GPIO_ResetBits(JTRST_GPIO, JTRST_PIN);
-    }   
 }
 
 // nRESET 引脚 ------------------------------------------
@@ -354,7 +374,7 @@ __STATIC_FORCEINLINE void PIN_nTRST_OUT (uint32_t bit) {
  * @return 电平状态
  */
 __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN (void) {
-    return (!GPIO_ReadOutputDataBit(SRST_GPIO, SRST_PIN));
+    return (!GPIO_ReadOutputDataBit (SRST_GPIO, SRST_PIN));
 }
 
 /**
@@ -364,13 +384,10 @@ __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN (void) {
  * @return None
  */
 __STATIC_FORCEINLINE void PIN_nRESET_OUT (uint32_t bit) {
-    if (bit)
-    {
-        GPIO_ResetBits(SRST_GPIO, SRST_PIN);
-    }
-    else
-    {
-        GPIO_SetBits(SRST_GPIO, SRST_PIN);
+    if (bit & 0x01) {
+        GPIO_ResetBits (SRST_GPIO, SRST_PIN);
+    } else {
+        GPIO_SetBits (SRST_GPIO, SRST_PIN);
     }
 }
 
@@ -392,7 +409,7 @@ __STATIC_INLINE void LED_CONNECTED_OUT (uint32_t bit) {
  * @return None
  */
 __STATIC_INLINE void LED_RUNNING_OUT (uint32_t bit) {
-    if (bit) {
+    if (bit & 0x01) {
         GPIO_SetBits (GPIOC, GPIO_Pin_7);
     } else {
         GPIO_ResetBits (GPIOC, GPIO_Pin_7);
@@ -407,6 +424,5 @@ __STATIC_INLINE void LED_RUNNING_OUT (uint32_t bit) {
 __STATIC_INLINE uint8_t RESET_TARGET (void) {
     return (0U);
 }
-
 
 #endif

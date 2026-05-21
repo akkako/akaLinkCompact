@@ -154,7 +154,7 @@
 
 // DAP Data structure
 typedef struct {
-    uint8_t transfer_abort; // Transfer Abort Flag
+    uint8_t transfer_abort;    // Transfer Abort Flag
     uint8_t debug_port;        // Debug Port
     uint8_t fast_clock;        // Fastest clock with no delay
     uint8_t padding;
@@ -210,18 +210,6 @@ extern uint32_t DAP_ExecuteCommand (const uint8_t *request, uint8_t *response);
 extern void DAP_Setup (void);
 
 void Set_Clock_Delay (uint32_t clock);
-
-// Configurable delay for clock generation
-#ifndef DELAY_SLOW_CYCLES
-#define DELAY_SLOW_CYCLES 3U  // Number of cycles for one iteration
-#endif
-
-__STATIC_FORCEINLINE void PIN_DELAY_SLOW (uint32_t delay) {
-    volatile uint32_t count = delay;
-    do {
-        count -= 1;
-    } while (count);
-}
 
 // Fixed delay for fast clock generation
 #ifndef DELAY_FAST_CYCLES
