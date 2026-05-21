@@ -394,13 +394,16 @@ static uint32_t DAP_SWD_Sequence (const uint8_t *request, uint8_t *response) {
         count = (count + 7U) / 8U;
 #if (DAP_SWD != 0)
         if ((sequence_info & SWD_SEQUENCE_DIN) != 0U) {
+            PIN_SWDIR_INPUT();
             PIN_SWDIO_OUT_DISABLE();
         } else {
             PIN_SWDIO_OUT_ENABLE();
+            PIN_SWDIR_OUTPUT();
         }
         SWD_Sequence (sequence_info, request, response);
         if (sequence_count == 0U) {
             PIN_SWDIO_OUT_ENABLE();
+            PIN_SWDIR_OUTPUT();
         }
 #endif
         if ((sequence_info & SWD_SEQUENCE_DIN) != 0U) {

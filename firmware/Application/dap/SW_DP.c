@@ -156,7 +156,7 @@ static uint8_t SWD_Read_SPI (uint8_t request, uint32_t *data) {
     drv_spi_gpio_mux_gpio_in();
 
     /* 方向转换 */
-    PIN_SWDIO_OUT_DISABLE();
+    PIN_SWDIR_INPUT();
     for (uint8_t n = turn; n; n--) {
         SW_CLOCK_CYCLE();
     }
@@ -189,6 +189,7 @@ static uint8_t SWD_Read_SPI (uint8_t request, uint32_t *data) {
             SW_CLOCK_CYCLE();
         }
         PIN_SWDIO_OUT_ENABLE();
+        PIN_SWDIR_OUTPUT();
 
         /* 传输空闲时钟 */
         uint8_t n = DAP_Data.transfer.idle_cycles;
@@ -199,7 +200,7 @@ static uint8_t SWD_Read_SPI (uint8_t request, uint32_t *data) {
             }
         }
 
-        /* SWDIO 切换输出 */
+        /* SWDIO 输出高电平 */
         PIN_SWDIO_OUT (1U);
         return ((uint8_t)ack);
     }
@@ -219,6 +220,7 @@ static uint8_t SWD_Read_SPI (uint8_t request, uint32_t *data) {
         }
         PIN_SWDIO_OUT_ENABLE();
         PIN_SWDIO_OUT (1U);
+        PIN_SWDIR_OUTPUT();
         return ((uint8_t)ack);
     } else {
         /* Protocol error */
@@ -227,6 +229,7 @@ static uint8_t SWD_Read_SPI (uint8_t request, uint32_t *data) {
         }
         PIN_SWDIO_OUT_ENABLE();
         PIN_SWDIO_OUT (1U);
+        PIN_SWDIR_OUTPUT();
         return ((uint8_t)ack);
     }
 
@@ -258,7 +261,7 @@ static uint8_t SWD_Write_SPI (uint8_t request, uint32_t *data) {
     drv_spi_gpio_mux_gpio_in();
 
     /* 方向转换 */
-    PIN_SWDIO_OUT_DISABLE();
+    PIN_SWDIR_INPUT();
     for (uint8_t n = turn; n; n--) {
         SW_CLOCK_CYCLE();
     }
@@ -275,10 +278,10 @@ static uint8_t SWD_Write_SPI (uint8_t request, uint32_t *data) {
             SW_CLOCK_CYCLE();
         }
 
-        PIN_SWDIO_OUT_ENABLE();
-
         /* 写 32 位数据 */
         drv_spi_gpio_mux_spi();
+        PIN_SWDIR_OUTPUT();
+
         drv_spi_dma_transmit ((uint8_t *)&val, (uint8_t *)&dummy, 4);
         parity = GetParity (val);
         drv_spi_dma_wait();
@@ -304,6 +307,7 @@ static uint8_t SWD_Write_SPI (uint8_t request, uint32_t *data) {
             SW_CLOCK_CYCLE();
         }
         PIN_SWDIO_OUT_ENABLE();
+        PIN_SWDIR_OUTPUT();
         if (DAP_Data.swd_conf.data_phase) {
             PIN_SWDIO_OUT (0U);
             for (uint8_t n = 32U + 1U; n; n--) {
@@ -319,6 +323,7 @@ static uint8_t SWD_Write_SPI (uint8_t request, uint32_t *data) {
         }
         PIN_SWDIO_OUT_ENABLE();
         PIN_SWDIO_OUT (1U);
+        PIN_SWDIR_OUTPUT();
         return ((uint8_t)ack);
     }
 }
