@@ -21,3 +21,5 @@ obj
 __pycache__
 dist
 *.spec
+
+temp

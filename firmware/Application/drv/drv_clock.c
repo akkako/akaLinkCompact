@@ -20,13 +20,15 @@ static void SetSysClock(void);
 
 void SystemInit(void)
 {
+    #ifndef SYSTEM_CLOCK_144MHz
     // Set internal VDD LDO to 1.0V
-    // EXTEN->EXTEN_CTR = (EXTEN->EXTEN_CTR | (EXTEN_LDO_TRIM));
+    EXTEN->EXTEN_CTR = (EXTEN->EXTEN_CTR | (EXTEN_LDO_TRIM));
     // Wait for stable
-    // for(uint32_t i = 0; i < 10000; i++)
-    // {
-    //     asm("nop");
-    // }
+    for(uint32_t i = 0; i < 10000; i++)
+    {
+        asm("nop");
+    }
+    #endif
 
     RCC->CTLR |= (uint32_t)0x00000001;
     RCC->CFGR0 &= (uint32_t)0xF0FF0000;

@@ -155,8 +155,7 @@
 						"do_not_search_system_directories": false,
 						"preprocess_only": false,
 						"defined_symbols": [
-							"CONFIG_USB_HS",
-							"CONFIG_CHERRYDAP_USE_CUSTOM_HID"
+							"CONFIG_USB_HS"
 						],
 						"undefined_symbols": []
 					},
@@ -268,7 +267,7 @@
 						"do_not_use_syscalls": true,
 						"verbose": false,
 						"use_wch_printffloat": false,
-						"use_wch_printf": true,
+						"use_wch_printf": false,
 						"use_iqmath": false,
 						"other_linker_flags": ""
 					}
@@ -306,7 +305,7 @@
 						"do_not_use_syscalls": true,
 						"verbose": false,
 						"use_wch_printffloat": false,
-						"use_wch_printf": true,
+						"use_wch_printf": false,
 						"use_iqmath": false,
 						"other_linker_flags": ""
 					}

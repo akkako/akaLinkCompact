@@ -25,45 +25,51 @@ volatile uint16_t Rx_RemainLen; /* Remaining unprocessed length of the serial da
 
 void DMA1_Channel2_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 void DMA1_Channel3_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
-void USART3_IRQHandler(void)__attribute__((interrupt("WCH-Interrupt-fast")));
+void USART3_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 
-
+/**
+ * @brief UART3 DMA 发送完成中断处理函数
+ * @param None
+ */
 void DMA1_Channel2_IRQHandler(void)
 {
-    // 全满
-    if (DMA1->INTFR & DMA1_IT_TC2) {
+    if (DMA1->INTFR & DMA1_IT_TC2)
+    {
         DMA1->INTFCR = DMA1_IT_TC2;
-        DMA_Cmd(DMA_CH_UART_TX, DISABLE); /* USART3 Tx */
+        // 停止发送 DMA
+        DMA_Cmd(DMA_CH_UART_TX, DISABLE);
+        // 通知上层发送完成
         chry_dap_usb2uart_uart_send_complete(g_uart_tx_transfer_length);
     }
 }
 
+/**
+ * @brief UART3 DMA 接收完成中断处理函数
+ * @param None
+ */
 void DMA1_Channel3_IRQHandler(void)
 {
-    // 全满
-    if (DMA1->INTFR & DMA1_IT_TC3) {
+    if (DMA1->INTFR & DMA1_IT_TC3)
+    {
         DMA1->INTFCR = DMA1_IT_TC3;
     }
 }
 
+/**
+ * @brief UART3 中断处理函数
+ * @param None
+ */
 void USART3_IRQHandler(void)
 {
-    if(USART_GetITStatus(USART3, USART_IT_IDLE))
+    if (USART_GetITStatus(USART3, USART_IT_IDLE))
     {
-        
     }
 }
 
-void drv_usb2uart_init(void)
+void drv_usb2uart_gpio_af_uart(void)
 {
-    GPIO_InitTypeDef GPIO_InitStructure = { 0 };
-    USART_InitTypeDef USART_InitStructure = { 0 };
-    NVIC_InitTypeDef NVIC_InitStructure = { 0 };
-
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
-
-    /* USART3 TX--> PB10   RX -->P B11 */
+    GPIO_InitTypeDef GPIO_InitStructure = {0};
+    /* USART3 TX--> PB10   RX -->PB11 */
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
@@ -71,6 +77,17 @@ void drv_usb2uart_init(void)
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
     GPIO_Init(GPIOB, &GPIO_InitStructure);
+}
+
+void drv_usb2uart_init(void)
+{
+    USART_InitTypeDef USART_InitStructure = {0};
+    NVIC_InitTypeDef NVIC_InitStructure = {0};
+
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
+
+    // RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+    // drv_usb2uart_gpio_af_uart();
 
     USART_InitStructure.USART_BaudRate = 115200;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
@@ -82,7 +99,7 @@ void drv_usb2uart_init(void)
     USART_Cmd(USART3, ENABLE);
     USART_ITConfig(USART3, USART_IT_IDLE, ENABLE);
 
-    DMA_InitTypeDef DMA_InitStructure = { 0 };
+    DMA_InitTypeDef DMA_InitStructure = {0};
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
 
     // send dma
@@ -122,14 +139,12 @@ void drv_usb2uart_init(void)
     USART_DMACmd(USART3, USART_DMAReq_Tx | USART_DMAReq_Rx, ENABLE);
 }
 
-
-void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_coding)
+void drv_usb2uart_set_linecoding(struct cdc_line_coding *line_coding)
 {
-    USART_InitTypeDef USART_InitStructure = { 0 };
-    DMA_InitTypeDef DMA_InitStructure = { 0 };
+    USART_InitTypeDef USART_InitStructure = {0};
+    DMA_InitTypeDef DMA_InitStructure = {0};
 
-
-    if(line_coding->dwDTERate > 9000000)
+    if (line_coding->dwDTERate > 9000000)
     {
         line_coding->dwDTERate = 9000000;
     }
@@ -138,21 +153,31 @@ void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_coding)
     USART_InitStructure.USART_BaudRate = line_coding->dwDTERate;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
     /* Number of stop bits (0: 1 stop bit; 1: 1.5 stop bits; 2: 2 stop bits). */
-    if (line_coding->bCharFormat == 1) {
+    if (line_coding->bCharFormat == 1)
+    {
         USART_InitStructure.USART_StopBits = USART_StopBits_1_5;
-    } else if (line_coding->bCharFormat == 2) {
+    }
+    else if (line_coding->bCharFormat == 2)
+    {
         USART_InitStructure.USART_StopBits = USART_StopBits_2;
-    } else {
+    }
+    else
+    {
         USART_InitStructure.USART_StopBits = USART_StopBits_1;
     }
     /* Check digit (0: None; 1: Odd; 2: Even; 3: Mark; 4: Space); */
-    if (line_coding->bParityType == 1) {
+    if (line_coding->bParityType == 1)
+    {
         USART_InitStructure.USART_Parity = USART_Parity_Odd;
         USART_InitStructure.USART_WordLength = USART_WordLength_9b;
-    } else if (line_coding->bParityType == 2) {
+    }
+    else if (line_coding->bParityType == 2)
+    {
         USART_InitStructure.USART_Parity = USART_Parity_Even;
         USART_InitStructure.USART_WordLength = USART_WordLength_9b;
-    } else {
+    }
+    else
+    {
         USART_InitStructure.USART_Parity = USART_Parity_No;
     }
     USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
@@ -181,7 +206,6 @@ void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_coding)
     DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
     DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
     DMA_Init(DMA_CH_UART_TX, &DMA_InitStructure);
-    DMA_ITConfig(DMA_CH_UART_TX, DMA_IT_TC, ENABLE);
 
     // recv dma
     DMA_DeInit(DMA_CH_UART_RX);
@@ -192,7 +216,9 @@ void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_coding)
     DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
     DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;
     DMA_Init(DMA_CH_UART_RX, &DMA_InitStructure);
+
     // DMA_ITConfig(DMA_CH_UART_RX, DMA_IT_TC, ENABLE);
+    DMA_ITConfig(DMA_CH_UART_TX, DMA_IT_TC, ENABLE);
 
     DMA_Cmd(DMA_CH_UART_RX, ENABLE); /* USART3 Rx */
 
@@ -201,12 +227,12 @@ void chry_dap_usb2uart_uart_config_callback(struct cdc_line_coding *line_coding)
 
 void drv_usb2uart_restart_rxdma(void)
 {
-
 }
 
-void chry_dap_usb2uart_uart_send_bydma(uint8_t *data, uint16_t len)
+void drv_usb2uart_tx_dma(uint8_t *data, uint16_t len)
 {
-    if (len <= 0) {
+    if (len <= 0)
+    {
         return;
     }
     g_uart_tx_transfer_length = len;
