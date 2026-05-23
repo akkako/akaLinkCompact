@@ -18,7 +18,7 @@ static inline void SW_CLOCK_CYCLE() {
     PIN_SWCLK_TCK_CLR();
     PIN_DELAY();
     PIN_SWCLK_TCK_SET();
-    PIN_DELAY();
+    // PIN_DELAY();
 }
 
 static inline void SW_WRITE_BIT (uint32_t bit) {
@@ -26,7 +26,7 @@ static inline void SW_WRITE_BIT (uint32_t bit) {
     PIN_SWCLK_TCK_CLR();
     PIN_DELAY();
     PIN_SWCLK_TCK_SET();
-    PIN_DELAY();
+    // PIN_DELAY();
 }
 
 static inline uint32_t SW_READ_BIT() {
@@ -35,7 +35,7 @@ static inline uint32_t SW_READ_BIT() {
     PIN_DELAY();
     bit = PIN_SWDIO_IN();
     PIN_SWCLK_TCK_SET();
-    PIN_DELAY();
+    // PIN_DELAY();
     return bit;
 }
 
@@ -135,11 +135,12 @@ void SWD_Sequence_Fast (uint32_t info, const uint8_t *swdo, uint8_t *swdi) {
 
 
 static uint8_t SWD_Read_SPI (uint8_t header, uint32_t *data) {
-    register uint32_t ack = 0;
-    register uint32_t ack1 = 0;
-    register uint32_t ack2 = 0;
+    register uint32_t ack;
+    register uint32_t ack1;
+    register uint32_t ack2;
     register uint8_t parity;
     register uint8_t turn = DAP_Data.swd_conf.turnaround;
+    register uint8_t n;
 
     uint32_t val = 0;
 
@@ -147,12 +148,15 @@ static uint8_t SWD_Read_SPI (uint8_t header, uint32_t *data) {
     drv_spi_gpio_mux_spi();
     drv_spi_tx (header);
     drv_spi_dma_rx_preset ((uint8_t *)&dummy, (uint8_t *)&val, 4);
+    PIN_SWCLK_TCK_CLR();
     drv_spi_tx_wait();
     drv_spi_gpio_mux_gpio_in();
 
     /* 方向转换 */
     PIN_SWDIR_INPUT();
-    for (uint8_t n = turn; n; n--) {
+    PIN_SWCLK_TCK_SET();
+
+    for (uint8_t n = turn - 1; n; n--) {
         SW_CLOCK_CYCLE();
     }
 
@@ -179,7 +183,7 @@ static uint8_t SWD_Read_SPI (uint8_t header, uint32_t *data) {
         *data = val;
 
         /* 方向调转 */
-        for (uint8_t n = turn; n; n--) {
+        for (n = turn; n; n--) {
             SW_CLOCK_CYCLE();
         }
         // PIN_SWDIO_OUT_ENABLE();
@@ -233,22 +237,25 @@ static uint8_t SWD_Read_SPI (uint8_t header, uint32_t *data) {
 
 static uint8_t SWD_Write_SPI (uint8_t header, uint32_t *data) {
     register uint32_t ack;
-    register uint32_t ack1 = 0;
-    register uint32_t ack2 = 0;
+    register uint32_t ack1;
+    register uint32_t ack2;
     register uint8_t parity;
     register uint8_t turn = DAP_Data.swd_conf.turnaround;
     register uint8_t n;
-    
+
     /* 发送 8 bit 包头 */
     drv_spi_gpio_mux_spi();
     drv_spi_tx (header);
-    drv_spi_dma_tx_preset((uint8_t *)data, 4);
+    drv_spi_dma_tx_preset ((uint8_t *)data, 4);
+    PIN_SWCLK_TCK_CLR();
     drv_spi_tx_wait();
     drv_spi_gpio_mux_gpio_in();
 
     /* 方向转换 */
     PIN_SWDIR_INPUT();
-    for (n = turn; n; n--) {
+    PIN_SWCLK_TCK_SET();
+
+    for (n = turn - 1; n; n--) {
         SW_CLOCK_CYCLE();
     }
 
