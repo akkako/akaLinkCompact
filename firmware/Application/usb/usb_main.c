@@ -1,4 +1,5 @@
 #include "usb_main.h"
+#include "drv_systick.h"
 
 #define CMSIS_DAP_INTERFACE_SIZE (9 + 7 + 7)
 
@@ -324,16 +325,25 @@ void usbd_cdc_acm_bulk_in (uint8_t busid, uint8_t ep, uint32_t nbytes) {
     // 环形缓冲区标记发送完成的数据
     chry_ringbuffer_linear_read_done (&g_uartrx, nbytes);
 
+    printf ("USB TX:%d\r\n", nbytes);
+
     // 上一包数据是满的，发送一个额外的 zlp 包
     if ((nbytes % DAP_PACKET_SIZE) == 0 && nbytes) {
         usbd_ep_start_write (0, CDC_IN_EP, NULL, 0);
+        printf("St 1:%d\r\n", 0);
+        usbtx_finished_flag = 0;
     }
     // 正常发送数据完成
     else {
         // 还有剩余数据，则继续发送
         if (chry_ringbuffer_get_used (&g_uartrx)) {
             buffer = chry_ringbuffer_linear_read_setup (&g_uartrx, &size);
+            if (size > 256) {
+                size = 256;
+            }
             usbd_ep_start_write (0, CDC_IN_EP, buffer, size);
+            printf("St 2:%d\r\n", size);
+            usbtx_finished_flag = 0;
         }
         // 发送空闲
         else {
@@ -476,12 +486,9 @@ void chry_dap_handle (void) {
  */
 void usbd_cdc_acm_set_line_coding (uint8_t busid, uint8_t intf, struct cdc_line_coding *line_coding) {
     (void)busid;
-    // 存储需要配置的线路编码参数，并在主循环中进行异步配置
-    if (memcmp (line_coding, (uint8_t *)&g_cdc_lincoding, sizeof (struct cdc_line_coding)) != 0) {
-        memcpy ((uint8_t *)&g_cdc_lincoding, line_coding, sizeof (struct cdc_line_coding));
-        config_uart = 1;
-        config_uart_transfer = 0;
-    }
+    memcpy ((uint8_t *)&g_cdc_lincoding, line_coding, sizeof (struct cdc_line_coding));
+    config_uart = 1;
+    config_uart_transfer = 0;
 }
 
 /**
@@ -508,15 +515,18 @@ void chry_dap_usb2uart_handle (void) {
         /* 关闭中断 */
         __disable_irq();
         config_uart = 0;
+        config_uart_transfer = 1;
         /* 配置新的线路参数 */
         chry_dap_usb2uart_uart_config_callback ((struct cdc_line_coding *)&g_cdc_lincoding);
         usbtx_finished_flag = 1;
         uarttx_finished_flag = 1;
-        config_uart_transfer = 1;
         chry_ringbuffer_reset_read (&g_uartrx);
         chry_ringbuffer_reset_read (&g_usbrx);
+
         /* 开启中断 */
         __enable_irq();
+        // printf ("Actual Set Linecodeing\r\n");
+        // printf ("Set LineCoding: %d, %d, %d, %d\r\n", g_cdc_lincoding.dwDTERate, g_cdc_lincoding.bCharFormat, g_cdc_lincoding.bParityType, g_cdc_lincoding.bDataBits);
     }
 
     // 未完成配置线路参数，不进行收发操作
@@ -527,15 +537,26 @@ void chry_dap_usb2uart_handle (void) {
     // 在主循环中检查相关空闲状态，并启动对应传输
 
     // 之前串口接收 FIFO 中的数据已经通过 USB 发送完成，检查是否有待发送新数据
+    /* 关闭中断 */
+    __disable_irq();
     if (usbtx_finished_flag) {
         // 有新数据，启动发送
         if (chry_ringbuffer_get_used (&g_uartrx)) {
-            usbtx_finished_flag = 0;
             buffer = chry_ringbuffer_linear_read_setup (&g_uartrx, &size);
+            if (size > 256) {
+                size = 256;
+            }
+
             usbd_ep_start_write (0, CDC_IN_EP, buffer, size);
+            printf("St 3:%d\r\n", size);
+            usbtx_finished_flag = 0;
+
+            // printf ("[main] Start USB TX:%d\r\n", size);
         }
     }
-
+    /* 打开中断 */
+    __enable_irq();
+    
     // 之前没有串口待发送数据了，检查是否有新数据
     if (uarttx_finished_flag) {
         // USB 接收到了新数据，开始发送数据
@@ -543,6 +564,7 @@ void chry_dap_usb2uart_handle (void) {
             uarttx_finished_flag = 0;
             buffer = chry_ringbuffer_linear_read_setup (&g_usbrx, &size);
             chry_dap_usb2uart_uart_send_bydma (buffer, size);
+            // printf ("[main] Start UART TX:%d\r\n", size);
         }
     }
 
@@ -552,7 +574,15 @@ void chry_dap_usb2uart_handle (void) {
         if (chry_ringbuffer_get_free (&g_usbrx) >= DAP_PACKET_SIZE) {
             usbrx_full_flag = 0;
             usbd_ep_start_read (0, CDC_OUT_EP, usb_tmpbuffer, DAP_PACKET_SIZE);
+            // printf ("[main] Restart USB RX:%d max\r\n", DAP_PACKET_SIZE);
         }
+    }
+
+    static uint32_t time_print = 0;
+
+    if (drv_systick_millis() - time_print > 2000) {
+        time_print = drv_systick_millis();
+        printf ("usbtx_finished_flag=%d, uarttx_finished_flag=%d, usbrx_full_flag=%d\r\n", usbtx_finished_flag, uarttx_finished_flag, usbrx_full_flag);
     }
 }
 
@@ -560,6 +590,9 @@ void chry_dap_usb2uart_handle (void) {
 void chry_dap_usb2uart_uart_config_callback (struct cdc_line_coding *line_coding) {
     if (line_coding->dwDTERate > 9000000) {
         line_coding->dwDTERate = 9000000;
+    }
+    if (line_coding->dwDTERate == 0) {
+        return;
     }
     drv_usb2uart_set_linecoding (line_coding->dwDTERate,
                                  line_coding->bCharFormat,

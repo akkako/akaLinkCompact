@@ -20,7 +20,6 @@
 // 串口 DMA 接收双缓冲
 uint32_t usart_rx_buffer_index = 0;
 uint8_t usart_rx_buffer[2][USART_RX_BUFFER_SIZE];
-uint32_t usart_rx_count[2];
 
 // 串口 DMA 发送计数
 uint32_t usart_tx_length = 0;
@@ -37,7 +36,6 @@ void DMA1_Channel2_IRQHandler (void) {
     if (DMA1->INTFR & DMA_TCIF2) {
         // 关闭 DMA
         drv_usb2uart_stop_tx_dma();
-
         // 通知上层发送完成
         chry_dap_usb2uart_uart_send_complete (usart_tx_length);
     }
@@ -51,11 +49,15 @@ void DMA1_Channel3_IRQHandler (void) {
     if (DMA1->INTFR & DMA_TCIF3) {
         // 关闭 DMA
         drv_usb2uart_stop_rx_dma();
-
-        // 上一个接收缓冲区存满了，重新启动接收 DMA 切下一个缓冲区，并且将已经接收的数据拷贝到接收 FIFO 中
+        // 上一个接收缓冲区存满了，重新启动接收 DMA 切下一个缓冲区
         usart_rx_buffer_index = !usart_rx_buffer_index;
-        // drv_usb2uart_start_rx_dma()
+        drv_usb2uart_start_rx_dma (&usart_rx_buffer[usart_rx_buffer_index][0], USART_RX_BUFFER_SIZE);
+        // 将已经接收的数据拷贝到接收 FIFO 中，长度固定为 512
+        chry_ringbuffer_overwrite(&g_uartrx, usart_rx_buffer[!usart_rx_buffer_index], USART_RX_BUFFER_SIZE);
 
+        // 检查是否有 IDLE 中断，如果有则清除
+
+        // printf("D=%d\r\n", USART_RX_BUFFER_SIZE);
     }
 }
 
@@ -64,8 +66,19 @@ void DMA1_Channel3_IRQHandler (void) {
  * @param None
  */
 void USART3_IRQHandler (void) {
+
     if (USART_GetITStatus (USART3, USART_IT_IDLE)) {
-        // 空闲中断，说明接收断帧，重新启动接收 DMA 切到下一个缓冲区，并且将已接收的数据拷贝到接收 FIFO 中
+        drv_usb2uart_stop_rx_dma();
+        (void)USART3->STATR;
+        (void)USART3->DATAR;
+        // 获取 DMA 传输的数据长度
+        uint32_t rx_len = USART_RX_BUFFER_SIZE - DMA_CH_UART_RX->CNTR;
+        // 空闲中断，说明接收断帧，重新启动接收 DMA 切到下一个缓冲区
+        usart_rx_buffer_index = !usart_rx_buffer_index;
+        drv_usb2uart_start_rx_dma (&usart_rx_buffer[usart_rx_buffer_index][0], USART_RX_BUFFER_SIZE);
+        // 将已接收的数据拷贝到接收 FIFO 中
+        chry_ringbuffer_overwrite(&g_uartrx, usart_rx_buffer[!usart_rx_buffer_index], rx_len);
+        // printf("U=%d\r\n", rx_len);
     }
 }
 
@@ -84,14 +97,17 @@ void drv_usb2uart_gpio_af_uart (void) {
 void drv_usb2uart_stop_rx_dma (void) {
     // 关闭 DMA
     DMA_CH_UART_RX->CFGR = 0;
-
     // 清除接收通道 DMA 标志
     DMA1->INTFCR = DMA_CGIF3 | DMA_CTCIF3 | DMA_CHTIF3 | DMA_CTEIF3;
 }
 
 void drv_usb2uart_start_rx_dma (uint8_t *data, uint16_t len) {
+    // printf ("[DMA] Start rx:%x, %d\r\n", (uint32_t)data, len);
+
+    drv_usb2uart_stop_rx_dma();
+
     // 启动 DMA 传输
-    DMA_CH_UART_RX->CNTR = USART_RX_BUFFER_SIZE;
+    DMA_CH_UART_RX->CNTR = len;
     DMA_CH_UART_RX->MADDR = (uint32_t)data;
     DMA_CH_UART_RX->PADDR = (uint32_t)(&USART3->DATAR);
     DMA_CH_UART_RX->CFGR =
@@ -104,13 +120,14 @@ void drv_usb2uart_start_rx_dma (uint8_t *data, uint16_t len) {
 void drv_usb2uart_stop_tx_dma (void) {
     // 关闭 DMA
     DMA_CH_UART_TX->CFGR = 0;
-
     // 清除发送通道 DMA 标志
     DMA1->INTFCR = DMA_CGIF2 | DMA_CTCIF2 | DMA_CHTIF2 | DMA_CTEIF2;
 }
 
 void drv_usb2uart_start_tx_dma (uint8_t *data, uint16_t len) {
+    // printf ("[DMA] Start tx:%x, %d\r\n", (uint32_t)data, len);
     usart_tx_length = len;
+    drv_usb2uart_stop_tx_dma();
     // 启动 DMA 传输
     DMA_CH_UART_TX->CNTR = usart_tx_length;
     DMA_CH_UART_TX->MADDR = (uint32_t)data;
@@ -156,6 +173,8 @@ void drv_usb2uart_preinit (void) {
     NVIC_Init (&NVIC_InitStructure);
 
     drv_usb2uart_enable (1);
+    usart_rx_buffer_index = 0;
+    drv_usb2uart_start_rx_dma (&usart_rx_buffer[usart_rx_buffer_index][0], USART_RX_BUFFER_SIZE);
 }
 
 void drv_usb2uart_enable (uint8_t enable) {
@@ -164,6 +183,9 @@ void drv_usb2uart_enable (uint8_t enable) {
 
 void drv_usb2uart_set_linecoding (uint32_t dwDTERate, uint8_t bCharFormat, uint8_t bParityType, uint8_t bDataBits) {
     USART_InitTypeDef USART_InitStructure = {0};
+
+    // drv_usb2uart_stop_rx_dma();
+    // drv_usb2uart_stop_tx_dma();
 
     USART_DeInit (USART3);
     USART_InitStructure.USART_BaudRate = dwDTERate;
@@ -190,6 +212,7 @@ void drv_usb2uart_set_linecoding (uint32_t dwDTERate, uint8_t bCharFormat, uint8
     USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
     USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
     USART_Init (USART3, &USART_InitStructure);
+    USART_Cmd (USART3, ENABLE);
     USART_ITConfig (USART3, USART_IT_IDLE, ENABLE);
     USART_DMACmd (USART3, USART_DMAReq_Tx | USART_DMAReq_Rx, ENABLE);
 }

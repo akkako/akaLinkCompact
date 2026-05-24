@@ -19,7 +19,7 @@ int main (void) {
 	drv_usb2uart_preinit();
 
 	chry_dap_init(0, 0);
-    //printf("System Init\r\n");
+    printf("System Init\r\n");
 
 	while(1)
     {
