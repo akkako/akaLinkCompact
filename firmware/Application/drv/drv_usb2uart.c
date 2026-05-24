@@ -34,9 +34,10 @@ void USART3_IRQHandler (void) __attribute__ ((interrupt ("WCH-Interrupt-fast")))
  * @param None
  */
 void DMA1_Channel2_IRQHandler (void) {
-    if (DMA_GetFlagStatus (DMA1_IT_TC2)) {
-        DMA_ClearFlag (DMA1_IT_TC2);
-        DMA_Cmd (DMA_CH_UART_TX, DISABLE);
+    if (DMA1->INTFR & DMA_TCIF2) {
+        // 关闭 DMA
+        drv_usb2uart_stop_tx_dma();
+
         // 通知上层发送完成
         chry_dap_usb2uart_uart_send_complete (usart_tx_length);
     }
@@ -47,9 +48,14 @@ void DMA1_Channel2_IRQHandler (void) {
  * @param None
  */
 void DMA1_Channel3_IRQHandler (void) {
-    if (DMA_GetFlagStatus (DMA1_IT_TC3)) {
-        DMA_ClearFlag (DMA1_IT_TC3);
+    if (DMA1->INTFR & DMA_TCIF3) {
+        // 关闭 DMA
+        drv_usb2uart_stop_rx_dma();
+
         // 上一个接收缓冲区存满了，重新启动接收 DMA 切下一个缓冲区，并且将已经接收的数据拷贝到接收 FIFO 中
+        usart_rx_buffer_index = !usart_rx_buffer_index;
+        // drv_usb2uart_start_rx_dma()
+
     }
 }
 
@@ -75,146 +81,115 @@ void drv_usb2uart_gpio_af_uart (void) {
     GPIO_Init (GPIOB, &GPIO_InitStructure);
 }
 
+void drv_usb2uart_stop_rx_dma (void) {
+    // 关闭 DMA
+    DMA_CH_UART_RX->CFGR = 0;
+
+    // 清除接收通道 DMA 标志
+    DMA1->INTFCR = DMA_CGIF3 | DMA_CTCIF3 | DMA_CHTIF3 | DMA_CTEIF3;
+}
+
 void drv_usb2uart_start_rx_dma (uint8_t *data, uint16_t len) {
+    // 启动 DMA 传输
+    DMA_CH_UART_RX->CNTR = USART_RX_BUFFER_SIZE;
+    DMA_CH_UART_RX->MADDR = (uint32_t)data;
+    DMA_CH_UART_RX->PADDR = (uint32_t)(&USART3->DATAR);
+    DMA_CH_UART_RX->CFGR =
+        DMA_CFGR1_EN |    // 通道使能
+        DMA_CFGR1_TCIE |  // 传输完成触发中断
+        DMA_CFGR1_MINC |  // 内存地址自增
+        DMA_CFGR1_PL;     // 优先级最高
+}
+
+void drv_usb2uart_stop_tx_dma (void) {
+    // 关闭 DMA
+    DMA_CH_UART_TX->CFGR = 0;
+
+    // 清除发送通道 DMA 标志
+    DMA1->INTFCR = DMA_CGIF2 | DMA_CTCIF2 | DMA_CHTIF2 | DMA_CTEIF2;
 }
 
 void drv_usb2uart_start_tx_dma (uint8_t *data, uint16_t len) {
     usart_tx_length = len;
-    // Start DMA
-    DMA_CH_UART_TX->CFGR &= (uint16_t)(~DMA_CFGR1_EN);
+    // 启动 DMA 传输
     DMA_CH_UART_TX->CNTR = usart_tx_length;
     DMA_CH_UART_TX->MADDR = (uint32_t)data;
-    DMA_Cmd (DMA_CH_UART_TX, ENABLE); /* USART3 Tx */
+    DMA_CH_UART_TX->PADDR = (uint32_t)(&USART3->DATAR);
+    DMA_CH_UART_TX->CFGR =
+        DMA_CFGR1_EN |    // 通道使能
+        DMA_CFGR1_TCIE |  // 传输完成触发中断
+        DMA_CFGR1_MINC |  // 内存地址自增
+        DMA_CFGR1_DIR |   // 内存到外设
+        DMA_CFGR1_PL;     // 优先级最高
 }
 
-void drv_usb2uart_init (void) {
-    USART_InitTypeDef USART_InitStructure = {0};
+void drv_usb2uart_preinit (void) {
     NVIC_InitTypeDef NVIC_InitStructure = {0};
 
     RCC_APB1PeriphClockCmd (RCC_APB1Periph_USART3, ENABLE);
+    RCC_AHBPeriphClockCmd (RCC_AHBPeriph_DMA1, ENABLE);
 
     // drv_usb2uart_gpio_af_uart();
 
-    USART_InitStructure.USART_BaudRate = 115200;
-    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-    USART_InitStructure.USART_StopBits = USART_StopBits_1;
-    USART_InitStructure.USART_Parity = USART_Parity_No;
-    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-    USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
-    USART_Init (USART3, &USART_InitStructure);
-    USART_Cmd (USART3, ENABLE);
-    USART_ITConfig (USART3, USART_IT_IDLE, ENABLE);
+    // 初始化串口设置
+    drv_usb2uart_set_linecoding (115200, 0, 0, 8);
 
-    DMA_InitTypeDef DMA_InitStructure = {0};
-    RCC_AHBPeriphClockCmd (RCC_AHBPeriph_DMA1, ENABLE);
-
-    // send dma
-    DMA_DeInit (DMA_CH_UART_TX);
-    DMA_InitStructure.DMA_PeripheralBaseAddr = (u32)(&USART3->DATAR);
-    DMA_InitStructure.DMA_MemoryBaseAddr = (u32)0;
-    DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
-    DMA_InitStructure.DMA_BufferSize = 0;
-    DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-    DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-    DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-    DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-    DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
-    DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
-    DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-    DMA_Init (DMA_CH_UART_TX, &DMA_InitStructure);
-
-    // send complete irq setting
-    DMA_ITConfig (DMA_CH_UART_TX, DMA_IT_TC, ENABLE);  // 传输完成
+    // 开启 DMA 通道 2 全局中断使能（DMA 发送完成中断）
     NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel2_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init (&NVIC_InitStructure);
 
-    // recv dma
-    DMA_DeInit (DMA_CH_UART_RX);
-    DMA_InitStructure.DMA_PeripheralBaseAddr = (u32)(&USART3->DATAR);
-    DMA_InitStructure.DMA_MemoryBaseAddr = (u32)usart_rx_buffer;
-    DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-    DMA_InitStructure.DMA_BufferSize = 512;
-    DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-    DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;
-    DMA_Init (DMA_CH_UART_RX, &DMA_InitStructure);
-    DMA_Cmd (DMA_CH_UART_RX, ENABLE); /* USART3 Rx */
+    // 开启 DMA 通道 3 全局中断使能（DMA 接收完成中断）
+    NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel3_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init (&NVIC_InitStructure);
 
-    USART_DMACmd (USART3, USART_DMAReq_Tx | USART_DMAReq_Rx, ENABLE);
+    // 开启 USART3 全局中断使能（UART 接收空闲中断）
+    NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init (&NVIC_InitStructure);
+
+    drv_usb2uart_enable (1);
 }
 
 void drv_usb2uart_enable (uint8_t enable) {
     USART_Cmd (USART3, enable ? ENABLE : DISABLE);
 }
 
-void drv_usb2uart_set_linecoding (struct cdc_line_coding *line_coding) {
+void drv_usb2uart_set_linecoding (uint32_t dwDTERate, uint8_t bCharFormat, uint8_t bParityType, uint8_t bDataBits) {
     USART_InitTypeDef USART_InitStructure = {0};
-    DMA_InitTypeDef DMA_InitStructure = {0};
-
-    if (line_coding->dwDTERate > 9000000) {
-        line_coding->dwDTERate = 9000000;
-    }
 
     USART_DeInit (USART3);
-    USART_InitStructure.USART_BaudRate = line_coding->dwDTERate;
+    USART_InitStructure.USART_BaudRate = dwDTERate;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
     /* Number of stop bits (0: 1 stop bit; 1: 1.5 stop bits; 2: 2 stop bits). */
-    if (line_coding->bCharFormat == 1) {
+    if (bCharFormat == 1) {
         USART_InitStructure.USART_StopBits = USART_StopBits_1_5;
-    } else if (line_coding->bCharFormat == 2) {
+    } else if (bCharFormat == 2) {
         USART_InitStructure.USART_StopBits = USART_StopBits_2;
     } else {
         USART_InitStructure.USART_StopBits = USART_StopBits_1;
     }
     /* Check digit (0: None; 1: Odd; 2: Even; 3: Mark; 4: Space); */
-    if (line_coding->bParityType == 1) {
+    if (bParityType == 1) {
         USART_InitStructure.USART_Parity = USART_Parity_Odd;
         USART_InitStructure.USART_WordLength = USART_WordLength_9b;
-    } else if (line_coding->bParityType == 2) {
+    } else if (bParityType == 2) {
         USART_InitStructure.USART_Parity = USART_Parity_Even;
         USART_InitStructure.USART_WordLength = USART_WordLength_9b;
     } else {
         USART_InitStructure.USART_Parity = USART_Parity_No;
     }
+
     USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
     USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
     USART_Init (USART3, &USART_InitStructure);
-
-    DMA_CH_UART_RX->CFGR &= (uint16_t)(~DMA_CFGR1_EN);
-    DMA_CH_UART_RX->CNTR = USART_RX_BUFFER_SIZE;
-    DMA_CH_UART_RX->CFGR |= DMA_CFGR1_EN;
-
-    // send dma
-    DMA_DeInit (DMA_CH_UART_TX);
-    // DMA_InitStructure.DMA_PeripheralBaseAddr = (u32)(&USART3->DATAR); /* USART2->DATAR:0x40004404 */
-    // DMA_InitStructure.DMA_MemoryBaseAddr = (u32)0;
-    // DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
-    // DMA_InitStructure.DMA_BufferSize = 0;
-    // DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-    // DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-    // DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-    // DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-    // DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
-    // DMA_InitStructure.DMA_Priority = DMA_Priority_VeryHigh;
-    // DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-    // DMA_Init (DMA_CH_UART_TX, &DMA_InitStructure);
-
-    // recv dma
-    DMA_DeInit (DMA_CH_UART_RX);
-    // DMA_InitStructure.DMA_PeripheralBaseAddr = (u32)(&USART3->DATAR);
-    // DMA_InitStructure.DMA_MemoryBaseAddr = (u32)usart_rx_buffer;
-    // DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-    // DMA_InitStructure.DMA_BufferSize = 512;
-    // DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-    // DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;
-    // DMA_Init (DMA_CH_UART_RX, &DMA_InitStructure);
-
-    DMA_ITConfig (DMA_CH_UART_RX, DMA_IT_TC, ENABLE);
-    DMA_ITConfig (DMA_CH_UART_TX, DMA_IT_TC, ENABLE);
-
-    DMA_Cmd (DMA_CH_UART_RX, ENABLE); /* USART3 Rx */
-
+    USART_ITConfig (USART3, USART_IT_IDLE, ENABLE);
     USART_DMACmd (USART3, USART_DMAReq_Tx | USART_DMAReq_Rx, ENABLE);
 }
