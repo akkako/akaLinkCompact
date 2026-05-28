@@ -53,11 +53,19 @@ void DMA1_Channel3_IRQHandler (void) {
         usart_rx_buffer_index = !usart_rx_buffer_index;
         drv_usb2uart_start_rx_dma (&usart_rx_buffer[usart_rx_buffer_index][0], USART_RX_BUFFER_SIZE);
         // 将已经接收的数据拷贝到接收 FIFO 中，长度固定为 512
-        chry_ringbuffer_overwrite(&g_uartrx, usart_rx_buffer[!usart_rx_buffer_index], USART_RX_BUFFER_SIZE);
+        chry_ringbuffer_overwrite (&g_uartrx, usart_rx_buffer[!usart_rx_buffer_index], USART_RX_BUFFER_SIZE);
 
         // 检查是否有 IDLE 中断，如果有则清除
+        if (USART_GetITStatus (USART3, USART_IT_IDLE)) {
+            (void)USART3->STATR;
+            (void)USART3->DATAR;
+            NVIC_ClearPendingIRQ(USART3_IRQn);
+        }
 
-        // printf("D=%d\r\n", USART_RX_BUFFER_SIZE);
+        if (USART_GetITStatus (USART3, USART_IT_ORE))
+        {
+            printf("ORE\r\n");
+        }
     }
 }
 
@@ -77,8 +85,7 @@ void USART3_IRQHandler (void) {
         usart_rx_buffer_index = !usart_rx_buffer_index;
         drv_usb2uart_start_rx_dma (&usart_rx_buffer[usart_rx_buffer_index][0], USART_RX_BUFFER_SIZE);
         // 将已接收的数据拷贝到接收 FIFO 中
-        chry_ringbuffer_overwrite(&g_uartrx, usart_rx_buffer[!usart_rx_buffer_index], rx_len);
-        // printf("U=%d\r\n", rx_len);
+        chry_ringbuffer_overwrite (&g_uartrx, usart_rx_buffer[!usart_rx_buffer_index], rx_len);
     }
 }
 
@@ -102,8 +109,6 @@ void drv_usb2uart_stop_rx_dma (void) {
 }
 
 void drv_usb2uart_start_rx_dma (uint8_t *data, uint16_t len) {
-    // printf ("[DMA] Start rx:%x, %d\r\n", (uint32_t)data, len);
-
     drv_usb2uart_stop_rx_dma();
 
     // 启动 DMA 传输
@@ -125,7 +130,6 @@ void drv_usb2uart_stop_tx_dma (void) {
 }
 
 void drv_usb2uart_start_tx_dma (uint8_t *data, uint16_t len) {
-    // printf ("[DMA] Start tx:%x, %d\r\n", (uint32_t)data, len);
     usart_tx_length = len;
     drv_usb2uart_stop_tx_dma();
     // 启动 DMA 传输
@@ -153,14 +157,14 @@ void drv_usb2uart_preinit (void) {
 
     // 开启 DMA 通道 2 全局中断使能（DMA 发送完成中断）
     NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel2_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 2;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init (&NVIC_InitStructure);
 
     // 开启 DMA 通道 3 全局中断使能（DMA 接收完成中断）
     NVIC_InitStructure.NVIC_IRQChannel = DMA1_Channel3_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init (&NVIC_InitStructure);
