@@ -428,12 +428,6 @@ void chry_dap_handle (void) {
             if (n == DAP_PACKET_COUNT) {
                 n = 0U;
             }
-            if (n == USB_RequestIndexI) {
-                // flags = osThreadFlagsWait(0x81U, osFlagsWaitAny, osWaitForever);
-                // if (flags & 0x80U) {
-                //     break;
-                // }
-            }
         }
 
         // Execute DAP Command (process request and prepare response)
@@ -523,7 +517,6 @@ void chry_dap_usb2uart_handle (void) {
 
         /* 开启中断 */
         __enable_irq();
-        // printf ("Set LineCoding: %d, %d, %d, %d\r\n", g_cdc_lincoding.dwDTERate, g_cdc_lincoding.bCharFormat, g_cdc_lincoding.bParityType, g_cdc_lincoding.bDataBits);
     }
 
     // 未完成配置线路参数，不进行收发操作
@@ -566,6 +559,8 @@ void chry_dap_usb2uart_handle (void) {
             usbd_ep_start_read (0, CDC_OUT_EP, usb_rx_buffer, DAP_PACKET_SIZE);
         }
     }
+
+    drv_usb2uart_proc();
 }
 
 /* implment by user */

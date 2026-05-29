@@ -173,7 +173,7 @@
 							"${project}/../../Middleware/CherryUSB/class/cdc",
 							"${project}/../../Middleware/CherryUSB/port/ch32/ch32hs",
 							"${project}/../../Middleware/CherryRB",
-							"${project}/../hscope"
+							"${project}/../sys"
 						],
 						"include_system_paths": [],
 						"include_files": []

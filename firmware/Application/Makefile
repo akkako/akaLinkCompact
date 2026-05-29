@@ -23,6 +23,7 @@ C_INCLUDES += -Iapp/
 C_INCLUDES += -Idrv/
 C_INCLUDES += -Iusb/
 C_INCLUDES += -Idap/
+C_INCLUDES += -Isys/
 C_INCLUDES += -Ihscope/
 
 C_INCLUDES += -I../Drivers/inc

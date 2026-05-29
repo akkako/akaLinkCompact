@@ -9,6 +9,9 @@
 #include "usb_main.h"
 #include "drv_print.h"
 
+#include "sys_config.h"
+
+
 #define USART_RX_BUFFER_SIZE (512)
 
 // PB10  UART3_TX DMA_CH2
@@ -24,9 +27,14 @@ uint8_t usart_rx_buffer[2][USART_RX_BUFFER_SIZE];
 // 串口 DMA 发送计数
 uint32_t usart_tx_length = 0;
 
+void drv_usb2uart_restart_rx_dma (void);
+
 void DMA1_Channel2_IRQHandler (void) __attribute__ ((interrupt ("WCH-Interrupt-fast")));
 void DMA1_Channel3_IRQHandler (void) __attribute__ ((interrupt ("WCH-Interrupt-fast")));
+
+#if SYS_CFG_USE_UART_IDLE_IRQ
 void USART3_IRQHandler (void) __attribute__ ((interrupt ("WCH-Interrupt-fast")));
+#endif
 
 /**
  * @brief UART3 DMA 发送完成中断处理函数
@@ -55,20 +63,18 @@ void DMA1_Channel3_IRQHandler (void) {
         // 将已经接收的数据拷贝到接收 FIFO 中，长度固定为 512
         chry_ringbuffer_overwrite (&g_uartrx, usart_rx_buffer[!usart_rx_buffer_index], USART_RX_BUFFER_SIZE);
 
+#if SYS_CFG_USE_UART_IDLE_IRQ
         // 检查是否有 IDLE 中断，如果有则清除
         if (USART_GetITStatus (USART3, USART_IT_IDLE)) {
             (void)USART3->STATR;
             (void)USART3->DATAR;
-            NVIC_ClearPendingIRQ(USART3_IRQn);
+            NVIC_ClearPendingIRQ (USART3_IRQn);
         }
-
-        if (USART_GetITStatus (USART3, USART_IT_ORE))
-        {
-            printf("ORE\r\n");
-        }
+#endif
     }
 }
 
+#if SYS_CFG_USE_UART_IDLE_IRQ
 /**
  * @brief UART3 中断处理函数
  * @param None
@@ -76,17 +82,32 @@ void DMA1_Channel3_IRQHandler (void) {
 void USART3_IRQHandler (void) {
 
     if (USART_GetITStatus (USART3, USART_IT_IDLE)) {
-        drv_usb2uart_stop_rx_dma();
         (void)USART3->STATR;
         (void)USART3->DATAR;
-        // 获取 DMA 传输的数据长度
-        uint32_t rx_len = USART_RX_BUFFER_SIZE - DMA_CH_UART_RX->CNTR;
-        // 空闲中断，说明接收断帧，重新启动接收 DMA 切到下一个缓冲区
-        usart_rx_buffer_index = !usart_rx_buffer_index;
-        drv_usb2uart_start_rx_dma (&usart_rx_buffer[usart_rx_buffer_index][0], USART_RX_BUFFER_SIZE);
-        // 将已接收的数据拷贝到接收 FIFO 中
-        chry_ringbuffer_overwrite (&g_uartrx, usart_rx_buffer[!usart_rx_buffer_index], rx_len);
+        drv_usb2uart_restart_rx_dma();
     }
+}
+
+#endif
+
+void drv_usb2uart_restart_rx_dma (void) {
+    // 关闭 DMA
+    drv_usb2uart_stop_rx_dma();
+    // 获取 DMA 传输的数据长度
+    uint32_t rx_len = USART_RX_BUFFER_SIZE - DMA_CH_UART_RX->CNTR;
+    // 空闲中断，说明接收断帧，重新启动接收 DMA 切到下一个缓冲区
+    usart_rx_buffer_index = !usart_rx_buffer_index;
+    drv_usb2uart_start_rx_dma (&usart_rx_buffer[usart_rx_buffer_index][0], USART_RX_BUFFER_SIZE);
+    // 将已接收的数据拷贝到接收 FIFO 中
+    chry_ringbuffer_overwrite (&g_uartrx, usart_rx_buffer[!usart_rx_buffer_index], rx_len);
+}
+
+void drv_usb2uart_proc (void) {
+#if !SYS_CFG_USE_UART_IDLE_IRQ
+    if (DMA_CH_UART_RX->CNTR != USART_RX_BUFFER_SIZE) {
+        drv_usb2uart_restart_rx_dma();
+    }
+#endif
 }
 
 void drv_usb2uart_gpio_af_uart (void) {
@@ -169,12 +190,14 @@ void drv_usb2uart_preinit (void) {
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init (&NVIC_InitStructure);
 
+#if SYS_CFG_USE_UART_IDLE_IRQ
     // 开启 USART3 全局中断使能（UART 接收空闲中断）
     NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init (&NVIC_InitStructure);
+#endif
 
     drv_usb2uart_enable (1);
     usart_rx_buffer_index = 0;
@@ -217,6 +240,8 @@ void drv_usb2uart_set_linecoding (uint32_t dwDTERate, uint8_t bCharFormat, uint8
     USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
     USART_Init (USART3, &USART_InitStructure);
     USART_Cmd (USART3, ENABLE);
+#if SYS_CFG_USE_UART_IDLE_IRQ
     USART_ITConfig (USART3, USART_IT_IDLE, ENABLE);
+#endif
     USART_DMACmd (USART3, USART_DMAReq_Tx | USART_DMAReq_Rx, ENABLE);
 }
