@@ -169,7 +169,6 @@
 							"${project}/../../Middleware/CherryUSB/common",
 							"${project}/../../Middleware/CherryUSB/core",
 							"${project}/../../Middleware/CherryUSB/class/hid",
-							"${project}/../../Middleware/CherryUSB/class/msc",
 							"${project}/../../Middleware/CherryUSB/class/cdc",
 							"${project}/../../Middleware/CherryUSB/port/ch32/ch32hs",
 							"${project}/../../Middleware/CherryRB",

@@ -3,21 +3,34 @@
 
 #include "usbd_core.h"
 #include "usbd_cdc.h"
+#include "usbd_hid.h"
 #include "chry_ringbuffer.h"
 #include "DAP_config.h"
 #include "DAP.h"
 
+// DAP WinUSB 端点
 #define DAP_IN_EP  0x81
 #define DAP_OUT_EP 0x02
 
+// CDC ACM 端点
 #define CDC_IN_EP  0x83
-#define CDC_OUT_EP 0x03
-#define CDC_INT_EP 0x84
+#define CDC_OUT_EP 0x04
+#define CDC_INT_EP 0x85
+
+// HID 控制端点
+#define HID_IN_EP  0x86
+#define HID_OUT_EP 0x07
 
 #define USBD_VID           0x0D28
 #define USBD_PID           0x0204
-#define USBD_MAX_POWER     100
+#define USBD_MAX_POWER     250
 #define USBD_LANGID_STRING 1033
+
+#ifdef CONFIG_USB_HS
+#define HID_PACKET_SIZE 64
+#else
+#define HID_PACKET_SIZE 64
+#endif
 
 #ifdef CONFIG_USB_HS
 #if DAP_PACKET_SIZE != 512

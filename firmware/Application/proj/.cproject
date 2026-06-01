@@ -129,7 +129,6 @@
                   <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/../../Middleware/CherryUSB/common}&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/../../Middleware/CherryUSB/core}&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/../../Middleware/CherryUSB/class/hid}&quot;"/>
-                  <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/../../Middleware/CherryUSB/class/msc}&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/../../Middleware/CherryUSB/class/cdc}&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/../../Middleware/CherryUSB/port/ch32/ch32hs}&quot;"/>
                   <listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/../../Middleware/CherryRB}&quot;"/>
