@@ -1,5 +1,6 @@
 #include "usb_main.h"
 #include "drv_systick.h"
+#include "app_param.h"
 
 #define CMSIS_DAP_INTERFACE_SIZE (9 + 7 + 7)
 #define CUSTOM_HID_LEN (9 + 9 + 7 + 7)
@@ -480,59 +481,9 @@ void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
     (void)busid;
     (void)ep;
 
-    //printf("actual out len:%d\r\n", (unsigned int)nbytes);
+    app_param_proc_hid(hid_rx_buffer, hid_tx_buffer);
 
-    // for (uint32_t i = 0; i < nbytes; i++)
-    // {
-    //     printf("%02x ", hid_rx_buffer[i]);
-    // }
-    //printf("\r\n");
-    memcpy(hid_tx_buffer, hid_rx_buffer, 64);
     hid_tx_buffer[0] = 0x02; /* IN: report id */
-
-    #if 0
-    if (hid_rx_buffer[0] == 0x01 && hid_rx_buffer[1] == 0x05)
-    {
-        if (hid_rx_buffer[2] == 0x01)
-        {
-            hscope_enable();
-            uint8_t len = sprintf(&hid_tx_buffer[2], "HScope Enable\r\n");
-            hid_tx_buffer[1] = len;
-        }
-        else if (hid_rx_buffer[2] == 0x02)
-        {
-            hscope_disable();
-            uint8_t len = sprintf(&hid_tx_buffer[2], "HScope Disable\r\n");
-            hid_tx_buffer[1] = len;
-        }
-        else if (hid_rx_buffer[2] == 0x03)
-        {
-            uint32_t addr = hid_rx_buffer[3] << 24;
-            addr |= hid_rx_buffer[4] << 16;
-            addr |= hid_rx_buffer[5] << 8;
-            addr |= hid_rx_buffer[6];
-            hscope_set_addr(addr);
-            uint8_t len = sprintf(&hid_tx_buffer[2], "HScope Set Addr: 0x%04x\r\n", addr);
-            hid_tx_buffer[1] = len;
-        }
-        else if (hid_rx_buffer[2] == 0x04)
-        {
-            uint32_t data = hscope_get_data();
-            uint8_t len = sprintf(&hid_tx_buffer[2], "HScope Get Data: 0x%04x\r\n", data);
-            hid_tx_buffer[1] = len;
-        }
-        else
-        {
-            uint8_t len = sprintf(&hid_tx_buffer[2], "HID Unsupported Command\r\n");
-            hid_tx_buffer[1] = len;
-        }
-    }
-    else
-    {
-        uint8_t len = sprintf(&hid_tx_buffer[2], "HID Wrong Command\r\n");
-        hid_tx_buffer[1] = len;
-    }
-        #endif
 
     usbd_ep_start_read(busid, ep, hid_rx_buffer, HID_PACKET_SIZE);
     usbd_ep_start_write(busid, HID_IN_EP, hid_tx_buffer, HID_PACKET_SIZE);
