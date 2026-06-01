@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebHID 调试工具</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 标题栏 -->
+        <header class="header">
+            <h1>WebHID 调试工具</h1>
+            <div class="device-status">
+                <span id="connectionStatus" class="status-disconnected">未连接</span>
+                <button id="connectBtn" class="btn btn-primary">连接设备</button>
+                <button id="disconnectBtn" class="btn btn-secondary" disabled>断开连接</button>
+            </div>
+        </header>
+
+        <!-- 设备信息面板 -->
+        <section class="panel device-info-panel">
+            <h2>设备信息</h2>
+            <div class="device-info-grid" id="deviceInfo">
+                <div class="info-item">
+                    <label>VID:</label>
+                    <span id="vid">--</span>
+                </div>
+                <div class="info-item">
+                    <label>PID:</label>
+                    <span id="pid">--</span>
+                </div>
+                <div class="info-item">
+                    <label>产品名称:</label>
+                    <span id="productName">--</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 发送配置面板 -->
+        <section class="panel send-panel">
+            <h2>发送配置</h2>
+            <div class="send-config">
+                <div class="config-row">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="useHeaderLength">
+                        启用长度头标记
+                    </label>
+                    <div class="header-config" id="headerConfig" style="display: none;">
+                        <label>长度头字节数:</label>
+                        <select id="headerLengthBytes">
+                            <option value="1">1字节</option>
+                            <option value="2">2字节</option>
+                        </select>
+                        <label>字节序:</label>
+                        <select id="headerEndian">
+                            <option value="little">小端序</option>
+                            <option value="big">大端序</option>
+                        </select>
+                    </div>
+                    <label>发送模式:</label>
+                    <select id="sendMode">
+                        <option value="output">Output Report</option>
+                        <option value="feature">Feature Report</option>
+                    </select>
+                    <label>Report ID:</label>
+                    <input type="number" id="reportId" value="0" min="0" max="255" style="width: 60px;">
+                </div>
+            </div>
+            
+            <div class="send-entries" id="sendEntries">
+                <!-- 动态生成的发送条目将插入这里 -->
+            </div>
+            
+            <div class="send-actions">
+                <button id="addEntryBtn" class="btn btn-secondary">+ 添加条目</button>
+                <button id="sendAllBtn" class="btn btn-primary" disabled>发送全部</button>
+            </div>
+        </section>
+
+        <!-- 接收面板 -->
+        <section class="panel receive-panel">
+            <h2>接收数据</h2>
+            <div class="receive-config">
+                <div class="config-row">
+                    <label>显示格式:</label>
+                    <select id="displayFormat">
+                        <option value="hex">HEX</option>
+                        <option value="ascii">ASCII</option>
+                    </select>
+                    
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showTimestamp" checked>
+                        显示时间
+                    </label>
+                    
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="showSentData" checked>
+                        显示发送数据
+                    </label>
+                    
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="autoTruncate">
+                        根据长度头截断
+                    </label>
+                </div>
+            </div>
+            
+            <div class="receive-output" id="receiveOutput">
+                <!-- 接收到的数据将显示在这里 -->
+            </div>
+            
+            <div class="receive-actions">
+                <button id="clearReceiveBtn" class="btn btn-secondary">清空接收区</button>
+                <button id="exportBtn" class="btn btn-secondary">导出数据</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- 发送条目模板 -->
+    <template id="sendEntryTemplate">
+        <div class="send-entry">
+            <div class="entry-header">
+                <span class="entry-number">条目 #<span class="entry-index">1</span></span>
+                <button class="btn-icon delete-entry" title="删除条目">×</button>
+            </div>
+            <div class="entry-content">
+                <div class="input-row">
+                    <select class="entry-format">
+                        <option value="hex">HEX</option>
+                        <option value="ascii">ASCII</option>
+                    </select>
+                    <input type="text" class="entry-data" placeholder="输入数据...">
+                    <button class="btn btn-small send-entry-btn" disabled>发送</button>
+                </div>
+                <div class="entry-preview">
+                    <label>预览:</label>
+                    <span class="preview-text">--</span>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

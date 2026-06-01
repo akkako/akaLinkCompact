@@ -487,7 +487,7 @@ void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
     //     printf("%02x ", hid_rx_buffer[i]);
     // }
     //printf("\r\n");
-
+    memcpy(hid_tx_buffer, hid_rx_buffer, 64);
     hid_tx_buffer[0] = 0x02; /* IN: report id */
 
     #if 0
@@ -535,7 +535,7 @@ void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
         #endif
 
     usbd_ep_start_read(busid, ep, hid_rx_buffer, HID_PACKET_SIZE);
-    // usbd_ep_start_write(busid, HID_IN_EP, hid_tx_buffer, nbytes);
+    usbd_ep_start_write(busid, HID_IN_EP, hid_tx_buffer, HID_PACKET_SIZE);
 }
 
 void usbd_hid_custom_in_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)

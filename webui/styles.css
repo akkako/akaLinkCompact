@@ -1,0 +1,401 @@
+/* 基础样式重置 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* 容器 */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px;
+}
+
+/* 头部 */
+.header {
+    background: white;
+    padding: 12px 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h1 {
+    font-size: 20px;
+    color: #2c3e50;
+}
+
+.device-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#connectionStatus {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.status-disconnected {
+    background-color: #fee;
+    color: #c33;
+}
+
+.status-connected {
+    background-color: #efe;
+    color: #3c3;
+}
+
+/* 面板通用样式 */
+.panel {
+    background: white;
+    padding: 12px 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+}
+
+.panel h2 {
+    font-size: 16px;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+/* 按钮样式 */
+.btn {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: #2980b9;
+}
+
+.btn-secondary {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: #7f8c8d;
+}
+
+.btn-small {
+    padding: 4px 12px;
+    font-size: 12px;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #e74c3c;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.btn-icon:hover {
+    color: #c0392b;
+}
+
+/* 设备信息网格 */
+.device-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 8px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-item label {
+    font-size: 11px;
+    color: #7f8c8d;
+    margin-bottom: 2px;
+}
+
+.info-item span {
+    font-size: 13px;
+    color: #2c3e50;
+    font-weight: 500;
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+
+/* 配置行 */
+.config-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.config-row label {
+    font-size: 13px;
+    color: #555;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
+select, input[type="text"] {
+    padding: 4px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+select:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+/* 头长度配置 */
+.header-config {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 15px;
+}
+
+/* 发送条目 */
+.send-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.send-entry {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 10px;
+    background-color: #fafafa;
+}
+
+.entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.entry-number {
+    font-size: 13px;
+    font-weight: 500;
+    color: #555;
+}
+
+.entry-content {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.input-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.entry-format {
+    width: 90px;
+    flex-shrink: 0;
+}
+
+.entry-data {
+    flex: 1;
+    min-width: 150px;
+}
+
+.entry-preview {
+    font-size: 11px;
+    color: #7f8c8d;
+    display: flex;
+    gap: 6px;
+}
+
+.preview-text {
+    font-family: 'Consolas', 'Monaco', monospace;
+    color: #2c3e50;
+    word-break: break-all;
+}
+
+/* 发送操作按钮 */
+.send-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* 接收输出区域 */
+.receive-output {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 12px;
+    padding: 10px;
+    border-radius: 4px;
+    min-height: 250px;
+    max-height: 400px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    line-height: 1.4;
+}
+
+/* 接收数据条目样式 */
+.receive-entry {
+    margin-bottom: 2px;
+    padding: 1px 0;
+}
+
+.receive-entry.sent {
+    color: #4ec9b0;
+}
+
+.receive-entry.received {
+    color: #ce9178;
+}
+
+.receive-entry .timestamp {
+    color: #6a9955;
+    margin-right: 8px;
+}
+
+.receive-entry .direction {
+    margin-right: 8px;
+    font-weight: bold;
+}
+
+.receive-entry .data {
+    color: #d4d4d4;
+}
+
+/* 接收操作按钮 */
+.receive-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+/* 滚动条样式 */
+.receive-output::-webkit-scrollbar {
+    width: 8px;
+}
+
+.receive-output::-webkit-scrollbar-track {
+    background: #2d2d2d;
+}
+
+.receive-output::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+.receive-output::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .config-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .input-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .entry-format, .entry-data {
+        width: 100%;
+    }
+    
+    .header-config {
+        margin-left: 0;
+        margin-top: 10px;
+        flex-wrap: wrap;
+    }
+}
+
+/* 空状态提示 */
+.empty-state {
+    text-align: center;
+    color: #7f8c8d;
+    padding: 40px;
+    font-style: italic;
+}
+
+/* 错误提示 */
+.error-message {
+    background-color: #fee;
+    color: #c33;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+/* 成功提示 */
+.success-message {
+    background-color: #efe;
+    color: #3c3;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
