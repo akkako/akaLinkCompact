@@ -4,7 +4,7 @@
 #include "drv_print.h"
 #include "drv_systick.h"
 #include "drv_usb2uart.h"
-
+#include "app_param.h"
 
 
 void chry_dap_init(uint8_t busid, uint32_t reg_base);
@@ -15,6 +15,7 @@ int main (void) {
     NVIC_PriorityGroupConfig (NVIC_PriorityGroup_2);
     drv_print_init();
     drv_systick_init();
+    app_param_load();
     drv_gpio_init_misc();
     drv_gpio_init_as_hiz();
 	

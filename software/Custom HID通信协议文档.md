@@ -42,3 +42,9 @@ typedef struct _app_param_t
     uint8_t padding;
 } app_param_t
 ```
+
+## 数据空间分配
+
+Bootloader - 32K
+
+config - 4K
