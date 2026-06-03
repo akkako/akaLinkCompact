@@ -84,53 +84,74 @@ export function createHIDPacket(reportId, dataLength, commandType, data = null) 
 
 /**
  * 解析配置数据包
- * @param {Uint8Array} data - 接收到的数据
+ * @param {Uint8Array} data - 接收到的数据（WebHID API 返回的数据不包含 Report ID）
  * @returns {Object|null} 配置对象
  */
 export function parseConfigData(data) {
-    if (data.length < 6) return null;
+    if (data.length < 5) return null;
     
-    // 检查 Report ID 和 Command type
-    if (data[0] !== 0x02 || data[2] !== 0x01) return null;
+    // WebHID API 接收的数据不包含 Report ID
+    // 数据格式: [Data Length][Command Type][Command Data...]
+    // 检查 Command type (0x01)
+    if (data[1] !== 0x01) {
+        console.log('解析配置失败: Command type 不匹配',
+            '期望 Command=0x01,',
+            '实际 Command=0x' + data[1].toString(16));
+        return null;
+    }
     
     return {
-        outputMode: data[3],
-        swdMode: data[4],
-        v5Mode: data[5],
-        clockMode: data[6]
+        outputMode: data[2],
+        swdMode: data[3],
+        v5Mode: data[4],
+        clockMode: data[5]
     };
 }
 
 /**
  * 解析电压数据
- * @param {Uint8Array} data - 接收到的数据
+ * @param {Uint8Array} data - 接收到的数据（WebHID API 返回的数据不包含 Report ID）
  * @returns {number|null} 电压值(mV)
  */
 export function parseVoltageData(data) {
-    if (data.length < 5) return null;
+    if (data.length < 4) return null;
     
-    // 检查 Report ID 和 Command type
-    if (data[0] !== 0x02 || data[2] !== 0x03) return null;
+    // WebHID API 接收的数据不包含 Report ID
+    // 数据格式: [Data Length][Command Type][Voltage Low][Voltage High]
+    // 检查 Command type (0x03)
+    if (data[1] !== 0x03) {
+        console.log('解析电压失败: Command type 不匹配',
+            '期望 Command=0x03,',
+            '实际 Command=0x' + data[1].toString(16));
+        return null;
+    }
     
-    const lowByte = data[3];
-    const highByte = data[4];
+    const lowByte = data[2];
+    const highByte = data[3];
     return (highByte << 8) | lowByte;
 }
 
 /**
  * 解析型号字符串
- * @param {Uint8Array} data - 接收到的数据
+ * @param {Uint8Array} data - 接收到的数据（WebHID API 返回的数据不包含 Report ID）
  * @returns {string|null} 型号字符串
  */
 export function parseModelString(data) {
-    if (data.length < 3) return null;
+    if (data.length < 2) return null;
     
-    // 检查 Report ID 和 Command type
-    if (data[0] !== 0x02 || data[2] !== 0x10) return null;
+    // WebHID API 接收的数据不包含 Report ID
+    // 数据格式: [Data Length][Command Type][Model String...]
+    // 检查 Command type (0x10)
+    if (data[1] !== 0x10) {
+        console.log('解析型号失败: Command type 不匹配', 
+            '期望 Command=0x10,', 
+            '实际 Command=0x' + data[1].toString(16));
+        return null;
+    }
     
-    // 从第3字节开始读取字符串，直到遇到 \0
+    // 从第2字节开始读取字符串，直到遇到 \0
     const chars = [];
-    for (let i = 3; i < data.length && data[i] !== 0; i++) {
+    for (let i = 2; i < data.length && data[i] !== 0; i++) {
         chars.push(String.fromCharCode(data[i]));
     }
     return chars.join('');
@@ -138,18 +159,25 @@ export function parseModelString(data) {
 
 /**
  * 解析序列号字符串
- * @param {Uint8Array} data - 接收到的数据
+ * @param {Uint8Array} data - 接收到的数据（WebHID API 返回的数据不包含 Report ID）
  * @returns {string|null} 序列号字符串
  */
 export function parseSNString(data) {
-    if (data.length < 3) return null;
+    if (data.length < 2) return null;
     
-    // 检查 Report ID 和 Command type
-    if (data[0] !== 0x02 || data[2] !== 0x11) return null;
+    // WebHID API 接收的数据不包含 Report ID
+    // 数据格式: [Data Length][Command Type][SN String...]
+    // 检查 Command type (0x11)
+    if (data[1] !== 0x11) {
+        console.log('解析序列号失败: Command type 不匹配',
+            '期望 Command=0x11,',
+            '实际 Command=0x' + data[1].toString(16));
+        return null;
+    }
     
-    // 从第3字节开始读取字符串，直到遇到 \0
+    // 从第2字节开始读取字符串，直到遇到 \0
     const chars = [];
-    for (let i = 3; i < data.length && data[i] !== 0; i++) {
+    for (let i = 2; i < data.length && data[i] !== 0; i++) {
         chars.push(String.fromCharCode(data[i]));
     }
     return chars.join('');
@@ -157,13 +185,21 @@ export function parseSNString(data) {
 
 /**
  * 检查响应是否成功
- * @param {Uint8Array} data - 接收到的数据
+ * @param {Uint8Array} data - 接收到的数据（WebHID API 返回的数据不包含 Report ID）
  * @param {number} expectedCmd - 预期的命令类型
  * @returns {boolean} 是否成功
  */
 export function isResponseSuccess(data, expectedCmd) {
-    if (data.length < 3) return false;
-    return data[0] === 0x02 && data[2] === expectedCmd;
+    if (data.length < 2) return false;
+    // WebHID API 接收的数据不包含 Report ID
+    // 数据格式: [Data Length][Command Type]
+    const success = data[1] === expectedCmd;
+    if (!success) {
+        console.log('响应检查失败:',
+            '期望 Command=0x' + expectedCmd.toString(16),
+            '实际 Command=0x' + data[1].toString(16));
+    }
+    return success;
 }
 
 /**

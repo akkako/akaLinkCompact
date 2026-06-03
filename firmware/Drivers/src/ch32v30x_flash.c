@@ -53,8 +53,8 @@
 #define FLASH_BANK1_END_ADDRESS    ((uint32_t)0x807FFFF)
 
 /* Delay definition */
-#define EraseTimeout               ((uint32_t)0x00130000)
-#define ProgramTimeout             ((uint32_t)0x00005000)
+#define EraseTimeout               ((uint32_t)0x00200000)
+#define ProgramTimeout             ((uint32_t)0x00020000)
 
 /* Flash Program Valid Address */
 #define ValidAddrStart             (FLASH_BASE)

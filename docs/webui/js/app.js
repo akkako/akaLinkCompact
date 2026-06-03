@@ -132,10 +132,10 @@ class akaLinkConfigApp {
     startVoltageUpdate() {
         // 先停止之前的定时器
         this.stopVoltageUpdate();
-        // 每 0.5 秒更新一次电压
+        // 每 2 秒更新一次电压
         this.voltageTimer = setInterval(() => {
             this.readVoltage();
-        }, 500);
+        }, 2000);
     }
 
     /**
@@ -156,12 +156,8 @@ class akaLinkConfigApp {
             const devices = await this.deviceManager.getPairedDevices();
             for (const device of devices) {
                 if (device.opened) {
-                    this.deviceManager.device = device;
-                    device.addEventListener('inputreport', (event) => {
-                        this.deviceManager.handleInputReport(event);
-                    });
-                    this.updateConnectionStatus(true);
-                    this.readDeviceInfo();
+                    // 使用设备管理器的 setDevice 方法来正确设置设备
+                    await this.deviceManager.setDevice(device);
                     this.log('已恢复设备连接', 'success');
                     break;
                 }

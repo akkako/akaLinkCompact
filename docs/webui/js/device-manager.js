@@ -97,6 +97,9 @@ export class DeviceManager {
 
             // 打开设备
             await this.device.open();
+            
+            // 等待设备就绪
+            await sleep(100);
 
             // 设置输入报告回调
             this.device.addEventListener('inputreport', this.handleInputReport.bind(this));
@@ -113,6 +116,37 @@ export class DeviceManager {
             console.error('连接设备失败:', error);
             this.device = null;
             throw error;
+        }
+    }
+
+    /**
+     * 设置已打开的设备（用于恢复已配对的设备）
+     * @param {HIDDevice} device - 已打开的设备
+     */
+    async setDevice(device) {
+        if (!device || !device.opened) {
+            console.warn('设备未打开，无法设置');
+            return;
+        }
+
+        // 如果已有设备，先断开
+        if (this.device) {
+            await this.disconnect();
+        }
+
+        this.device = device;
+
+        // 等待设备就绪
+        await sleep(100);
+
+        // 设置输入报告回调
+        this.device.addEventListener('inputreport', this.handleInputReport.bind(this));
+
+        // 监听设备断开事件
+        navigator.hid.addEventListener('disconnect', this.handleDisconnect.bind(this));
+
+        if (this.onConnectCallback) {
+            this.onConnectCallback(this.device);
         }
     }
 
@@ -164,10 +198,20 @@ export class DeviceManager {
      * @param {HIDConnectionEvent} event - 连接事件
      */
     handleDisconnect(event) {
-        if (this.device && 
-            event.device.productId === this.device.productId && 
-            event.device.vendorId === this.device.vendorId) {
+        if (!this.device) return;
+        
+        // 检查是否是当前连接的设备断开
+        const isSameDevice = event.device.productId === this.device.productId && 
+                             event.device.vendorId === this.device.vendorId;
+        
+        // 对于某些设备，还需要检查序列号
+        const isSameSerial = !event.device.serialNumber || !this.device.serialNumber || 
+                             event.device.serialNumber === this.device.serialNumber;
+        
+        if (isSameDevice && isSameSerial) {
+            console.log('设备已断开:', event.device.productName);
             this.device = null;
+            navigator.hid.removeEventListener('disconnect', this.handleDisconnect);
             if (this.onDisconnectCallback) {
                 this.onDisconnectCallback();
             }
@@ -207,31 +251,49 @@ export class DeviceManager {
     /**
      * 发送输出报告
      * @param {Uint8Array} data - 要发送的数据
-     * @param {number} reportId - 报告 ID（默认为 1）
+     * @param {number} reportId - 报告 ID（默认为 0，自动从设备描述符获取）
      * @returns {Promise<void>}
      */
-    async sendOutputReport(data, reportId = 1) {
+    async sendOutputReport(data, reportId = 0) {
         if (!this.device) {
             throw new Error('设备未连接');
         }
 
         if (!this.device.opened) {
-            try {
-                await this.device.open();
-            } catch (error) {
-                throw new Error('设备连接已断开，请重新连接');
-            }
+            throw new Error('设备连接已断开，请重新连接');
         }
 
         try {
-            // 确保数据长度为64字节
-            let paddedData = data;
-            if (data.length < 64) {
-                paddedData = new Uint8Array(64);
-                paddedData.set(data);
-            } else if (data.length > 64) {
-                paddedData = data.slice(0, 64);
+            // 获取设备的报告信息
+            const reportInfo = this.getDeviceReportInfo();
+            
+            // 如果没有指定 reportId，自动从描述符获取
+            if (reportId === 0 && reportInfo) {
+                reportId = reportInfo.outputReportId;
             }
+            
+            // 获取报告大小
+            let reportSize = 64; // 默认 HID 报告大小
+            if (reportInfo) {
+                reportSize = reportInfo.outputReportSize;
+            }
+
+            // WebHID API 会自动处理 Report ID，所以数据部分不应该包含 Report ID
+            // 数据格式: [Data Length][Command Type][Command Data...]
+            // 跳过 data[0] (Report ID)，从 data[1] 开始发送
+            let sendData = data.slice(1);
+            
+            // 确保数据长度为报告大小 - 1 (去掉 Report ID 后的长度)
+            let paddedData = sendData;
+            if (sendData.length < reportSize - 1) {
+                paddedData = new Uint8Array(reportSize - 1);
+                paddedData.set(sendData);
+            } else if (sendData.length > reportSize - 1) {
+                paddedData = sendData.slice(0, reportSize - 1);
+            }
+
+            console.log(`发送数据 - Report ID: ${reportId}, 数据长度: ${paddedData.length}`);
+            console.log(`发送数据 - HEX:`, Array.from(paddedData).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' '));
 
             await this.device.sendReport(reportId, paddedData);
         } catch (error) {
@@ -272,6 +334,75 @@ export class DeviceManager {
     }
 
     /**
+     * 从 HID 集合中解析报告信息
+     * @param {HIDCollectionInfo} collection - HID 集合信息
+     * @returns {Object} 报告信息
+     */
+    parseReportInfo(collection) {
+        const result = {
+            outputReportId: 0,
+            outputReportSize: 64,
+            inputReportId: 0,
+            inputReportSize: 64
+        };
+
+        if (!collection) return result;
+
+        // 解析输出报告
+        if (collection.outputReports && collection.outputReports.length > 0) {
+            const outputReport = collection.outputReports[0];
+            result.outputReportId = outputReport.reportId || 0;
+            if (outputReport.items && outputReport.items.length > 0) {
+                const totalBits = outputReport.items.reduce((sum, item) => {
+                    return sum + ((item.reportCount || 1) * (item.reportSize || 8));
+                }, 0);
+                result.outputReportSize = Math.ceil(totalBits / 8);
+            }
+        }
+
+        // 解析输入报告
+        if (collection.inputReports && collection.inputReports.length > 0) {
+            const inputReport = collection.inputReports[0];
+            result.inputReportId = inputReport.reportId || 0;
+            if (inputReport.items && inputReport.items.length > 0) {
+                const totalBits = inputReport.items.reduce((sum, item) => {
+                    return sum + ((item.reportCount || 1) * (item.reportSize || 8));
+                }, 0);
+                result.inputReportSize = Math.ceil(totalBits / 8);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 获取设备报告信息
+     * @returns {Object} 报告信息
+     */
+    getDeviceReportInfo() {
+        if (!this.device || !this.device.collections) {
+            return {
+                outputReportId: 0,
+                outputReportSize: 64,
+                inputReportId: 0,
+                inputReportSize: 64
+            };
+        }
+
+        const collections = this.device.collections;
+        if (collections.length > 0) {
+            return this.parseReportInfo(collections[0]);
+        }
+
+        return {
+            outputReportId: 0,
+            outputReportSize: 64,
+            inputReportId: 0,
+            inputReportSize: 64
+        };
+    }
+
+    /**
      * 检查设备是否已连接
      * @returns {boolean} 是否已连接
      */
@@ -306,6 +437,7 @@ export class DeviceManager {
     async getConfig() {
         const packet = createHIDPacket(0x01, 0x01, 0x01);
         const response = await this.sendAndWaitResponse(packet);
+        console.log('获取配置 - 原始响应数据:', Array.from(response).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' '));
         const config = parseConfigData(response);
         if (!config) {
             throw new Error('获取配置失败：响应数据无效');
@@ -337,6 +469,7 @@ export class DeviceManager {
     async getVoltage() {
         const packet = createHIDPacket(0x01, 0x01, 0x03);
         const response = await this.sendAndWaitResponse(packet);
+        console.log('获取电压 - 原始响应数据:', Array.from(response).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' '));
         const voltage = parseVoltageData(response);
         if (voltage === null) {
             throw new Error('获取电压失败：响应数据无效');
@@ -361,6 +494,7 @@ export class DeviceManager {
     async getModel() {
         const packet = createHIDPacket(0x01, 0x01, 0x10);
         const response = await this.sendAndWaitResponse(packet);
+        console.log('获取型号 - 原始响应数据:', Array.from(response).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' '));
         const model = parseModelString(response);
         if (!model) {
             throw new Error('获取型号失败：响应数据无效');
@@ -375,6 +509,7 @@ export class DeviceManager {
     async getSN() {
         const packet = createHIDPacket(0x01, 0x01, 0x11);
         const response = await this.sendAndWaitResponse(packet);
+        console.log('获取序列号 - 原始响应数据:', Array.from(response).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' '));
         const sn = parseSNString(response);
         if (!sn) {
             throw new Error('获取序列号失败：响应数据无效');

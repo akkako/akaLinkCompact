@@ -481,6 +481,8 @@ void usbd_hid_custom_out_callback(uint8_t busid, uint8_t ep, uint32_t nbytes)
     (void)busid;
     (void)ep;
 
+    memset(hid_tx_buffer, 0x00, HID_PACKET_SIZE);
+
     app_param_proc_hid(hid_rx_buffer, hid_tx_buffer);
 
     hid_tx_buffer[0] = 0x02; /* IN: report id */

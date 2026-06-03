@@ -76,7 +76,8 @@
 				"excludeResources": [
 					"${project}/Startup/startup_ch32v30x_D8.S",
 					"${project}/Middleware/CherryUSB/demo",
-					"${project}/Middleware/CherryUSB/class/dfu"
+					"${project}/Middleware/CherryUSB/class/dfu",
+					"${project}/app/example.c"
 				],
 				"optimization": {
 					"level": "fast",
@@ -661,7 +662,7 @@
 		"address": "0x08000000",
 		"target_path": "obj\\akaLink.hex",
 		"clkSpeed": "High",
-		"debug_interface_mode": "1-wire serial",
+		"debug_interface_mode": "",
 		"erase": false,
 		"program": true,
 		"verify": true,
