@@ -10,6 +10,9 @@ import {
     parseVoltageData,
     parseModelString,
     parseSNString,
+    parseHWVersionString,
+    parseFWVersionString,
+    parseBLVersionString,
     isResponseSuccess,
     sleep
 } from './utils.js';
@@ -515,6 +518,51 @@ export class DeviceManager {
             throw new Error('获取序列号失败：响应数据无效');
         }
         return sn;
+    }
+
+    /**
+     * 获取硬件版本号
+     * @returns {Promise<string>} 硬件版本号字符串
+     */
+    async getHWVersion() {
+        const packet = createHIDPacket(0x01, 0x01, 0x12);
+        const response = await this.sendAndWaitResponse(packet);
+        console.log('获取硬件版本号 - 原始响应数据:', Array.from(response).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' '));
+        const hw = parseHWVersionString(response);
+        if (!hw) {
+            throw new Error('获取硬件版本号失败：响应数据无效');
+        }
+        return hw;
+    }
+
+    /**
+     * 获取固件版本号
+     * @returns {Promise<string>} 固件版本号字符串
+     */
+    async getFWVersion() {
+        const packet = createHIDPacket(0x01, 0x01, 0x13);
+        const response = await this.sendAndWaitResponse(packet);
+        console.log('获取固件版本号 - 原始响应数据:', Array.from(response).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' '));
+        const fw = parseFWVersionString(response);
+        if (!fw) {
+            throw new Error('获取固件版本号失败：响应数据无效');
+        }
+        return fw;
+    }
+
+    /**
+     * 获取Bootloader版本号
+     * @returns {Promise<string>} Bootloader版本号字符串
+     */
+    async getBLVersion() {
+        const packet = createHIDPacket(0x01, 0x01, 0x14);
+        const response = await this.sendAndWaitResponse(packet);
+        console.log('获取Bootloader版本号 - 原始响应数据:', Array.from(response).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' '));
+        const bl = parseBLVersionString(response);
+        if (!bl) {
+            throw new Error('获取Bootloader版本号失败：响应数据无效');
+        }
+        return bl;
     }
 
     /**

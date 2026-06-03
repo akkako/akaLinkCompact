@@ -54,6 +54,9 @@ class akaLinkConfigApp {
         this.deviceModel = document.getElementById('deviceModel');
         this.deviceSN = document.getElementById('deviceSN');
         this.targetVoltage = document.getElementById('targetVoltage');
+        this.deviceHWVersion = document.getElementById('deviceHWVersion');
+        this.deviceFWVersion = document.getElementById('deviceFWVersion');
+        this.deviceBLVersion = document.getElementById('deviceBLVersion');
 
         // 配置项
         this.outputMode = document.getElementById('outputMode');
@@ -314,6 +317,24 @@ class akaLinkConfigApp {
             this.deviceSN.textContent = sn;
             this.log(`序列号: ${sn}`, 'success');
 
+            // 读取硬件版本号
+            this.log('正在读取硬件版本号...', 'info');
+            const hwVersion = await this.deviceManager.getHWVersion();
+            this.deviceHWVersion.textContent = hwVersion;
+            this.log(`硬件版本: ${hwVersion}`, 'success');
+
+            // 读取固件版本号
+            this.log('正在读取固件版本号...', 'info');
+            const fwVersion = await this.deviceManager.getFWVersion();
+            this.deviceFWVersion.textContent = fwVersion;
+            this.log(`固件版本: ${fwVersion}`, 'success');
+
+            // 读取Bootloader版本号
+            this.log('正在读取Bootloader版本号...', 'info');
+            const blVersion = await this.deviceManager.getBLVersion();
+            this.deviceBLVersion.textContent = blVersion;
+            this.log(`Bootloader版本: ${blVersion}`, 'success');
+
             // 读取配置
             this.log('正在读取配置...', 'info');
             const config = await this.deviceManager.getConfig();
@@ -379,6 +400,9 @@ class akaLinkConfigApp {
         this.deviceModel.textContent = '--';
         this.deviceSN.textContent = '--';
         this.targetVoltage.textContent = '--';
+        this.deviceHWVersion.textContent = '--';
+        this.deviceFWVersion.textContent = '--';
+        this.deviceBLVersion.textContent = '--';
         this.outputMode.value = '0';
         this.swdMode.value = '0';
         this.v5Mode.value = '0';

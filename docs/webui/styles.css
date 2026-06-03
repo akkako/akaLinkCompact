@@ -245,10 +245,10 @@ body {
     font-size: 14px;
 }
 
-/* 设备信息网格 */
+/* 设备信息网格 - 3x2 布局 */
 .device-info-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 10px;
 }
 
@@ -516,6 +516,13 @@ body {
 
     .actions-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+/* 小屏幕设备信息网格调整为2列 */
+@media (max-width: 600px) {
+    .device-info-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 

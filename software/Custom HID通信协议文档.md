@@ -118,14 +118,62 @@ Byte[0x03-0x3F] = Command data（可选）
    Byte[0x0F] = \0
    设备回应代表成功
 
-7. 设备复位指令 0xFE
+7. 获取硬件版本号 0x12
+   主机发送 request
+   Byte[0x00] = 0x01 // Report ID
+   Byte[0x01] = 0x01 // Data Length
+   Byte[0x02] = 0x12 // Command type
+   设备回应 response
+   Byte[0x00] = 0x02 // Report ID
+   Byte[0x01] = 0x06 // Data Length
+   Byte[0x02] = 0x12 // Command type
+   Byte[0x03] = HW 第 1 位 ACSII
+   Byte[0x04] = HW 第 2 位 ACSII
+   Byte[0x05] = HW 第 3 位 ACSII
+   Byte[0x06] = HW 第 4 位 ACSII
+   Byte[0x07] = \0
+   设备回应代表成功
+
+8. 获取固件版本号 0x13
+   主机发送 request
+   Byte[0x00] = 0x01 // Report ID
+   Byte[0x01] = 0x01 // Data Length
+   Byte[0x02] = 0x13 // Command type
+   设备回应 response
+   Byte[0x00] = 0x02 // Report ID
+   Byte[0x01] = 0x06 // Data Length
+   Byte[0x02] = 0x13 // Command type
+   Byte[0x03] = FW 第 1 位 ACSII
+   Byte[0x04] = FW 第 2 位 ACSII
+   Byte[0x05] = FW 第 3 位 ACSII
+   Byte[0x06] = FW 第 4 位 ACSII
+   Byte[0x07] = \0
+   设备回应代表成功
+
+9. 获取Bootloader版本号 0x14
+   主机发送 request
+   Byte[0x00] = 0x01 // Report ID
+   Byte[0x01] = 0x01 // Data Length
+   Byte[0x02] = 0x14 // Command type
+   设备回应 response
+   Byte[0x00] = 0x02 // Report ID
+   Byte[0x01] = 0x06 // Data Length
+   Byte[0x02] = 0x14 // Command type
+   Byte[0x03] = BL 第 1 位 ACSII
+   Byte[0x04] = BL 第 2 位 ACSII
+   Byte[0x05] = BL 第 3 位 ACSII
+   Byte[0x06] = BL 第 4 位 ACSII
+   Byte[0x07] = \0
+   设备回应代表成功
+
+10. 设备复位指令 0xFE
    主机发送 request
    Byte[0x00] = 0x01 // Report ID
    Byte[0x01] = 0x01 // Data Length
    Byte[0x02] = 0xFE // Command type
    设备复位，不会回复，此时连接断开
 
-8. 进入DFU模式设置指令 0xFF
+11. 进入DFU模式设置指令 0xFF
    主机发送 request
    Byte[0x00] = 0x01 // Report ID
    Byte[0x01] = 0x01 // Data Length
