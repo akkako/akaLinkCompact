@@ -38,7 +38,8 @@
         }
 
         /* 手动主题覆盖 */
-        [data-theme="dark"] {
+        [data-theme="dark"],
+        body.dark-theme {
             --bg-primary: #1a1a2e;
             --bg-secondary: #16213e;
             --bg-card: rgba(255, 255, 255, 0.05);
@@ -49,7 +50,8 @@
             --shadow-color: rgba(0, 0, 0, 0.3);
         }
 
-        [data-theme="light"] {
+        [data-theme="light"],
+        body:not(.dark-theme) {
             --bg-primary: #f0f2f5;
             --bg-secondary: #e4e7eb;
             --bg-card: rgba(255, 255, 255, 0.8);
@@ -103,31 +105,33 @@
         /* 主题切换按钮 */
         .theme-toggle {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 50%;
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 20px;
+            font-size: 18px;
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
-            z-index: 100;
+            z-index: 1000;
             overflow: hidden;
-        }
-
-        .theme-toggle:hover {
-            transform: scale(1.1);
             box-shadow: 0 4px 15px var(--shadow-color);
         }
 
+        .theme-toggle:hover {
+            transform: translateX(-50%) scale(1.1);
+            box-shadow: 0 6px 20px var(--shadow-color);
+        }
+
         .theme-toggle:active {
-            transform: scale(0.95);
+            transform: translateX(-50%) scale(0.95);
         }
 
         .theme-toggle.animating span {
@@ -223,10 +227,11 @@
 
             .theme-toggle {
                 top: 10px;
-                right: 10px;
-                width: 40px;
-                height: 40px;
-                font-size: 18px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
             }
         }
     </style>
@@ -270,31 +275,34 @@
         // 主题切换功能
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
-        const html = document.documentElement;
+        const body = document.body;
 
+        // 统一的 localStorage key
+        const THEME_KEY = 'akalink-theme';
+        
         // 获取保存的主题或检测系统主题
         function getInitialTheme() {
-            const savedTheme = localStorage.getItem('theme');
+            const savedTheme = localStorage.getItem(THEME_KEY);
             if (savedTheme) {
                 return savedTheme;
             }
-            // 检测系统主题
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-                return 'light';
+            // 检测系统主题 - 默认深色
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                return 'dark';
             }
-            return 'dark';
+            return 'light';
         }
 
         // 应用主题
         function applyTheme(theme) {
             if (theme === 'light') {
-                html.setAttribute('data-theme', 'light');
+                body.classList.remove('dark-theme');
                 themeIcon.textContent = '☀️';
             } else {
-                html.setAttribute('data-theme', 'dark');
+                body.classList.add('dark-theme');
                 themeIcon.textContent = '🌙';
             }
-            localStorage.setItem('theme', theme);
+            localStorage.setItem(THEME_KEY, theme);
         }
 
         // 切换主题
@@ -303,8 +311,8 @@
             themeToggle.classList.add('animating');
             
             // 切换主题
-            const currentTheme = html.getAttribute('data-theme') || 'dark';
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            const isDark = body.classList.contains('dark-theme');
+            const newTheme = isDark ? 'light' : 'dark';
             applyTheme(newTheme);
             
             // 动画结束后移除动画类
@@ -321,13 +329,21 @@
 
         // 监听系统主题变化
         if (window.matchMedia) {
-            window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
                 // 只在用户没有手动设置过主题时自动切换
-                if (!localStorage.getItem('theme')) {
-                    applyTheme(e.matches ? 'light' : 'dark');
+                if (!localStorage.getItem(THEME_KEY)) {
+                    applyTheme(e.matches ? 'dark' : 'light');
                 }
             });
         }
+
+        // 监听其他页面修改主题（通过 localStorage 同步）
+        window.addEventListener('storage', (e) => {
+            if (e.key === THEME_KEY) {
+                const newTheme = e.newValue || 'dark';
+                applyTheme(newTheme);
+            }
+        });
     </script>
 </body>
 </html>

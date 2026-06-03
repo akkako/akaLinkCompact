@@ -1,3 +1,83 @@
+/* CSS 变量定义 - 浅色主题（默认） */
+:root {
+    --bg-primary: #f0f2f5;
+    --bg-secondary: #ffffff;
+    --text-primary: #2c3e50;
+    --text-secondary: #5a6c7d;
+    --accent-color: #3498db;
+    --accent-hover: #2980b9;
+    --border-color: #e0e0e0;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --panel-bg: #ffffff;
+    --header-bg: #ffffff;
+    --btn-primary-bg: #3498db;
+    --btn-primary-hover: #2980b9;
+    --btn-secondary-bg: #95a5a6;
+    --btn-secondary-hover: #7f8c8d;
+    --status-disconnected-bg: #fee;
+    --status-disconnected-text: #c33;
+    --status-connected-bg: #efe;
+    --status-connected-text: #3c3;
+    --input-bg: #ffffff;
+    --input-border: #ddd;
+    --receive-bg: #1e1e1e;
+    --receive-text: #d4d4d4;
+}
+
+/* 深色主题 */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-primary: #1a1d29;
+        --bg-secondary: #242838;
+        --text-primary: #e4e6eb;
+        --text-secondary: #b0b3b8;
+        --accent-color: #4a9eff;
+        --accent-hover: #6ab2ff;
+        --border-color: #3a3f4b;
+        --shadow-color: rgba(0, 0, 0, 0.3);
+        --panel-bg: #242838;
+        --header-bg: #242838;
+        --btn-primary-bg: #4a9eff;
+        --btn-primary-hover: #6ab2ff;
+        --btn-secondary-bg: #4a5568;
+        --btn-secondary-hover: #5a6578;
+        --status-disconnected-bg: #3d1f1f;
+        --status-disconnected-text: #ff6b6b;
+        --status-connected-bg: #1f3d1f;
+        --status-connected-text: #6bff6b;
+        --input-bg: #1a1d29;
+        --input-border: #3a3f4b;
+        --receive-bg: #1a1d29;
+        --receive-text: #d4d4d4;
+    }
+}
+
+/* 手动深色主题覆盖 */
+body.dark-theme {
+    --bg-primary: #1a1d29;
+    --bg-secondary: #242838;
+    --text-primary: #e4e6eb;
+    --text-secondary: #b0b3b8;
+    --accent-color: #4a9eff;
+    --accent-hover: #6ab2ff;
+    --border-color: #3a3f4b;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --panel-bg: #242838;
+    --header-bg: #242838;
+    --btn-primary-bg: #4a9eff;
+    --btn-primary-hover: #6ab2ff;
+    --btn-secondary-bg: #4a5568;
+    --btn-secondary-hover: #5a6578;
+    --status-disconnected-bg: #3d1f1f;
+    --status-disconnected-text: #ff6b6b;
+    --status-connected-bg: #1f3d1f;
+    --status-connected-text: #6bff6b;
+    --input-bg: #1a1d29;
+    --input-border: #3a3f4b;
+    --receive-bg: #1a1d29;
+    --receive-text: #d4d4d4;
+}
+
 /* 基础样式重置 */
 * {
     margin: 0;
@@ -7,9 +87,10 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background-color: #f5f5f5;
-    color: #333;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     line-height: 1.6;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* 容器 */
@@ -21,10 +102,10 @@ body {
 
 /* 头部 */
 .header {
-    background: white;
+    background: var(--header-bg);
     padding: 12px 15px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px var(--shadow-color);
     margin-bottom: 10px;
     display: flex;
     justify-content: space-between;
@@ -33,7 +114,7 @@ body {
 
 .header h1 {
     font-size: 20px;
-    color: #2c3e50;
+    color: var(--text-primary);
 }
 
 .device-status {
@@ -50,30 +131,30 @@ body {
 }
 
 .status-disconnected {
-    background-color: #fee;
-    color: #c33;
+    background-color: var(--status-disconnected-bg);
+    color: var(--status-disconnected-text);
 }
 
 .status-connected {
-    background-color: #efe;
-    color: #3c3;
+    background-color: var(--status-connected-bg);
+    color: var(--status-connected-text);
 }
 
 /* 面板通用样式 */
 .panel {
-    background: white;
+    background: var(--panel-bg);
     padding: 12px 15px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px var(--shadow-color);
     margin-bottom: 10px;
 }
 
 .panel h2 {
     font-size: 16px;
-    color: #2c3e50;
+    color: var(--text-primary);
     margin-bottom: 10px;
     padding-bottom: 6px;
-    border-bottom: 2px solid #e0e0e0;
+    border-bottom: 2px solid var(--border-color);
 }
 
 /* 按钮样式 */
@@ -93,21 +174,21 @@ body {
 }
 
 .btn-primary {
-    background-color: #3498db;
+    background-color: var(--btn-primary-bg);
     color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-    background-color: #2980b9;
+    background-color: var(--btn-primary-hover);
 }
 
 .btn-secondary {
-    background-color: #95a5a6;
+    background-color: var(--btn-secondary-bg);
     color: white;
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background-color: #7f8c8d;
+    background-color: var(--btn-secondary-hover);
 }
 
 .btn-small {
@@ -149,7 +230,7 @@ body {
 
 .info-item span {
     font-size: 13px;
-    color: #2c3e50;
+    color: var(--text-primary);
     font-weight: 500;
     font-family: 'Consolas', 'Monaco', monospace;
 }
@@ -165,7 +246,7 @@ body {
 
 .config-row label {
     font-size: 13px;
-    color: #555;
+    color: var(--text-secondary);
 }
 
 .checkbox-label {
@@ -183,14 +264,16 @@ body {
 
 select, input[type="text"] {
     padding: 4px 8px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--input-border);
     border-radius: 4px;
     font-size: 13px;
+    background-color: var(--input-bg);
+    color: var(--text-primary);
 }
 
 select:focus, input[type="text"]:focus {
     outline: none;
-    border-color: #3498db;
+    border-color: var(--accent-color);
 }
 
 /* 头长度配置 */
@@ -210,10 +293,10 @@ select:focus, input[type="text"]:focus {
 }
 
 .send-entry {
-    border: 1px solid #e0e0e0;
+    border: 1px solid var(--border-color);
     border-radius: 6px;
     padding: 10px;
-    background-color: #fafafa;
+    background-color: var(--bg-secondary);
 }
 
 .entry-header {
@@ -226,7 +309,7 @@ select:focus, input[type="text"]:focus {
 .entry-number {
     font-size: 13px;
     font-weight: 500;
-    color: #555;
+    color: var(--text-secondary);
 }
 
 .entry-content {
@@ -253,14 +336,14 @@ select:focus, input[type="text"]:focus {
 
 .entry-preview {
     font-size: 11px;
-    color: #7f8c8d;
+    color: var(--text-secondary);
     display: flex;
     gap: 6px;
 }
 
 .preview-text {
     font-family: 'Consolas', 'Monaco', monospace;
-    color: #2c3e50;
+    color: var(--text-primary);
     word-break: break-all;
 }
 
@@ -272,8 +355,8 @@ select:focus, input[type="text"]:focus {
 
 /* 接收输出区域 */
 .receive-output {
-    background-color: #1e1e1e;
-    color: #d4d4d4;
+    background-color: var(--receive-bg);
+    color: var(--receive-text);
     font-family: 'Consolas', 'Monaco', monospace;
     font-size: 12px;
     padding: 10px;
@@ -321,6 +404,53 @@ select:focus, input[type="text"]:focus {
     margin-top: 15px;
 }
 
+/* 主题切换按钮 */
+.theme-toggle {
+    position: fixed;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--panel-bg);
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 4px 15px var(--shadow-color);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.theme-toggle:hover {
+    transform: translateX(-50%) scale(1.1);
+    box-shadow: 0 6px 20px var(--shadow-color);
+}
+
+.theme-toggle:active {
+    transform: translateX(-50%) scale(0.95);
+}
+
+.theme-toggle span {
+    transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover span {
+    transform: rotate(15deg);
+}
+
+.theme-toggle.animating span {
+    animation: themeToggleSpin 0.5s ease;
+}
+
+@keyframes themeToggleSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 /* 滚动条样式 */
 .receive-output::-webkit-scrollbar {
     width: 8px;
@@ -341,6 +471,13 @@ select:focus, input[type="text"]:focus {
 
 /* 响应式布局 */
 @media (max-width: 768px) {
+    .theme-toggle {
+        top: 10px;
+        width: 36px;
+        height: 36px;
+        font-size: 16px;
+    }
+    
     .container {
         padding: 10px;
     }

@@ -157,4 +157,80 @@ class HIDDebuggerApp {
 // 页面加载完成后初始化应用
 document.addEventListener('DOMContentLoaded', () => {
     window.hidDebuggerApp = new HIDDebuggerApp();
+    initThemeToggle();
 });
+
+/**
+ * 初始化主题切换功能
+ */
+function initThemeToggle() {
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const body = document.body;
+    
+    // 统一的 localStorage key
+    const THEME_KEY = 'akalink-theme';
+    
+    // 获取保存的主题或检测系统主题
+    function getInitialTheme() {
+        const savedTheme = localStorage.getItem(THEME_KEY);
+        if (savedTheme) {
+            return savedTheme;
+        }
+        // 检测系统主题 - 默认深色
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return 'dark';
+        }
+        return 'light';
+    }
+    
+    // 应用主题
+    function applyTheme(theme) {
+        if (theme === 'light') {
+            body.classList.remove('dark-theme');
+            themeIcon.textContent = '☀️';
+        } else {
+            body.classList.add('dark-theme');
+            themeIcon.textContent = '🌙';
+        }
+        localStorage.setItem(THEME_KEY, theme);
+    }
+    
+    // 切换主题
+    function toggleTheme() {
+        // 添加动画类
+        themeToggle.classList.add('animating');
+        
+        setTimeout(() => {
+            themeToggle.classList.remove('animating');
+        }, 500);
+        
+        const isDark = body.classList.contains('dark-theme');
+        const newTheme = isDark ? 'light' : 'dark';
+        applyTheme(newTheme);
+    }
+    
+    // 初始化
+    applyTheme(getInitialTheme());
+    
+    // 监听点击
+    themeToggle.addEventListener('click', toggleTheme);
+    
+    // 监听系统主题变化
+    if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            // 只有在用户没有手动设置主题时才自动切换
+            if (!localStorage.getItem(THEME_KEY)) {
+                applyTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+    }
+    
+    // 监听其他页面修改主题（通过 localStorage 同步）
+    window.addEventListener('storage', (e) => {
+        if (e.key === THEME_KEY) {
+            const newTheme = e.newValue || 'dark';
+            applyTheme(newTheme);
+        }
+    });
+}

@@ -46,7 +46,8 @@
 }
 
 /* 手动主题覆盖 - 深色 */
-[data-theme="dark"] {
+[data-theme="dark"],
+body.dark-theme {
     --bg-primary: #1a1a2e;
     --bg-secondary: #16213e;
     --bg-panel: rgba(255, 255, 255, 0.05);
@@ -65,7 +66,8 @@
 }
 
 /* 手动主题覆盖 - 浅色 */
-[data-theme="light"] {
+[data-theme="light"],
+body:not(.dark-theme) {
     --bg-primary: #f0f2f5;
     --bg-secondary: #e4e7eb;
     --bg-panel: rgba(255, 255, 255, 0.8);

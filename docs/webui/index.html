@@ -157,31 +157,34 @@
         // 主题切换功能
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
-        const html = document.documentElement;
+        const body = document.body;
+
+        // 统一的 localStorage key
+        const THEME_KEY = 'akalink-theme';
 
         // 获取保存的主题或检测系统主题
         function getInitialTheme() {
-            const savedTheme = localStorage.getItem('theme');
+            const savedTheme = localStorage.getItem(THEME_KEY);
             if (savedTheme) {
                 return savedTheme;
             }
-            // 检测系统主题
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
-                return 'light';
+            // 检测系统主题 - 默认深色
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                return 'dark';
             }
-            return 'dark';
+            return 'light';
         }
 
         // 应用主题
         function applyTheme(theme) {
             if (theme === 'light') {
-                html.setAttribute('data-theme', 'light');
+                body.classList.remove('dark-theme');
                 themeIcon.textContent = '☀️';
             } else {
-                html.setAttribute('data-theme', 'dark');
+                body.classList.add('dark-theme');
                 themeIcon.textContent = '🌙';
             }
-            localStorage.setItem('theme', theme);
+            localStorage.setItem(THEME_KEY, theme);
         }
 
         // 切换主题
@@ -190,8 +193,8 @@
             themeToggle.classList.add('animating');
             
             // 切换主题
-            const currentTheme = html.getAttribute('data-theme') || 'dark';
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            const isDark = body.classList.contains('dark-theme');
+            const newTheme = isDark ? 'light' : 'dark';
             applyTheme(newTheme);
             
             // 动画结束后移除动画类
@@ -208,13 +211,21 @@
 
         // 监听系统主题变化
         if (window.matchMedia) {
-            window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
                 // 只在用户没有手动设置过主题时自动切换
-                if (!localStorage.getItem('theme')) {
-                    applyTheme(e.matches ? 'light' : 'dark');
+                if (!localStorage.getItem(THEME_KEY)) {
+                    applyTheme(e.matches ? 'dark' : 'light');
                 }
             });
         }
+
+        // 监听其他页面修改主题（通过 localStorage 同步）
+        window.addEventListener('storage', (e) => {
+            if (e.key === THEME_KEY) {
+                const newTheme = e.newValue || 'dark';
+                applyTheme(newTheme);
+            }
+        });
     </script>
 </body>
 </html>
