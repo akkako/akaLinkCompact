@@ -5,15 +5,16 @@ __stack_size = 2048;
 PROVIDE( _stack_size = __stack_size );
 
 
+MEMORY
+{
 /* CH32V30x_D8C - CH32V305RB-CH32V305FB
    CH32V30x_D8 - CH32V303CB-CH32V303RB
 */
-/*
-	FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 128K
+	FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 26K
 	RAM (xrw) : ORIGIN = 0x20000000, LENGTH = 32K
-*/
-    
+
 /* CH32V30x_D8C - CH32V307VC-CH32V307WC-CH32V307RC-CH32V305CC
+   CH32V30x_D8 - CH32V303VC-CH32V303RC
    FLASH + RAM supports the following configuration
    For specific choices, please refer :CH32FV2x_V3xRM.PDF\Table 32-3
    FLASH-192K + RAM-128K
@@ -22,15 +23,16 @@ PROVIDE( _stack_size = __stack_size );
    FLASH-288K + RAM-32K  
    FLASH-128K + RAM-192K  
 */
-MEMORY
-{
-	FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 32K
+/*
+	FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 256K
 	RAM (xrw) : ORIGIN = 0x20000000, LENGTH = 64K
+*/
 }
 
 
 SECTIONS
 {
+
 	.init :
 	{
 		_sinit = .;

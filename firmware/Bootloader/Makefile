@@ -1,11 +1,11 @@
 # 项目编译目标名
-TARGET = akaLink_Compact_Boot
+TARGET = akaLink_Compact_App
 # 调试信息
 DEBUG = 1
 # 优化等级
-OPT = -O2
+OPT = -Ofast
 # 链接时优化
-LTO = #-flto
+LTO = -flto
 
 # 检测操作系统
 OS := $(shell uname -s)
@@ -14,6 +14,7 @@ OS := $(shell uname -s)
 BUILD_DIR = build
 EXEC_DIR = build_exec
 
+
 # C源文件宏定义
 C_DEFS += -DCONFIG_USB_HS
 
@@ -21,6 +22,9 @@ C_DEFS += -DCONFIG_USB_HS
 C_INCLUDES += -Iapp/
 C_INCLUDES += -Idrv/
 C_INCLUDES += -Iusb/
+C_INCLUDES += -Idap/
+C_INCLUDES += -Isys/
+C_INCLUDES += -Ihscope/
 
 C_INCLUDES += -I../Drivers/inc
 
@@ -28,22 +32,24 @@ C_INCLUDES += -I../Middleware/CherryUSB/common
 C_INCLUDES += -I../Middleware/CherryUSB/core
 C_INCLUDES += -I../Middleware/CherryUSB/class/hid
 C_INCLUDES += -I../Middleware/CherryUSB/class/cdc
-C_INCLUDES += -I../Middleware/CherryUSB/class/msc
 C_INCLUDES += -I../Middleware/CherryUSB/port/ch32/ch32hs
+
 C_INCLUDES += -I../Middleware/CherryRB
 
 # C源文件
+C_SOURCES += $(wildcard ../Drivers/src/*.c)
+
 C_SOURCES += $(wildcard app/*.c)
 C_SOURCES += $(wildcard drv/*.c)
 C_SOURCES += $(wildcard usb/*.c)
-
-C_SOURCES += $(wildcard ../Drivers/src/*.c)
+C_SOURCES += $(wildcard dap/*.c)
 
 C_SOURCES += $(wildcard ../Middleware/CherryRB/*.c)
-C_SOURCES += $(wildcard ../Middleware/CherryUSB/class/msc/*.c)
 C_SOURCES += $(wildcard ../Middleware/CherryUSB/class/cdc/*.c)
+C_SOURCES += $(wildcard ../Middleware/CherryUSB/class/hid/*.c)
 C_SOURCES += $(wildcard ../Middleware/CherryUSB/port/ch32/ch32hs/*.c)
 C_SOURCES += $(wildcard ../Middleware/CherryUSB/core/*.c)
+
 
 # 汇编文件宏定义
 AS_DEFS += 
@@ -109,14 +115,14 @@ MCU = $(CPU) $(FPU) $(FLOAT-ABI)
 # -mcmodel=medany
 
 # link script
-LDSCRIPT = ./sys/CH32V305CC.ld
+LDSCRIPT = ./sys/CH32V305FB.ld
 
 
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) $(LTO) -Wall -fdata-sections -ffunction-sections
 
-CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) $(LTO) -Wall -msmall-data-limit=8 -msave-restore -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common
+CFLAGS += $(MCU) $(C_DEFS) $(C_INCLUDES) $(OPT) $(LTO) -Wall -ffunction-sections -fdata-sections
 
 ifeq ($(DEBUG), 1)
 CFLAGS += -g -gdwarf-2 
