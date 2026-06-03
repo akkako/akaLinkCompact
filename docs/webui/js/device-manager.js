@@ -28,6 +28,12 @@ export class DeviceManager {
         this.onInputReportCallback = null;
         this.pendingResponse = null;
         this.responseTimeout = 5000; // 5秒超时
+        
+        // #region debug-point init
+        // 绑定一次事件处理函数，避免重复添加
+        this.boundHandleInputReport = this.handleInputReport.bind(this);
+        this.boundHandleDisconnect = this.handleDisconnect.bind(this);
+        // #endregion debug-point init
     }
 
     /**
@@ -105,10 +111,17 @@ export class DeviceManager {
             await sleep(100);
 
             // 设置输入报告回调
-            this.device.addEventListener('inputreport', this.handleInputReport.bind(this));
+            // #region debug-point connect
+            console.log('[DEBUG] 添加 inputreport 监听器, device.opened=', this.device.opened);
+            // #endregion debug-point connect
+            this.device.addEventListener('inputreport', this.boundHandleInputReport);
 
             // 监听设备断开事件
-            navigator.hid.addEventListener('disconnect', this.handleDisconnect.bind(this));
+            navigator.hid.addEventListener('disconnect', this.boundHandleDisconnect);
+            
+            // #region debug-point connect
+            console.log('[DEBUG] requestDevice 添加 disconnect 监听器');
+            // #endregion debug-point connect
 
             if (this.onConnectCallback) {
                 this.onConnectCallback(this.device);
@@ -143,10 +156,10 @@ export class DeviceManager {
         await sleep(100);
 
         // 设置输入报告回调
-        this.device.addEventListener('inputreport', this.handleInputReport.bind(this));
+        this.device.addEventListener('inputreport', this.boundHandleInputReport);
 
         // 监听设备断开事件
-        navigator.hid.addEventListener('disconnect', this.handleDisconnect.bind(this));
+        navigator.hid.addEventListener('disconnect', this.boundHandleDisconnect);
 
         if (this.onConnectCallback) {
             this.onConnectCallback(this.device);
@@ -157,12 +170,27 @@ export class DeviceManager {
      * 断开设备连接
      */
     async disconnect() {
+        // #region debug-point disconnect
+        console.log('[DEBUG] disconnect() 被调用, device=', this.device ? this.device.productName : null, 'opened=', this.device ? this.device.opened : null);
+        // #endregion debug-point disconnect
         if (this.device) {
             const wasConnected = this.device.opened;
             const deviceToClose = this.device;
 
+            // 移除 inputreport 监听器
+            deviceToClose.removeEventListener('inputreport', this.boundHandleInputReport);
+            
             this.device = null;
-            navigator.hid.removeEventListener('disconnect', this.handleDisconnect);
+            navigator.hid.removeEventListener('disconnect', this.boundHandleDisconnect);
+            
+            // 清理 pendingResponse
+            if (this.pendingResponse) {
+                // #region debug-point disconnect
+                console.log('[DEBUG] 清理 pendingResponse');
+                // #endregion debug-point disconnect
+                this.pendingResponse.reject(new Error('设备已断开连接'));
+                this.pendingResponse = null;
+            }
 
             try {
                 if (wasConnected && deviceToClose) {
@@ -184,9 +212,15 @@ export class DeviceManager {
      */
     handleInputReport(event) {
         const data = new Uint8Array(event.data.buffer);
+        // #region debug-point inputreport
+        console.log('[DEBUG] handleInputReport 收到数据, reportId=', event.reportId, 'data[0]=', data[0].toString(16), 'pendingResponse=', this.pendingResponse ? '有' : '无');
+        // #endregion debug-point inputreport
         
         // 如果有等待的响应，解析它
         if (this.pendingResponse) {
+            // #region debug-point inputreport
+            console.log('[DEBUG] 调用 pendingResponse.resolve');
+            // #endregion debug-point inputreport
             this.pendingResponse.resolve(data);
             this.pendingResponse = null;
         }
@@ -201,6 +235,9 @@ export class DeviceManager {
      * @param {HIDConnectionEvent} event - 连接事件
      */
     handleDisconnect(event) {
+        // #region debug-point handleDisconnect
+        console.log('[DEBUG] handleDisconnect 被调用, event.device=', event.device.productName);
+        // #endregion debug-point handleDisconnect
         if (!this.device) return;
         
         // 检查是否是当前连接的设备断开
@@ -212,9 +249,11 @@ export class DeviceManager {
                              event.device.serialNumber === this.device.serialNumber;
         
         if (isSameDevice && isSameSerial) {
-            console.log('设备已断开:', event.device.productName);
+            // #region debug-point handleDisconnect
+            console.log('[DEBUG] 检测到同一设备断开:', event.device.productName);
+            // #endregion debug-point handleDisconnect
             this.device = null;
-            navigator.hid.removeEventListener('disconnect', this.handleDisconnect);
+            navigator.hid.removeEventListener('disconnect', this.boundHandleDisconnect);
             if (this.onDisconnectCallback) {
                 this.onDisconnectCallback();
             }
@@ -228,8 +267,20 @@ export class DeviceManager {
      * @returns {Promise<Uint8Array>} 响应数据
      */
     async sendAndWaitResponse(data, timeout = this.responseTimeout) {
+        // #region debug-point send
+        console.log('[DEBUG] sendAndWaitResponse 被调用, device=', this.device ? this.device.productName : null, 'opened=', this.device ? this.device.opened : null, 'pendingResponse=', this.pendingResponse ? '有' : '无');
+        // #endregion debug-point send
         if (!this.device || !this.device.opened) {
             throw new Error('设备未连接');
+        }
+
+        // 如果之前有未完成的响应，先清理
+        if (this.pendingResponse) {
+            // #region debug-point send
+            console.log('[DEBUG] 清理之前的 pendingResponse');
+            // #endregion debug-point send
+            this.pendingResponse.reject(new Error('新的请求覆盖了旧请求'));
+            this.pendingResponse = null;
         }
 
         // 创建等待响应的 Promise
@@ -239,6 +290,9 @@ export class DeviceManager {
             // 设置超时
             setTimeout(() => {
                 if (this.pendingResponse) {
+                    // #region debug-point send
+                    console.log('[DEBUG] 响应超时');
+                    // #endregion debug-point send
                     this.pendingResponse = null;
                     reject(new Error('设备响应超时'));
                 }
