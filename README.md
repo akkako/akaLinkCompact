@@ -10,10 +10,10 @@
 
 ## TODO List
 
-- [x] 移植 CMSIS-DAP
-- [x] 优化 SWD 速度
+- [X] 移植 CMSIS-DAP
+- [X] 优化 SWD 速度
 - [ ] 优化 JTAG 性能
 - [ ] 优化 VCOM 性能
 - [ ] 更多速度选项
 - [ ] Bootloader
-- [ ] HID 配置功能
+- [X] HID 配置功能

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>akaLink CMSIS-DAP 配置工具</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle" title="切换主题">
+        <span id="themeIcon">🌙</span>
+    </button>
+
+    <div class="container">
+        <!-- 标题栏 -->
+        <header class="header">
+            <div class="header-left">
+                <h1>akaLink CMSIS-DAP</h1>
+                <span class="subtitle">配置工具</span>
+            </div>
+            <div class="device-status">
+                <span id="connectionStatus" class="status-disconnected">未连接</span>
+                <button id="connectBtn" class="btn btn-primary">连接设备</button>
+                <button id="disconnectBtn" class="btn btn-secondary" disabled>断开连接</button>
+            </div>
+        </header>
+
+        <!-- 设备信息面板 -->
+        <section class="panel device-info-panel">
+            <h2>设备信息</h2>
+            <div class="device-info-grid" id="deviceInfo">
+                <div class="info-item">
+                    <label>型号:</label>
+                    <span id="deviceModel">--</span>
+                </div>
+                <div class="info-item">
+                    <label>序列号:</label>
+                    <span id="deviceSN">--</span>
+                </div>
+                <div class="info-item">
+                    <label>目标电压:</label>
+                    <span id="targetVoltage">--</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 配置面板 -->
+        <section class="panel config-panel">
+            <h2>设备配置</h2>
+            <div class="config-grid">
+                <!-- 输出模式 -->
+                <div class="config-item" title="选择调试接口模式：SWD+VCOM 使用UART功能；SWD+JTAG 使用JTAG功能">
+                    <label class="config-label">
+                        输出模式
+                        <span class="tooltip-icon">?</span>
+                    </label>
+                    <div class="config-control">
+                        <select id="outputMode" disabled>
+                            <option value="0">SWD + VCOM (UART)</option>
+                            <option value="1">SWD + JTAG</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- SWD模拟模式 -->
+                <div class="config-item" title="SPI模式速度快但可能有兼容性问题；GPIO模式稳定但速度较慢">
+                    <label class="config-label">
+                        SWD模拟模式
+                        <span class="tooltip-icon">?</span>
+                    </label>
+                    <div class="config-control">
+                        <select id="swdMode" disabled>
+                            <option value="0">SPI (高速)</option>
+                            <option value="1">GPIO (稳定)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 5V输出模式 -->
+                <div class="config-item" title="开启5V输出可为外接隔离器模块或目标板供电">
+                    <label class="config-label">
+                        5V输出
+                        <span class="tooltip-icon">?</span>
+                    </label>
+                    <div class="config-control">
+                        <select id="v5Mode" disabled>
+                            <option value="0">关闭</option>
+                            <option value="1">开启</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 时钟加速模式 -->
+                <div class="config-item" title="关闭：适用于OpenOCD；开启(x10)：适用于Keil MDK">
+                    <label class="config-label">
+                        时钟加速模式
+                        <span class="tooltip-icon">?</span>
+                    </label>
+                    <div class="config-control">
+                        <select id="clockMode" disabled>
+                            <option value="0">关闭 (OpenOCD)</option>
+                            <option value="1">开启 x10 (Keil)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 配置修改提示 -->
+            <div class="config-notice" id="configNotice" style="display: none;">
+                <span class="notice-icon">!</span>
+                <span>配置已修改，点击"保存配置"后生效</span>
+            </div>
+        </section>
+
+        <!-- 操作按钮面板 -->
+        <section class="panel actions-panel">
+            <h2>操作</h2>
+            <div class="actions-grid">
+                <button id="saveConfigBtn" class="btn btn-primary btn-large" disabled title="将当前配置保存到设备">
+                    保存配置
+                </button>
+                <button id="resetBtn" class="btn btn-secondary btn-large" disabled title="复位设备">
+                    复位设备
+                </button>
+                <button id="dfuBtn" class="btn btn-warning btn-large" disabled title="进入DFU固件升级模式">
+                    进入DFU模式
+                </button>
+            </div>
+        </section>
+
+        <!-- 日志面板 -->
+        <section class="panel log-panel">
+            <h2>操作日志</h2>
+            <div class="log-output" id="logOutput">
+                <div class="log-entry info">等待连接设备...</div>
+            </div>
+            <div class="log-actions">
+                <button id="clearLogBtn" class="btn btn-small">清空日志</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- 确认对话框 -->
+    <div class="modal" id="confirmModal" style="display: none;">
+        <div class="modal-content">
+            <h3 id="modalTitle">确认</h3>
+            <p id="modalMessage">确定要执行此操作吗？</p>
+            <div class="modal-actions">
+                <button id="modalCancel" class="btn btn-secondary">取消</button>
+                <button id="modalConfirm" class="btn btn-primary">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+    <script>
+        // 主题切换功能
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        const html = document.documentElement;
+
+        // 获取保存的主题或检测系统主题
+        function getInitialTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                return savedTheme;
+            }
+            // 检测系统主题
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                return 'light';
+            }
+            return 'dark';
+        }
+
+        // 应用主题
+        function applyTheme(theme) {
+            if (theme === 'light') {
+                html.setAttribute('data-theme', 'light');
+                themeIcon.textContent = '☀️';
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                themeIcon.textContent = '🌙';
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // 切换主题
+        function toggleTheme() {
+            // 添加动画类
+            themeToggle.classList.add('animating');
+            
+            // 切换主题
+            const currentTheme = html.getAttribute('data-theme') || 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme(newTheme);
+            
+            // 动画结束后移除动画类
+            setTimeout(() => {
+                themeToggle.classList.remove('animating');
+            }, 500);
+        }
+
+        // 初始化
+        applyTheme(getInitialTheme());
+
+        // 监听点击
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // 监听系统主题变化
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
+                // 只在用户没有手动设置过主题时自动切换
+                if (!localStorage.getItem('theme')) {
+                    applyTheme(e.matches ? 'light' : 'dark');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
