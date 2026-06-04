@@ -11,9 +11,6 @@
 uint8_t g_app_download_finished = 0;
 uint8_t g_app_verify_state = 0;
 uint8_t g_app_strap_state = 0;
-uint32_t g_app_calc_crc32 = 0;
-uint32_t g_app_file_crc32 = 0;
-uint32_t g_app_length = 0;
 
 extern void usb_msc_init(uint8_t busid, uintptr_t reg_base);
 
@@ -34,21 +31,17 @@ static inline uint32_t crc32(uint32_t crc, uint8_t *buf, uint32_t len)
     return ~crc;
 }
 
-static inline void get_app_info(void)
-{
-    g_app_length = *(uint32_t *)(APPLICATION_CODE_LENGTH_ADDR);
-    g_app_file_crc32 = *(uint32_t *)(APPLICATION_CODE_CRC32_ADDR);
-}
-
 static inline void app_check(void)
 {
-    if (g_app_length > APPLICATION_MAX_SIZE)
+    uint32_t app_length = *(uint32_t *)(APPLICATION_CODE_LENGTH_ADDR);
+    if (app_length > APPLICATION_MAX_SIZE)
     {
         return;
     }
-    g_app_calc_crc32 = crc32(0x0D000721, (uint8_t *)APPLICATION_START_ADDR, g_app_length);
+    uint32_t file_crc32 = *(uint32_t *)(APPLICATION_CODE_CRC32_ADDR);
+    uint32_t calc_crc32 = crc32(0x0D000721, (uint8_t *)APPLICATION_START_ADDR, app_length);
 
-    if (g_app_calc_crc32 == g_app_file_crc32)
+    if (calc_crc32 == file_crc32)
     {
         g_app_verify_state = 1;
     }
@@ -88,19 +81,18 @@ void SW_Handler(void) {
 int main(void)
 {
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
-    drv_print_init();
+    // drv_print_init();
     drv_systick_init();
     drv_gpio_init_misc();
     drv_gpio_init_as_hiz();
     drv_bkp_init();
 
-    get_app_info();
     app_check();
     check_strap_state();
 
     // 需要停在 Bootloader 的情况：
     // 1. app 校验失败
-    // 2. 主动 starp
+    // 2. app 主动 starp
 
     if (g_app_verify_state != 1 || g_app_strap_state)
     {
