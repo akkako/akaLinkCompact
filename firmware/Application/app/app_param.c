@@ -5,7 +5,7 @@
 #include "ch32v30x_flash.h"
 #include "drv_bkp.h"
 
-#define APP_PARAM_ADDR_OFFSET ((uint32_t)0x0800F000)
+#define APP_PARAM_ADDR_OFFSET ((uint32_t)0x08000000+124*1024)
 #define FLASH_PAGE_SIZE (4096)
 
 #define CMD_NOT_SUPPORT (0x00)

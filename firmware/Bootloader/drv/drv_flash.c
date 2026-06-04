@@ -8,10 +8,8 @@
  * @param addr 读取开始地址
  * @param length 读取长度
  */
-extern void drv_flash_read(uint8_t *buff, uint32_t addr, uint32_t length)
-{
-    for (uint32_t i = 0; i < length; i++)
-    {
+extern void drv_flash_read (uint8_t *buff, uint32_t addr, uint32_t length) {
+    for (uint32_t i = 0; i < length; i++) {
         buff[i] = ((uint8_t *)addr)[i];
     }
 }
@@ -20,38 +18,18 @@ extern void drv_flash_read(uint8_t *buff, uint32_t addr, uint32_t length)
  * @brief 向 Flash 内写入数据
  * @param buff 写入缓冲区
  * @param addr 写入地址（需要为页起始地址，256字节对齐）
- * @param length 写入长度（需要 2 字节对齐、最大为页大小 2048）
+ * @param length 写入长度（需要 4 字节对齐）
  * @return 写入状态（0 为成功，-1 为失败）
  */
-extern int drv_flash_write(uint8_t *buff, uint32_t addr, uint32_t length)
-{
-    FLASH_Status ret;
+extern int drv_flash_write (uint8_t *buff, uint32_t addr, uint32_t length) {
 
-    FLASH_Unlock();
-    ret = FLASH_ErasePage(addr);
-    if (ret != FLASH_COMPLETE)
-    {
-        goto error;
+    FLASH_Unlock_Fast();
+    FLASH_Access_Clock_Cfg (FLASH_Access_SYSTEM_HALF);
+    for (uint32_t pos = addr; pos < addr + length; pos += 256) {
+        FLASH_ErasePage_Fast (pos);
+        FLASH_ProgramPage_Fast (pos, (uint32_t *)(&buff[pos - addr]));
     }
+    FLASH_Lock_Fast();
 
-    for (uint32_t i = 0; i < length / 2; i++)
-    {
-        ret = FLASH_ProgramHalfWord(addr, ((uint16_t *)buff)[i]);
-        addr += 2;
-        if (ret != FLASH_COMPLETE)
-        {
-            goto error;
-        }
-    }
-
-error:
-    FLASH_Lock();
-    if (ret != FLASH_COMPLETE)
-    {
-        return -1;
-    }
-    else
-    {
-        return 0;
-    }
+    return 0;
 }

@@ -120,63 +120,55 @@ static fat_dir_type g_file_attr;
 static uint32_t file_write_nr = 0;
 static bool file_erase = false;
 
-static uint32_t fat16_memory_cmp(uint8_t *dst, uint8_t *src, uint32_t len);
-static uint32_t fat16_memory_copy(uint8_t *dst, const uint8_t *src, uint32_t len);
-static uint32_t fat16_memory_memset(uint8_t *dst, uint8_t set, uint32_t len);
+static uint32_t fat16_memory_cmp (uint8_t *dst, uint8_t *src, uint32_t len);
+static uint32_t fat16_memory_copy (uint8_t *dst, const uint8_t *src, uint32_t len);
+static uint32_t fat16_memory_memset (uint8_t *dst, uint8_t set, uint32_t len);
 
-uint32_t flash_fat16_root_dir_write(uint32_t fat_lbk, uint8_t *data, uint32_t len);
-uint32_t flash_fat16_sector_write(uint32_t fat_lbk, uint8_t *data, uint32_t len);
+uint32_t flash_fat16_root_dir_write (uint32_t fat_lbk, uint8_t *data, uint32_t len);
+uint32_t flash_fat16_sector_write (uint32_t fat_lbk, uint8_t *data, uint32_t len);
 
-uint32_t flash_write_data(uint32_t address, uint8_t *data, uint32_t len);
-uint32_t flash_read_data(uint32_t address, uint8_t *data, uint32_t len);
+uint32_t flash_write_data (uint32_t address, uint8_t *data, uint32_t len);
+uint32_t flash_read_data (uint32_t address, uint8_t *data, uint32_t len);
 
-static uint32_t fat16_memory_copy(uint8_t *dst, const uint8_t *src, uint32_t len)
-{
+static uint32_t fat16_memory_copy (uint8_t *dst, const uint8_t *src, uint32_t len) {
     uint32_t i_index;
-    for (i_index = 0; i_index < len; i_index++)
-    {
+    for (i_index = 0; i_index < len; i_index++) {
         dst[i_index] = src[i_index];
     }
     return i_index;
 }
 
-static uint32_t fat16_memory_memset(uint8_t *dst, uint8_t set, uint32_t len)
-{
-    for (uint32_t i_index = 0; i_index < len; i_index++)
-    {
+static uint32_t fat16_memory_memset (uint8_t *dst, uint8_t set, uint32_t len) {
+    for (uint32_t i_index = 0; i_index < len; i_index++) {
         dst[i_index] = (uint8_t)set;
     }
     return len;
 }
 
-static uint32_t fat16_memory_cmp(uint8_t *dst, uint8_t *src, uint32_t len)
-{
+static uint32_t fat16_memory_cmp (uint8_t *dst, uint8_t *src, uint32_t len) {
     uint32_t i_index;
-    for (i_index = 0; i_index < len; i_index++)
-    {
+    for (i_index = 0; i_index < len; i_index++) {
         if (dst[i_index] != src[i_index])
             return 1;
     }
     return 0;
 }
 
-uint32_t flash_fat16_read(uint32_t fat_lbk, uint8_t *data, uint32_t len)
-{
-    fat16_memory_memset(data, 0, VFAT16_CONF_SECTOR_SIZE);
-    switch (fat_lbk)
-    {
+uint32_t flash_fat16_read (uint32_t fat_lbk, uint8_t *data, uint32_t len) {
+    fat16_memory_memset (data, 0, VFAT16_CONF_SECTOR_SIZE);
+    switch (fat_lbk) {
     case FLASH_FAT16_BOOT_SECTOR_ADDR:
-        fat16_memory_copy(data, fat16_boot_sector, FAT16_BOOT_SECTOR_SIZE);
+        fat16_memory_copy (data, fat16_boot_sector, FAT16_BOOT_SECTOR_SIZE);
         break;
     case FLASH_FAT16_1_ADDR:
     case FLASH_FAT16_2_ADDR:
-        fat16_memory_copy(data, fat16_table_sector0, FAT16_TABLE_SIZE);
+        fat16_memory_copy (data, fat16_table_sector0, FAT16_TABLE_SIZE);
         break;
     case FLASH_FAT16_ROOT_ADDR:
-        fat16_memory_copy(data, fat16_root_dir_sector, FAT16_DIR_SIZE);
+        fat16_memory_copy (data, fat16_root_dir_sector, FAT16_DIR_SIZE);
         break;
     case FLASH_FAT16_FILE_START_ADDR:
-        fat16_memory_copy(data, vfat16_file_data, sizeof(vfat16_file_data));
+        fat16_memory_copy (data, vfat16_file_data, sizeof (vfat16_file_data));
         break;
     default:
         break;
@@ -194,70 +186,75 @@ static const char hex_format[] = "0123456789ABCDEF";
 #define INFO_FILE_FWVER_OFFSET (98)
 #define INFO_FILE_CRC32_OFFSET (120)
 
-void fat16_file_init(void)
-{
+size_t str_copy_limit (char *dst, const char *src, size_t max_len) {
+    size_t i = 0;
+    while (i < max_len && src[i] != '\0') {
+        dst[i] = src[i];
+        i++;
+    }
+    return i;
+}
+
+void fat16_file_init (void) {
     uint8_t *pdest;
 
     // Fix UID
     pdest = &vfat16_file_data[INFO_FILE_SN_OFFSET];
-    for (int j = 0; j < 3; j++)
-    {
+    for (int j = 0; j < 3; j++) {
         uint32_t IC_UID = *(uint32_t *)(0x1FFFF7E8 + j * 4);
-        for (int i = 0; i < 8; i++)
-        {
+        for (int i = 0; i < 8; i++) {
             pdest[i + j * 8] = hex_format[(IC_UID >> i * 4) & 0xF];
         }
     }
 
     // HWVER
     pdest = &vfat16_file_data[INFO_FILE_HWVER_OFFSET];
-    memset(pdest, ' ', 8);
-    strncpy((char *)pdest, (const char *)HARDWARE_VER_STR_ADDR, 8);
+    memset (pdest, ' ', 8);
+    str_copy_limit ((char *)pdest, (const char *)HARDWARE_VER_STR_ADDR, 8);
 
     // BLVER
     pdest = &vfat16_file_data[INFO_FILE_BLVER_OFFSET];
-    memset(pdest, ' ', 8);
-    strncpy((char *)pdest, (const char *)BOOTLOADER_VER_STR_ADDR, 8);
+    memset (pdest, ' ', 8);
+    str_copy_limit ((char *)pdest, (const char *)BOOTLOADER_VER_STR_ADDR, 8);
 
     // CRC32 Check State
-    if (g_app_verify_state)
-    {
+    if (g_app_verify_state) {
         // Desc string
-        strncpy((char *)&vfat16_file_data[INFO_FILE_DESC_OFFSET], (const char*)APPLICATION_DESC_STR_ADDR, 24);
+        pdest = &vfat16_file_data[INFO_FILE_DESC_OFFSET];
+        memset (pdest, ' ', 24);
+        str_copy_limit ((char *)pdest, (const char *)APPLICATION_DESC_STR_ADDR, 24);
+
         // Check State
-        memcpy(&vfat16_file_data[INFO_FILE_CRC32_OFFSET], "pass", 4);
+        memcpy (&vfat16_file_data[INFO_FILE_CRC32_OFFSET], "pass", 4);
+
         // FWVER
         pdest = &vfat16_file_data[INFO_FILE_FWVER_OFFSET];
-        memset(pdest, ' ', 8);
-        strncpy((char *)pdest, (const char *)APPLICATION_VER_STR_ADDR, 8);
+        memset (pdest, ' ', 8);
+        str_copy_limit ((char *)pdest, (const char *)APPLICATION_VER_STR_ADDR, 8);
     }
 }
 #endif
 
-uint32_t flash_fat16_write(uint32_t fat_lbk, uint8_t *data, uint32_t len)
-{
-    switch (fat_lbk)
-    {
+uint32_t flash_fat16_write (uint32_t fat_lbk, uint8_t *data, uint32_t len) {
+    switch (fat_lbk) {
     case FLASH_FAT16_BOOT_SECTOR_ADDR:
         break;
     case FLASH_FAT16_1_ADDR:
     case FLASH_FAT16_2_ADDR:
         break;
     case FLASH_FAT16_ROOT_ADDR:
-        flash_fat16_root_dir_write(fat_lbk, data, len);
+        flash_fat16_root_dir_write (fat_lbk, data, len);
         break;
     default:
-        if (fat_lbk >= FLASH_FAT16_FILE_START_ADDR)
-        {
-            flash_fat16_sector_write(fat_lbk, data, len);
+        if (fat_lbk >= FLASH_FAT16_FILE_START_ADDR) {
+            flash_fat16_sector_write (fat_lbk, data, len);
         }
         break;
     }
     return len;
 }
 
-uint32_t flash_fat16_root_dir_write(uint32_t fat_lbk, uint8_t *data, uint32_t len)
-{
+uint32_t flash_fat16_root_dir_write (uint32_t fat_lbk, uint8_t *data, uint32_t len) {
     fat_dir_type *pdir = (fat_dir_type *)data;
     fat_long_name_type *plong_name = (fat_long_name_type *)data;
 
@@ -267,54 +264,43 @@ uint32_t flash_fat16_root_dir_write(uint32_t fat_lbk, uint8_t *data, uint32_t le
     plong_name += 2;
     loop_len += 64;
 
-    while (i_index++ < 2048 / 32 && loop_len < len)
-    {
-        if (((pdir->attr & 0x20) && ((pdir + 1)->attr == 0x00)) && plong_name->long_name_mark != 0x0F && plong_name->attr != 0xe5 && pdir->file_size != 0)
-        {
+    while (i_index++ < 2048 / 32 && loop_len < len) {
+        if (((pdir->attr & 0x20) && ((pdir + 1)->attr == 0x00)) && plong_name->long_name_mark != 0x0F && plong_name->attr != 0xe5 && pdir->file_size != 0) {
             // continue find
             break;
-        }
-        else
-        {
+        } else {
             pdir++;
             plong_name++;
         }
         loop_len += 32;
     }
 
-    if (i_index <= 2048 / 32 && loop_len < len && plong_name->long_name_mark != 0x0F && plong_name->attr != 0xe5 && pdir->file_size != 0)
-    {
-        fat16_memory_copy((uint8_t *)&g_file_attr, (const uint8_t *)pdir, 32);
+    if (i_index <= 2048 / 32 && loop_len < len && plong_name->long_name_mark != 0x0F && plong_name->attr != 0xe5 && pdir->file_size != 0) {
+        fat16_memory_copy ((uint8_t *)&g_file_attr, (const uint8_t *)pdir, 32);
 
         file_erase = true;
         file_write_nr = 0;
-    }
-    else
-    {
-        fat16_memory_memset((uint8_t *)&g_file_attr, 0, 32);
+    } else {
+        fat16_memory_memset ((uint8_t *)&g_file_attr, 0, 32);
     }
     return len;
 }
 
-uint32_t flash_fat16_sector_write(uint32_t fat_lbk, uint8_t *data, uint32_t len)
-{
+uint32_t flash_fat16_sector_write (uint32_t fat_lbk, uint8_t *data, uint32_t len) {
     uint32_t file_size = g_file_attr.file_size;
     uint32_t status;
 
-    if (file_size > VFAT16_FLASH_SIZE)
-    {
+    if (file_size > VFAT16_FLASH_SIZE) {
         return 0;
     }
 
-    if ((fat16_memory_cmp((uint8_t *)&g_file_attr.file_name[8],
-                          (uint8_t *)FILE_SUFFIX1_NAME, FILE_SUFFIX1_LEN) == 0) ||
-        (fat16_memory_cmp((uint8_t *)&g_file_attr.file_name[8],
-                          (uint8_t *)FILE_SUFFIX2_NAME, FILE_SUFFIX2_LEN) == 0))
-    {
+    if ((fat16_memory_cmp ((uint8_t *)&g_file_attr.file_name[8],
+                           (uint8_t *)FILE_SUFFIX1_NAME, FILE_SUFFIX1_LEN) == 0) ||
+        (fat16_memory_cmp ((uint8_t *)&g_file_attr.file_name[8],
+                           (uint8_t *)FILE_SUFFIX2_NAME, FILE_SUFFIX2_LEN) == 0)) {
 
         /* check the status */
-        if (file_erase)
-        {
+        if (file_erase) {
             // flash_unlock();
             // for (uint32_t i = 0; i < 352; i++)
             // {
@@ -326,34 +312,27 @@ uint32_t flash_fat16_sector_write(uint32_t fat_lbk, uint8_t *data, uint32_t len)
 
         file_size = g_file_attr.file_size;
 
-        if ((file_write_nr + len) >= file_size)
-        {
+        if ((file_write_nr + len) >= file_size) {
             len = file_size - file_write_nr;
         }
 
         /* write data to flash and check crc */
-        status = flash_write_data(file_write_nr, data, len);
+        status = flash_write_data (file_write_nr, data, len);
 
         file_write_nr += len;
 
-        if (status == 0)
-        {
-            if (file_write_nr >= file_size)
-            {
+        if (status == 0) {
+            if (file_write_nr >= file_size) {
                 /* download finish */
                 file_write_nr = 0;
                 g_app_download_finished = 1;
             }
-        }
-        else
-        {
+        } else {
             /* download error */
             file_write_nr = 0;
             g_app_download_finished = 1;
         }
-    }
-    else
-    {
+    } else {
         // do nothing
     }
 
@@ -368,10 +347,10 @@ uint32_t flash_fat16_sector_write(uint32_t fat_lbk, uint8_t *data, uint32_t len)
  * @param len Number of bytes to read
  * @return uint32_t Number of bytes read
  */
-uint32_t flash_read_data(uint32_t address, uint8_t *data, uint32_t len)
-{
+uint32_t flash_read_data (uint32_t address, uint8_t *data, uint32_t len) {
     return 0;
 }
+
 /**
  * @brief Write data to flash
  *
@@ -380,15 +359,13 @@ uint32_t flash_read_data(uint32_t address, uint8_t *data, uint32_t len)
  * @param len Number of bytes to write
  * @return uint32_t Number of bytes written
  */
-uint32_t flash_write_data(uint32_t address, uint8_t *data, uint32_t len)
-{
-    if (len != VFAT16_CONF_SECTOR_SIZE)
-    {
-        memset(&data[len], 0xFF, VFAT16_CONF_SECTOR_SIZE - len);
+uint32_t flash_write_data (uint32_t address, uint8_t *data, uint32_t len) {
+    if (len != VFAT16_CONF_SECTOR_SIZE) {
+        memset (&data[len], 0xFF, VFAT16_CONF_SECTOR_SIZE - len);
         len = VFAT16_CONF_SECTOR_SIZE;
     }
 
-    drv_flash_write(data, address + VFAT16_FLASH_START_ADDR, len);
+    drv_flash_write (data, address + VFAT16_FLASH_START_ADDR, len);
 
     return 0;
 }
