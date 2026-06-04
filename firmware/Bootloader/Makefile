@@ -1,9 +1,9 @@
 # 项目编译目标名
-TARGET = akaLink_Compact_App
+TARGET = akaLink_Compact_DFU
 # 调试信息
 DEBUG = 1
 # 优化等级
-OPT = -Ofast
+OPT = -Os
 # 链接时优化
 LTO = -flto
 
@@ -22,16 +22,14 @@ C_DEFS += -DCONFIG_USB_HS
 C_INCLUDES += -Iapp/
 C_INCLUDES += -Idrv/
 C_INCLUDES += -Iusb/
-C_INCLUDES += -Idap/
 C_INCLUDES += -Isys/
-C_INCLUDES += -Ihscope/
+C_INCLUDES += -Ivfat/
 
 C_INCLUDES += -I../Drivers/inc
 
 C_INCLUDES += -I../Middleware/CherryUSB/common
 C_INCLUDES += -I../Middleware/CherryUSB/core
-C_INCLUDES += -I../Middleware/CherryUSB/class/hid
-C_INCLUDES += -I../Middleware/CherryUSB/class/cdc
+C_INCLUDES += -I../Middleware/CherryUSB/class/msc
 C_INCLUDES += -I../Middleware/CherryUSB/port/ch32/ch32hs
 
 C_INCLUDES += -I../Middleware/CherryRB
@@ -42,11 +40,10 @@ C_SOURCES += $(wildcard ../Drivers/src/*.c)
 C_SOURCES += $(wildcard app/*.c)
 C_SOURCES += $(wildcard drv/*.c)
 C_SOURCES += $(wildcard usb/*.c)
-C_SOURCES += $(wildcard dap/*.c)
+C_SOURCES += $(wildcard vfat/*.c)
 
 C_SOURCES += $(wildcard ../Middleware/CherryRB/*.c)
-C_SOURCES += $(wildcard ../Middleware/CherryUSB/class/cdc/*.c)
-C_SOURCES += $(wildcard ../Middleware/CherryUSB/class/hid/*.c)
+C_SOURCES += $(wildcard ../Middleware/CherryUSB/class/msc/*.c)
 C_SOURCES += $(wildcard ../Middleware/CherryUSB/port/ch32/ch32hs/*.c)
 C_SOURCES += $(wildcard ../Middleware/CherryUSB/core/*.c)
 

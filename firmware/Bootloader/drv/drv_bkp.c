@@ -14,3 +14,7 @@ void drv_bkp_init (void) {
 void drv_bkp_write_reg (uint16_t data) {
     BKP_WriteBackupRegister (BKP_DR1, data);
 }
+
+uint16_t drv_bkp_read_reg (void) {
+    return BKP_ReadBackupRegister (BKP_DR1);
+}

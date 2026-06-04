@@ -7,7 +7,7 @@
 #define VFAT16_CONF_SECTOR_SIZE (2048)
 
 #define VFAT16_FLASH_START_ADDR (0x08010000)
-#define VFAT16_FLASH_SIZE (48 * 1024)
+#define VFAT16_FLASH_SIZE (100 * 1024)
 
 #ifdef __cplusplus
 extern "C"

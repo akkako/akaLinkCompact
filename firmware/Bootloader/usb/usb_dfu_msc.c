@@ -7,8 +7,8 @@
 #define MSC_IN_EP 0x81
 #define MSC_OUT_EP 0x02
 
-#define USBD_VID 0xFFFF
-#define USBD_PID 0x0001
+#define USBD_VID 0x0D28
+#define USBD_PID 0x0204
 #define USBD_MAX_POWER 250
 #define USBD_LANGID_STRING 1033
 
@@ -50,7 +50,7 @@ static const uint8_t device_quality_descriptor[] = {
     0x00,
 };
 
-char dynamic_serial_number[20] = {0};
+char dynamic_serial_number[25] = {0};
 
 static const char *string_descriptors[] = {
     (const char[]){0x09, 0x04}, /* Langid */
@@ -125,7 +125,7 @@ static const char hex_format[] = "0123456789ABCDEF";
 void usb_msc_init(uint8_t busid, uintptr_t reg_base)
 {
     // Fix UID
-    for (int j = 0; j < 2; j++)
+    for (int j = 0; j < 3; j++)
     {
         uint32_t IC_UID = *(uint32_t *)(0x1FFFF7E8 + j * 4);
         for (int i = 0; i < 8; i++)

@@ -9,6 +9,7 @@ extern "C" {
 
 void drv_bkp_init (void);
 void drv_bkp_write_reg (uint16_t data);
+uint16_t drv_bkp_read_reg (void);
 
 #ifdef __cplusplus
 }

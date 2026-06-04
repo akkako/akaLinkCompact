@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "dap_config.h": "c"
+        "dap_config.h": "c",
+        "sys_define.h": "c",
+        "drv_print.h": "c"
     }
 }

@@ -2,6 +2,7 @@
 #include "usbd_core.h"
 #include <strings.h>
 #include "drv_flash.h"
+#include "sys_define.h"
 
 #define FAT16_BOOT_SECTOR_SIZE (512)
 #define FAT16_TABLE_SIZE (5)
@@ -93,7 +94,8 @@ const uint8_t fat16_root_dir_sector[FAT16_DIR_SIZE] = {
     'a', 'k', 'a', 'L', 'i', 'n', 'k', 'D', 'F', 'U', 0x00, 0x08, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xBC, 0x41, 0x23, 0x59, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     'I', 'N', 'F', 'O', 0x20, 0x20, 0x20, 0x20, 0x54, 0x58, 0x54, 0x20, 0x00, 0x18, 0xBD, 0x41,
-    0x23, 0x59, 0x23, 0x59, 0x00, 0x00, 0x7B, 0x3D, 0x23, 0x59, 0x02, 0x00, 196, 0x00, 0x00, 0x00};
+    0x23, 0x59, 0x23, 0x59, 0x00, 0x00, 0x7B, 0x3D, 0x23, 0x59, 0x02, 0x00, 172, 0x00, 0x00, 0x00};
+
 // FAT table
 const uint8_t fat16_table_sector0[FAT16_TABLE_SIZE] =
     {
@@ -105,10 +107,11 @@ const uint8_t fat16_table_sector0[FAT16_TABLE_SIZE] =
 };
 
 uint8_t vfat16_file_data[] =
-    "SN:0000000000000000\r\n"
-    "HWVER:        \r\n"
-    "BLVER:        \r\n"
-    "FWVER:        \r\n"
+    "SN:000000000000000000000000\r\n"
+    "Desc:Unknown Firmware        \r\n"
+    "HWVER:Unknown \r\n"
+    "BLVER:Unknown \r\n"
+    "FWVER:Unknown \r\n"
     "CRC32 Check:fail\r\n"
     "Please drag new firmware into here to upgrade.";
 
@@ -184,12 +187,20 @@ uint32_t flash_fat16_read(uint32_t fat_lbk, uint8_t *data, uint32_t len)
 #if 1
 static const char hex_format[] = "0123456789ABCDEF";
 
+#define INFO_FILE_SN_OFFSET (3)
+#define INFO_FILE_DESC_OFFSET (34)
+#define INFO_FILE_HWVER_OFFSET (66)
+#define INFO_FILE_BLVER_OFFSET (82)
+#define INFO_FILE_FWVER_OFFSET (98)
+#define INFO_FILE_CRC32_OFFSET (120)
+
 void fat16_file_init(void)
 {
-    uint8_t *pdest = &vfat16_file_data[3];
+    uint8_t *pdest;
 
     // Fix UID
-    for (int j = 0; j < 2; j++)
+    pdest = &vfat16_file_data[INFO_FILE_SN_OFFSET];
+    for (int j = 0; j < 3; j++)
     {
         uint32_t IC_UID = *(uint32_t *)(0x1FFFF7E8 + j * 4);
         for (int i = 0; i < 8; i++)
@@ -198,25 +209,27 @@ void fat16_file_init(void)
         }
     }
 
-    pdest = &vfat16_file_data[122];
-    uint32_t VSN = *(uint32_t *)(0x0800F800);
-    for (int i = 0; i < 8; i++)
-    {
-        pdest[i] = hex_format[(VSN >> (7 - i) * 4) & 0xF];
-    }
+    // HWVER
+    pdest = &vfat16_file_data[INFO_FILE_HWVER_OFFSET];
+    memset(pdest, ' ', 8);
+    strncpy((char *)pdest, (const char *)HARDWARE_VER_STR_ADDR, 8);
 
-    pdest = &vfat16_file_data[140];
-    uint32_t HWVER = *(uint32_t *)(0x0800F804);
-    for (int i = 0; i < 8; i++)
-    {
-        pdest[i] = hex_format[(HWVER >> (7 - i) * 4) & 0xF];
-    }
+    // BLVER
+    pdest = &vfat16_file_data[INFO_FILE_BLVER_OFFSET];
+    memset(pdest, ' ', 8);
+    strncpy((char *)pdest, (const char *)BOOTLOADER_VER_STR_ADDR, 8);
 
+    // CRC32 Check State
     if (g_app_verify_state)
     {
-        memcpy(&vfat16_file_data[37 - 8], g_app_version_str, 36);
-        memcpy(&vfat16_file_data[92 - 8], g_app_compile_time, 19);
-        memcpy(&vfat16_file_data[119 - 8], "pass", 5);
+        // Desc string
+        strncpy((char *)&vfat16_file_data[INFO_FILE_DESC_OFFSET], (const char*)APPLICATION_DESC_STR_ADDR, 24);
+        // Check State
+        memcpy(&vfat16_file_data[INFO_FILE_CRC32_OFFSET], "pass", 4);
+        // FWVER
+        pdest = &vfat16_file_data[INFO_FILE_FWVER_OFFSET];
+        memset(pdest, ' ', 8);
+        strncpy((char *)pdest, (const char *)APPLICATION_VER_STR_ADDR, 8);
     }
 }
 #endif
