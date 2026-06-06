@@ -71,7 +71,7 @@
 				"stop_on_first_build_error": true,
 				"pre_script": "",
 				"pre_script_description": "",
-				"post_script": "python ../pack.py",
+				"post_script": "python ../pack_mrs.py",
 				"post_script_description": "",
 				"excludeResources": [
 					"${project}/Startup/startup_ch32v30x_D8.S",
@@ -664,7 +664,7 @@
 		"address": "0x08000000",
 		"target_path": "obj\\akaLink_pack.bin",
 		"clkSpeed": "High",
-		"debug_interface_mode": "",
+		"debug_interface_mode": "1-wire serial",
 		"erase": false,
 		"program": true,
 		"verify": true,

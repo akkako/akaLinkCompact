@@ -22,7 +22,6 @@ extern void drv_flash_read (uint8_t *buff, uint32_t addr, uint32_t length) {
  * @return 写入状态（0 为成功，-1 为失败）
  */
 extern int drv_flash_write (uint8_t *buff, uint32_t addr, uint32_t length) {
-
     FLASH_Unlock_Fast();
     FLASH_Access_Clock_Cfg (FLASH_Access_SYSTEM_HALF);
     for (uint32_t pos = addr; pos < addr + length; pos += 256) {

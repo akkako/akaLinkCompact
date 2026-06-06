@@ -8,7 +8,8 @@ OPT = -Os
 LTO = -flto
 
 # 检测操作系统
-OS := $(shell uname -s)
+# OS := $(shell uname -s)
+OS := Windows_NT
 
 # 编译临时文件目录
 BUILD_DIR = build
@@ -186,7 +187,8 @@ $(EXEC_DIR):
 POST_BUILD: $(EXEC_DIR)/$(TARGET).elf $(EXEC_DIR)/$(TARGET).bin
 	@echo "[DUMP]  $< -> $(EXEC_DIR)/$(TARGET).s"
 	@$(DUMP) -d $< > $(EXEC_DIR)/$(TARGET).s
-
+	@echo "[PACK]  $(EXEC_DIR)/$(TARGET).bin -> $(EXEC_DIR)/$(TARGET)_pack.bin"
+	@python pack_makefile.py
 # 	@echo "[SIZE]  $<"
 # 	@$(SZ) $<
 
