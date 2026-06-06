@@ -189,9 +189,8 @@ $(EXEC_DIR):
 POST_BUILD: $(EXEC_DIR)/$(TARGET).elf $(EXEC_DIR)/$(TARGET).bin
 	@echo "[DUMP]  $< -> $(EXEC_DIR)/$(TARGET).s"
 	@$(DUMP) -d $< > $(EXEC_DIR)/$(TARGET).s
-
-# 	@echo "[SIZE]  $<"
-# 	@$(SZ) $<
+	@echo "[PACK]  $(EXEC_DIR)/$(TARGET).bin -> $(EXEC_DIR)/$(TARGET)_pack.bin"
+	@python proj/pack.py make
 
 	@echo "Build Finish"
 

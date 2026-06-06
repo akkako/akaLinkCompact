@@ -55,30 +55,23 @@ void app_param_save(void)
 {
     FLASH_Status FLASHStatus = FLASH_COMPLETE;
 
-    printf("Flash Save Start, CTLR=%08X\r\n", (unsigned)FLASH->CTLR);
-
     FLASH_Unlock();
 
     /* 配置 FLASH 访问时钟为系统时钟的一半 (144MHz/2 = 72MHz < 60MHz 限制)
      * 注意：必须在 FLASH_Unlock 之后调用 */
     FLASH_Access_Clock_Cfg(FLASH_Access_SYSTEM_HALF);
 
-    printf("After clock cfg, CTLR=%08X\r\n", (unsigned)FLASH->CTLR);
-
     FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP | FLASH_FLAG_WRPRTERR);
 
     /* 检查 FLASH 状态 */
     FLASHStatus = FLASH_GetStatus();
-    printf("Before erase, status=%d\r\n", FLASHStatus);
 
     FLASHStatus = FLASH_ErasePage(APP_PARAM_ADDR_OFFSET); // Erase 4KB
     if (FLASHStatus != FLASH_COMPLETE)
     {
-        printf("FLASH Erase Fail, status=%d\r\n", FLASHStatus);
         FLASH_Lock();
         return;
     }
-    printf("Erase OK\r\n");
 
     uint16_t *p_data = (uint16_t *)&g_param;
     for (size_t addr = 0; addr < sizeof(app_param_t); addr += 2)
@@ -86,36 +79,12 @@ void app_param_save(void)
         FLASHStatus = FLASH_ProgramHalfWord(APP_PARAM_ADDR_OFFSET + addr, p_data[addr / 2]);
         if (FLASHStatus != FLASH_COMPLETE)
         {
-            printf("FLASH Program Fail at addr=%08X, status=%d, STATR=%08X\r\n",
-                   APP_PARAM_ADDR_OFFSET + addr, FLASHStatus, (unsigned)FLASH->STATR);
             FLASH_Lock();
             return;
         }
     }
 
     FLASH_Lock();
-
-    /* 验证写入的数据 */
-    uint32_t *p_flash = (uint32_t *)APP_PARAM_ADDR_OFFSET;
-    uint32_t *p_ram = (uint32_t *)&g_param;
-    int verify_ok = 1;
-    for (size_t i = 0; i < sizeof(app_param_t) / 4; i++)
-    {
-        if (p_flash[i] != p_ram[i])
-        {
-            verify_ok = 0;
-            printf("Verify Fail: offset=%d, flash=0x%08X, ram=0x%08X\r\n", (int)i * 4, (unsigned)p_flash[i], (unsigned)p_ram[i]);
-        }
-    }
-
-    if (verify_ok)
-    {
-        printf("Flash Save OK, size=%d\r\n", (int)sizeof(app_param_t));
-    }
-    else
-    {
-        printf("Flash Save Verify FAIL\r\n");
-    }
 }
 
 void app_param_proc_hid(uint8_t *req_hid, uint8_t *res_hid)

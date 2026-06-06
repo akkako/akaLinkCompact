@@ -2,30 +2,38 @@ from datetime import datetime
 import binascii
 import os
 import struct
+import sys
 
-app_filename = "akaLink.bin"
-output_filename = "akaLink_pack.bin"
+args = sys.argv[1:]
 
-desc_str = 'CMSIS-DAP'
+if args[0] == "mrs":
+    app_filename = "akaLink_Compact_App.bin"
+    output_filename = "akaLink_Compact_App_pack.bin"
+elif args[0] == "make":
+    app_filename = "build_exec/akaLink_Compact_App.bin"
+    output_filename = "build_exec/akaLink_Compact_App_pack.bin"
+else :
+    exit()
+
+desc_str = 'CMSIS-DAP v2.1'
 fw_ver_str = '0.02'
 
 # 地址与长度常量
-FIRMWARE_MAX_LEN = 0x17F00     # 固件最大长度：98048 bytes
+FIRMWARE_MAX_LEN  = 0x17F00     # 固件最大长度：98048 bytes
 
-APP_LENGTH_OFFSET   = 0x0000      # 固件长度偏移
-APP_LENGTH_LEN   = 4      # 固件长度偏移
-APP_CRC32_OFFSET   = 0x0004      # 固件CRC32偏移
-APP_CRC32_LEN   = 4      # 固件CRC32偏移
+APP_LENGTH_OFFSET = 0x0000      # 固件长度偏移
+APP_LENGTH_LEN    = 4           # 固件长度长度
+APP_CRC32_OFFSET  = 0x0004      # 固件CRC32偏移
+APP_CRC32_LEN     = 4           # 固件CRC32长度
 
-FW_VER_OFFSET   = 0x0008      # 版本字符串偏移
-FW_VER_LEN      = 8           # 版本字符串长度
-TIME_OFFSET      = 0x0010      # 编译时间偏移
-TIME_LEN         = 20          # 编译时间总长度（含末尾 0x00）
-DESC_STR_OFFSET = 0x0024
-DESC_STR_LEN    = 24
+FW_VER_OFFSET     = 0x0008      # 版本字符串偏移
+FW_VER_LEN        = 8           # 版本字符串长度
+TIME_OFFSET       = 0x0010      # 编译时间偏移
+TIME_LEN          = 20          # 编译时间总长度（含末尾 0x00）
+DESC_STR_OFFSET   = 0x0024      # 固件描述信息偏移
+DESC_STR_LEN      = 24          # 固件描述信息长度
 
-APP_CODE_OFFSET = 0x0100
-
+APP_CODE_OFFSET   = 0x0100      # 固件起始偏移地址
 
 # 获取当前时间
 current_time = datetime.now()
@@ -68,8 +76,7 @@ time_bytes = time_str_bytes + b'\x00' * (TIME_LEN - len(time_str_bytes))
 # 构建输出缓冲区，初始全部填充 0xFF
 output = bytearray([0xFF] * (app_len+256))
 
-# 在指定偏移写入数据
-
+# 指定偏移写入数据
 output[APP_LENGTH_OFFSET:APP_LENGTH_OFFSET + APP_LENGTH_LEN] = struct.pack('<I', app_len)
 output[APP_CRC32_OFFSET:APP_CRC32_OFFSET + APP_CRC32_LEN] = struct.pack('<I', crc32_value)
 output[FW_VER_OFFSET:FW_VER_OFFSET + FW_VER_LEN] = fw_ver_bytes

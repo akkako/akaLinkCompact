@@ -2,17 +2,26 @@ from datetime import datetime
 import binascii
 import os
 import struct
+import sys
 
-app_filename = "akaLink.bin"
-output_filename = "akaLink_pack.bin"
+args = sys.argv[1:]
+
+if args[0] == "mrs":
+    app_filename = "akaLink_Compact_Dfu.bin"
+    output_filename = "akaLink_Compact_Dfu_pack.bin"
+elif args[0] == "make":
+    app_filename = "build_exec/akaLink_Compact_Dfu.bin"
+    output_filename = "build_exec/akaLink_Compact_Dfu_pack.bin"
+else :
+    exit()
 
 bl_ver_str = '1.02'
 hw_ver_str = 'A.01'
 
 # 地址与长度常量
 FIRMWARE_MAX_LEN = 0x6EE4      # 固件最大长度：28388 bytes
-BL_VER_OFFSET   = 0x6EE4      # 版本字符串偏移
-BL_VER_LEN      = 8           # 版本字符串长度
+BL_VER_OFFSET   = 0x6EE4       # 版本字符串偏移
+BL_VER_LEN      = 8            # 版本字符串长度
 TIME_OFFSET      = 0x6EEC      # 编译时间偏移
 TIME_LEN         = 20          # 编译时间总长度（含末尾 0x00）
 TOTAL_SIZE       = 0x6F00 + 256

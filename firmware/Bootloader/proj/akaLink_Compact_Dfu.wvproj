@@ -54,7 +54,7 @@
 				"name": "*.wvproj"
 			}
 		],
-		"projectName": "akaLink",
+		"projectName": "akaLink_Compact_Dfu",
 		"architecture": "RISC-V",
 		"projectType": "c"
 	},
@@ -71,7 +71,7 @@
 				"stop_on_first_build_error": true,
 				"pre_script": "",
 				"pre_script_description": "",
-				"post_script": "python ../pack_mrs.py",
+				"post_script": "python ../pack.py mrs",
 				"post_script_description": "",
 				"excludeResources": [
 					"${project}/Startup/startup_ch32v30x_D8.S",
@@ -662,7 +662,7 @@
 	"flashConfig": {
 		"mcutype": "CH32V30x",
 		"address": "0x08000000",
-		"target_path": "obj\\akaLink_pack.bin",
+		"target_path": "obj\\akaLink_Compact_Dfu_pack.bin",
 		"clkSpeed": "High",
 		"debug_interface_mode": "1-wire serial",
 		"erase": false,

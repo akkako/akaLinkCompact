@@ -71,7 +71,7 @@
 				"stop_on_first_build_error": true,
 				"pre_script": "",
 				"pre_script_description": "",
-				"post_script": "python ../pack.py",
+				"post_script": "python ../pack.py mrs",
 				"post_script_description": "",
 				"excludeResources": [
 					"${project}/Startup/startup_ch32v30x_D8.S",

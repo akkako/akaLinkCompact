@@ -44,12 +44,14 @@ jobs:
         with:
           name: build-artifact
           path: |
-            firmware/Application/build_exec/akaLink_Compact_App.bin
-            firmware/Application/build_exec/akaLink_Compact_App.elf
-            firmware/Application/build_exec/akaLink_Compact_App.hex
-            firmware/Bootloader/build_exec/akaLink_Compact_Boot.bin
-            firmware/Bootloader/build_exec/akaLink_Compact_Boot.elf
-            firmware/Bootloader/build_exec/akaLink_Compact_Boot.hex
+#            firmware/Application/build_exec/akaLink_Compact_App.bin
+            firmware/Application/build_exec/akaLink_Compact_App_pack.bin
+#            firmware/Application/build_exec/akaLink_Compact_App.elf
+#            firmware/Application/build_exec/akaLink_Compact_App.hex
+#            firmware/Bootloader/build_exec/akaLink_Compact_Dfu.bin
+            firmware/Bootloader/build_exec/akaLink_Compact_Dfu_pack.bin
+#            firmware/Bootloader/build_exec/akaLink_Compact_Dfu.elf
+#            firmware/Bootloader/build_exec/akaLink_Compact_Dfu.hex
       
   release:
     runs-on: ubuntu-latest
