@@ -14,10 +14,6 @@ runs:
         REPO_URL="https://github.com/akkako/riscv-wch-elf-gcc.git"
         ARCHIVE_NAME="MRS_Toolchain_Linux_x64_V240.tar.xz"
 
-        echo "[DEBUG] TOOLCHAIN_DIR=$TOOLCHAIN_DIR"
-        echo "[DEBUG] TOOLCHAIN_BIN=$TOOLCHAIN_BIN"
-        echo "[DEBUG] ARCHIVE_NAME=$ARCHIVE_NAME"
-
         # Check if already installed
         if [ -d "$TOOLCHAIN_BIN" ] && [ -x "$TOOLCHAIN_BIN/riscv32-wch-elf-gcc" ]; then
           echo "[INFO] WCH toolchain already installed at $TOOLCHAIN_DIR"
@@ -35,65 +31,39 @@ runs:
           cd ~
           git clone "$REPO_URL"
           cd "$TOOLCHAIN_DIR"
-          echo "[DEBUG] Current directory: $(pwd)"
-          echo "[DEBUG] Directory contents:"
-          ls -la
 
           # Extract the archive
           echo "[INFO] Extracting toolchain archive..."
-          echo "[DEBUG] Looking for archive: $ARCHIVE_NAME"
           if [ -f "$ARCHIVE_NAME" ]; then
-            echo "[DEBUG] Archive found, extracting..."
             tar -Jxf "$ARCHIVE_NAME"
           else
-            echo "[WARN] Archive $ARCHIVE_NAME not found, trying case-insensitive search..."
             FOUND_ARCHIVE=$(find . -maxdepth 1 -iname "*.tar.xz" | head -n 1)
             if [ -n "$FOUND_ARCHIVE" ]; then
-              echo "[DEBUG] Found archive: $FOUND_ARCHIVE"
               tar -Jxf "$FOUND_ARCHIVE"
             else
               echo "[ERROR] No .tar.xz archive found in $(pwd)"
-              ls -la
               exit 1
             fi
           fi
 
           # Rename the GCC directory for consistency
-          echo "[DEBUG] Toolchain directory contents after extract:"
-          ls -la
           cd Toolchain
-          echo "[DEBUG] Toolchain subdirectory contents:"
-          ls -la
           if [ -d "RISC-V Embedded GCC15" ]; then
-            echo "[DEBUG] Renaming 'RISC-V Embedded GCC15' to 'gcc15'"
             mv "RISC-V Embedded GCC15" "gcc15"
-          else
-            echo "[WARN] 'RISC-V Embedded GCC15' directory not found, checking contents..."
-            ls -la
           fi
 
           echo "[INFO] Toolchain installation completed."
         fi
-
-        echo "[DEBUG] Final TOOLCHAIN_BIN=$TOOLCHAIN_BIN"
-        echo "[DEBUG] Checking if TOOLCHAIN_BIN exists:"
-        ls -la "$TOOLCHAIN_DIR/Toolchain/" || true
 
         # Add to PATH for subsequent steps
         echo "$TOOLCHAIN_BIN" >> "$GITHUB_PATH"
 
         # Verify installation
         export PATH="$PATH:$TOOLCHAIN_BIN"
-        echo "[DEBUG] Updated PATH=$PATH"
-        echo "[DEBUG] Checking for riscv32-wch-elf-gcc..."
         if command -v riscv32-wch-elf-gcc &> /dev/null; then
           VERSION=$(riscv32-wch-elf-gcc --version | head -n 1)
           echo "[INFO] Toolchain is ready: $VERSION"
         else
           echo "[ERROR] Toolchain installation failed or not in PATH"
-          echo "[DEBUG] Searching for gcc binary in $TOOLCHAIN_DIR..."
-          find "$TOOLCHAIN_DIR" -name "riscv32-wch-elf-gcc" -type f 2>/dev/null || true
-          echo "[DEBUG] Listing all files in bin directories..."
-          find "$TOOLCHAIN_DIR" -type d -name "bin" -exec ls -la {} \; 2>/dev/null || true
           exit 1
         fi
