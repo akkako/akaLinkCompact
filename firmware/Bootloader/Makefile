@@ -66,15 +66,15 @@ LIBDIR +=
 #######################################
 # 编译器指定
 #######################################
-PREFIX = riscv-wch-elf-
+PREFIX = riscv32-wch-elf-
 # 启用下一项以指定GCC目录
 ifeq ($(OS),Darwin)
-GCC_PATH = /Applications/MounRiver Studio 2.app/Contents/Resources/app/resources/darwin/components/WCH/Toolchain/RISC-V Embedded GCC12/bin
+GCC_PATH = /Applications/MounRiver Studio 2.app/Contents/Resources/app/resources/darwin/components/WCH/Toolchain/RISC-V Embedded GCC15/bin
 else ifeq ($(OS),Linux)
 
 else ifeq ($(OS),Windows_NT)
-# GCC_PATH = C:/MounRiver/MounRiver_Studio2/resources/app/resources/win32/components/WCH/Toolchain/RISC-V Embedded GCC12/bin
-# GCC_PATH = D:/_tools/MRS/MounRiver_Studio2/resources/app/resources/win32/components/WCH/Toolchain/RISC-V Embedded GCC12/bin
+# GCC_PATH = C:/MounRiver/MounRiver_Studio2/resources/app/resources/win32/components/WCH/Toolchain/RISC-V Embedded GCC15/bin
+# GCC_PATH = D:/_tools/MRS/MounRiver_Studio2/resources/app/resources/win32/components/WCH/Toolchain/RISC-V Embedded GCC15/bin
 else
 $(error Unsupported OS)
 endif
