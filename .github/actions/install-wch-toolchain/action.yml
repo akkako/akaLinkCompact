@@ -1,0 +1,59 @@
+name: 'Install WCH modified GCC toolchain'
+description: 'Install WCH modified RISC-V GCC toolchain for CH32V307 and add it to PATH'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install WCH modified GCC toolchain
+      shell: bash
+      run: |
+        set -e
+
+        TOOLCHAIN_DIR="$HOME/riscv-wch-elf-gcc"
+        TOOLCHAIN_BIN="$TOOLCHAIN_DIR/Toolchain/gcc15/bin"
+        REPO_URL="https://github.com/akkako/riscv-wch-elf-gcc.git"
+        ARCHIVE_NAME="MRS_Toolchain_Linux_X64_V240.tar.xz"
+
+        # Check if already installed
+        if [ -d "$TOOLCHAIN_BIN" ] && [ -x "$TOOLCHAIN_BIN/riscv-none-elf-gcc" ]; then
+          echo "[INFO] WCH toolchain already installed at $TOOLCHAIN_DIR"
+        else
+          echo "[INFO] Installing WCH modified GCC toolchain..."
+
+          # Clean up old installation if exists
+          if [ -d "$TOOLCHAIN_DIR" ]; then
+            echo "[WARN] Removing old toolchain directory..."
+            rm -rf "$TOOLCHAIN_DIR"
+          fi
+
+          # Clone the repository
+          echo "[INFO] Cloning toolchain repository..."
+          cd ~
+          git clone "$REPO_URL"
+          cd "$TOOLCHAIN_DIR"
+
+          # Extract the archive
+          echo "[INFO] Extracting toolchain archive..."
+          tar -Jxf "$ARCHIVE_NAME"
+
+          # Rename the GCC directory for consistency
+          cd Toolchain
+          if [ -d "RISC-V Embedded GCC15" ]; then
+            mv "RISC-V Embedded GCC15" "gcc15"
+          fi
+
+          echo "[INFO] Toolchain installation completed."
+        fi
+
+        # Add to PATH for subsequent steps
+        echo "$TOOLCHAIN_BIN" >> "$GITHUB_PATH"
+
+        # Verify installation
+        export PATH="$PATH:$TOOLCHAIN_BIN"
+        if command -v riscv-none-elf-gcc &> /dev/null; then
+          VERSION=$(riscv-none-elf-gcc --version | head -n 1)
+          echo "[INFO] Toolchain is ready: $VERSION"
+        else
+          echo "[ERROR] Toolchain installation failed or not in PATH"
+          exit 1
+        fi

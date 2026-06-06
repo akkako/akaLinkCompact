@@ -16,37 +16,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install WCH modified GCC toolchain
-        run: |
-          cd ~
-          git clone https://github.com/akkako/riscv-wch-elf-gcc.git
-          cd ./riscv-wch-elf-gcc
-          tar -Jxf MRS_Toolchain_Linux_X64_V240.tar.xz
-          cd Toolchain
-          mv "RISC-V Embedded GCC15" "gcc15"
+        uses: ./.github/actions/install-wch-toolchain
 
       - name: Build Bootloader
         run: |
           cd firmware/Bootloader
-          export PATH=$PATH:~/riscv-wch-elf-gcc/Toolchain/gcc15/bin
           make all -j
 
       - name: Build Application
         run: |
           cd firmware/Application
-          export PATH=$PATH:~/riscv-wch-elf-gcc/Toolchain/gcc15/bin
           make all -j
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: build-artifact
           path: |
             firmware/Application/build_exec/akaLink_Compact_App_pack.bin
             firmware/Bootloader/build_exec/akaLink_Compact_Dfu_pack.bin
-      
+
   release:
     runs-on: ubuntu-latest
     needs: build
@@ -54,12 +46,12 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
       - name: Download release
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: build-artifact
           path: releases
