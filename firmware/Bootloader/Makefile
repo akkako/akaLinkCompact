@@ -75,9 +75,11 @@ PREFIX = riscv32-wch-elf-
 # 启用下一项以指定GCC目录
 ifeq ($(OS),Darwin)
 GCC_PATH = /Applications/MounRiver Studio 2.app/Contents/Resources/app/resources/darwin/components/WCH/Toolchain/RISC-V Embedded GCC15/bin
+PYTHON_PTAH = python3
 else ifeq ($(OS),Linux)
-
+PYTHON_PTAH = python
 else ifeq ($(OS),Windows_NT)
+PYTHON_PTAH = python
 # GCC_PATH = C:/MounRiver/MounRiver_Studio2/resources/app/resources/win32/components/WCH/Toolchain/RISC-V Embedded GCC15/bin
 # GCC_PATH = D:/_tools/MRS/MounRiver_Studio2/resources/app/resources/win32/components/WCH/Toolchain/RISC-V Embedded GCC15/bin
 else
@@ -193,7 +195,7 @@ POST_BUILD: $(EXEC_DIR)/$(TARGET).elf $(EXEC_DIR)/$(TARGET).bin
 	@echo "[DUMP]  $< -> $(EXEC_DIR)/$(TARGET).s"
 	@$(DUMP) -d $< > $(EXEC_DIR)/$(TARGET).s
 	@echo "[PACK]  $(EXEC_DIR)/$(TARGET).bin -> $(EXEC_DIR)/$(TARGET)_pack.bin"
-	@python proj/pack.py make
+	@$(PYTHON_PTAH) proj/pack.py make
 
 	@echo "Build Finish"
 
