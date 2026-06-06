@@ -52,7 +52,6 @@ static inline uint32_t SW_READ_BIT_OPT() {
 //   count:  sequence bit count
 //   data:   pointer to sequence bit data
 //   return: none
-#if ((DAP_SWD != 0) || (DAP_JTAG != 0))
 void SWJ_Sequence_Fast (uint32_t count, const uint8_t *data) {
     uint32_t val;
     uint32_t n;
@@ -90,14 +89,13 @@ void SWJ_Sequence_Fast (uint32_t count, const uint8_t *data) {
         n--;
     }
 }
-#endif
+
 
 // Generate SWD Sequence
 //   info:   sequence information
 //   swdo:   pointer to SWDIO generated data
 //   swdi:   pointer to SWDIO captured data
 //   return: none
-#if (DAP_SWD != 0)
 void SWD_Sequence_Fast (uint32_t info, const uint8_t *swdo, uint8_t *swdi) {
     uint32_t val;
     uint32_t bit;
@@ -129,10 +127,6 @@ void SWD_Sequence_Fast (uint32_t info, const uint8_t *swdo, uint8_t *swdi) {
         }
     }
 }
-#endif
-
-#if (DAP_SWD != 0)
-
 
 static uint8_t SWD_Read_SPI (uint8_t header, uint32_t *data) {
     register uint32_t ack;
@@ -360,4 +354,3 @@ uint8_t SWD_Write (uint32_t request, uint32_t *data) {
 }
 
 
-#endif /* (DAP_SWD != 0) */

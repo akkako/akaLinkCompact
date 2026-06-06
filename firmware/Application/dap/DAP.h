@@ -157,7 +157,8 @@ typedef struct {
     uint8_t transfer_abort;    // Transfer Abort Flag
     uint8_t debug_port;        // Debug Port
     uint8_t fast_clock;        // Fastest clock with no delay
-    uint8_t padding;
+    uint8_t swd_spi_sim;       // SWD SPI Simulate
+    uint8_t support_jtag;      // Support JTAG
     uint32_t timestamp;        // Last captured Timestamp
 
     struct {                   // Transfer Configuration
@@ -167,12 +168,11 @@ typedef struct {
         uint16_t match_retry;  // Number of retries if read value does not match
         uint32_t match_mask;   // Match Mask
     } transfer;
-#if (DAP_SWD != 0)
+
     struct {                 // SWD Configuration
         uint8_t turnaround;  // Turnaround period
         uint8_t data_phase;  // Always generate Data Phase
     } swd_conf;
-#endif
 #if (DAP_JTAG != 0)
     struct {                                   // JTAG Device Chain
         uint8_t count;                         // Number of devices
@@ -207,7 +207,7 @@ extern uint32_t DAP_ProcessVendorCommand (const uint8_t *request, uint8_t *respo
 extern uint32_t DAP_ProcessCommand (const uint8_t *request, uint8_t *response);
 extern uint32_t DAP_ExecuteCommand (const uint8_t *request, uint8_t *response);
 
-extern void DAP_Setup (void);
+extern void DAP_Setup (uint8_t support_jtag);
 
 void Set_Clock_Delay (uint32_t clock);
 

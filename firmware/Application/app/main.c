@@ -18,11 +18,8 @@ int main (void) {
     app_param_load();
     drv_gpio_init_misc();
     drv_gpio_init_as_hiz();
-	
 	drv_usb2uart_preinit();
-
 	chry_dap_init(0, 0);
-    printf("System Init\r\n");
 
 	while(1)
     {

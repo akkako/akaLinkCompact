@@ -4,9 +4,10 @@
 #include "drv_gpio.h"
 #include "ch32v30x_flash.h"
 #include "drv_bkp.h"
+#include "sys_config.h"
 
-#define APP_PARAM_ADDR_OFFSET ((uint32_t)0x08000000+124*1024)
-#define FLASH_PAGE_SIZE (4096)
+#define FLASH_PAGE_SIZE (256)
+#define APP_PARAM_ADDR_OFFSET ((uint32_t)0x08000000 + 128 * 1024 - FLASH_PAGE_SIZE)
 
 #define CMD_NOT_SUPPORT (0x00)
 #define CMD_GET_CONFIG (0x01)
@@ -29,14 +30,12 @@ void app_param_load(void)
     if (g_param.magic_number != 0x0D000721)
     {
         // default value
-        printf("Default value\r\n");
         g_param.magic_number = 0x0D000721;
         g_param.output_mode = 0;
         g_param.swd_sim_mode = 0;
         g_param.usb5v_out_mode = 0;
         g_param.clock_accel_mode = 0;
         app_param_save();
-        printf("Save default, size=%d\r\n", (int)sizeof(app_param_t));
     }
     else
     {
@@ -53,38 +52,17 @@ void app_param_load(void)
 
 void app_param_save(void)
 {
-    FLASH_Status FLASHStatus = FLASH_COMPLETE;
+    uint32_t buf[FLASH_PAGE_SIZE / 4] = {0xFFFFFFFF};
 
-    FLASH_Unlock();
+    memcpy(buf, &g_param, sizeof(app_param_t));
 
-    /* 配置 FLASH 访问时钟为系统时钟的一半 (144MHz/2 = 72MHz < 60MHz 限制)
-     * 注意：必须在 FLASH_Unlock 之后调用 */
+    FLASH_Unlock_Fast();
     FLASH_Access_Clock_Cfg(FLASH_Access_SYSTEM_HALF);
 
-    FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP | FLASH_FLAG_WRPRTERR);
+    FLASH_ErasePage_Fast(APP_PARAM_ADDR_OFFSET);
+    FLASH_ProgramPage_Fast(APP_PARAM_ADDR_OFFSET, (uint32_t *)buf);
 
-    /* 检查 FLASH 状态 */
-    FLASHStatus = FLASH_GetStatus();
-
-    FLASHStatus = FLASH_ErasePage(APP_PARAM_ADDR_OFFSET); // Erase 4KB
-    if (FLASHStatus != FLASH_COMPLETE)
-    {
-        FLASH_Lock();
-        return;
-    }
-
-    uint16_t *p_data = (uint16_t *)&g_param;
-    for (size_t addr = 0; addr < sizeof(app_param_t); addr += 2)
-    {
-        FLASHStatus = FLASH_ProgramHalfWord(APP_PARAM_ADDR_OFFSET + addr, p_data[addr / 2]);
-        if (FLASHStatus != FLASH_COMPLETE)
-        {
-            FLASH_Lock();
-            return;
-        }
-    }
-
-    FLASH_Lock();
+    FLASH_Lock_Fast();
 }
 
 void app_param_proc_hid(uint8_t *req_hid, uint8_t *res_hid)
@@ -107,7 +85,6 @@ void app_param_proc_hid(uint8_t *req_hid, uint8_t *res_hid)
         g_param.clock_accel_mode = req_hid[6] ? 0x01 : 0x00;
         res_hid[1] = 1;
         res_hid[2] = CMD_SET_CONFIG;
-        printf("Set Config %d %d %d %d\r\n", g_param.output_mode, g_param.swd_sim_mode, g_param.usb5v_out_mode, g_param.clock_accel_mode);
         break;
     case CMD_GET_VOLTAGE:
     {
@@ -188,19 +165,15 @@ void app_param_proc_hid(uint8_t *req_hid, uint8_t *res_hid)
         app_param_save();
         res_hid[1] = 0x01;
         res_hid[2] = CMD_SAVE_CONFIG;
-        printf("Save Config\r\n");
         break;
     case CMD_RESET_DEVICE:
-        printf("Reset Device\r\n");
         NVIC_SystemReset();
         break;
     case CMD_ENTER_DFU:
-        printf("Enter DFU\r\n");
         drv_bkp_write_reg(0x0721);
         NVIC_SystemReset();
         break;
     default:
-        printf("Unsupport CMD\r\n");
         res_hid[1] = 0x01;
         res_hid[2] = CMD_NOT_SUPPORT;
         break;

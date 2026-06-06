@@ -557,7 +557,7 @@ void chry_dap_init(uint8_t busid, uint32_t reg_base)
     chry_ringbuffer_init(&g_uartrx, uartrx_ringbuffer, CONFIG_UARTRX_RINGBUF_SIZE);
     chry_ringbuffer_init(&g_usbrx, usbrx_ringbuffer, CONFIG_USBRX_RINGBUF_SIZE);
 
-    DAP_Setup();
+    DAP_Setup(g_param.output_mode);
 
     usbd_desc_register(0, &cmsisdap_descriptor);
 
