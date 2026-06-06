@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v5
 
       - name: Install WCH modified GCC toolchain
-        uses: ./.github/actions/install-wch-toolchain
+        uses: akkako/riscv-wch-elf-gcc@v1
 
       - name: Build Bootloader
         run: |
