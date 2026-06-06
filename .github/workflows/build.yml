@@ -21,22 +21,22 @@ jobs:
       - name: Install WCH modified GCC toolchain
         run: |
           cd ~
-          git clone https://github.com/akkako/riscv-wch-elf-gcc12.git
-          cd ./riscv-wch-elf-gcc12
-          tar -Jxf MRS_Toolchain_Linux_x64_V230.tar.xz
+          git clone https://github.com/akkako/riscv-wch-elf-gcc.git
+          cd ./riscv-wch-elf-gcc
+          tar -Jxf MRS_Toolchain_Linux_x64_V240.tar.xz
           cd Toolchain
-          mv "RISC-V Embedded GCC12" "gcc12"
+          mv "RISC-V Embedded GCC15" "gcc15"
 
       - name: Build Bootloader
         run: |
           cd firmware/Bootloader
-          export PATH=$PATH:~/riscv-wch-elf-gcc12/Toolchain/gcc12/bin
+          export PATH=$PATH:~/riscv-wch-elf-gcc/Toolchain/gcc15/bin
           make all -j
 
       - name: Build Application
         run: |
           cd firmware/Application
-          export PATH=$PATH:~/riscv-wch-elf-gcc12/Toolchain/gcc12/bin
+          export PATH=$PATH:~/riscv-wch-elf-gcc/Toolchain/gcc15/bin
           make all -j
 
       - name: Upload artifacts
@@ -44,14 +44,8 @@ jobs:
         with:
           name: build-artifact
           path: |
-#            firmware/Application/build_exec/akaLink_Compact_App.bin
             firmware/Application/build_exec/akaLink_Compact_App_pack.bin
-#            firmware/Application/build_exec/akaLink_Compact_App.elf
-#            firmware/Application/build_exec/akaLink_Compact_App.hex
-#            firmware/Bootloader/build_exec/akaLink_Compact_Dfu.bin
             firmware/Bootloader/build_exec/akaLink_Compact_Dfu_pack.bin
-#            firmware/Bootloader/build_exec/akaLink_Compact_Dfu.elf
-#            firmware/Bootloader/build_exec/akaLink_Compact_Dfu.hex
       
   release:
     runs-on: ubuntu-latest
