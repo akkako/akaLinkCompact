@@ -8,8 +8,12 @@ OPT = -Ofast
 LTO = -flto
 
 # 检测操作系统
-OS := $(shell uname -s)
-# OS := Windows_NT
+ifeq ($(OS),Windows_NT)
+    DETECTED_OS := Windows_NT
+else
+    DETECTED_OS := $(shell uname -s)
+endif
+OS := $(DETECTED_OS)
 
 # 编译临时文件目录
 BUILD_DIR = build
