@@ -23,7 +23,7 @@ jobs:
           cd ~
           git clone https://github.com/akkako/riscv-wch-elf-gcc.git
           cd ./riscv-wch-elf-gcc
-          tar -Jxf MRS_Toolchain_Linux_x64_V240.tar.xz
+          tar -Jxf MRS_Toolchain_Linux_X64_V240.tar.xz
           cd Toolchain
           mv "RISC-V Embedded GCC15" "gcc15"
 
