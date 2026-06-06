@@ -19,7 +19,7 @@ runs:
         echo "[DEBUG] ARCHIVE_NAME=$ARCHIVE_NAME"
 
         # Check if already installed
-        if [ -d "$TOOLCHAIN_BIN" ] && [ -x "$TOOLCHAIN_BIN/riscv-none-elf-gcc" ]; then
+        if [ -d "$TOOLCHAIN_BIN" ] && [ -x "$TOOLCHAIN_BIN/riscv32-wch-elf-gcc" ]; then
           echo "[INFO] WCH toolchain already installed at $TOOLCHAIN_DIR"
         else
           echo "[INFO] Installing WCH modified GCC toolchain..."
@@ -85,14 +85,14 @@ runs:
         # Verify installation
         export PATH="$PATH:$TOOLCHAIN_BIN"
         echo "[DEBUG] Updated PATH=$PATH"
-        echo "[DEBUG] Checking for riscv-none-elf-gcc..."
-        if command -v riscv-none-elf-gcc &> /dev/null; then
-          VERSION=$(riscv-none-elf-gcc --version | head -n 1)
+        echo "[DEBUG] Checking for riscv32-wch-elf-gcc..."
+        if command -v riscv32-wch-elf-gcc &> /dev/null; then
+          VERSION=$(riscv32-wch-elf-gcc --version | head -n 1)
           echo "[INFO] Toolchain is ready: $VERSION"
         else
           echo "[ERROR] Toolchain installation failed or not in PATH"
           echo "[DEBUG] Searching for gcc binary in $TOOLCHAIN_DIR..."
-          find "$TOOLCHAIN_DIR" -name "riscv-none-elf-gcc" -type f 2>/dev/null || true
+          find "$TOOLCHAIN_DIR" -name "riscv32-wch-elf-gcc" -type f 2>/dev/null || true
           echo "[DEBUG] Listing all files in bin directories..."
           find "$TOOLCHAIN_DIR" -type d -name "bin" -exec ls -la {} \; 2>/dev/null || true
           exit 1
