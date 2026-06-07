@@ -262,6 +262,84 @@ export function parseBLVersionString(data) {
 }
 
 /**
+ * 解析硬件生产日期字符串
+ * @param {Uint8Array} data - 接收到的数据（WebHID API 返回的数据不包含 Report ID）
+ * @returns {string|null} 硬件生产日期字符串
+ */
+export function parseHWProdDateString(data) {
+    if (data.length < 2) return null;
+    
+    // WebHID API 接收的数据不包含 Report ID
+    // 数据格式: [Data Length][Command Type][BL String...]
+    // 检查 Command type (0x15)
+    if (data[1] !== 0x15) {
+        console.log('解析硬件生产日期失败: Command type 不匹配',
+            '期望 Command=0x15,',
+            '实际 Command=0x' + data[1].toString(16));
+        return null;
+    }
+    
+    // 从第2字节开始读取字符串，直到遇到 \0
+    const chars = [];
+    for (let i = 2; i < data.length && data[i] !== 0; i++) {
+        chars.push(String.fromCharCode(data[i]));
+    }
+    return chars.join('');
+}
+
+/**
+ * 解析固件编译时间字符串
+ * @param {Uint8Array} data - 接收到的数据（WebHID API 返回的数据不包含 Report ID）
+ * @returns {string|null} 固件编译时间字符串
+ */
+export function parseFWCompileTimeString(data) {
+    if (data.length < 2) return null;
+    
+    // WebHID API 接收的数据不包含 Report ID
+    // 数据格式: [Data Length][Command Type][BL String...]
+    // 检查 Command type (0x16)
+    if (data[1] !== 0x16) {
+        console.log('解析固件编译时间失败: Command type 不匹配',
+            '期望 Command=0x16,',
+            '实际 Command=0x' + data[1].toString(16));
+        return null;
+    }
+    
+    // 从第2字节开始读取字符串，直到遇到 \0
+    const chars = [];
+    for (let i = 2; i < data.length && data[i] !== 0; i++) {
+        chars.push(String.fromCharCode(data[i]));
+    }
+    return chars.join('');
+}
+
+/**
+ * 解析Bootloader编译时间字符串
+ * @param {Uint8Array} data - 接收到的数据（WebHID API 返回的数据不包含 Report ID）
+ * @returns {string|null} Bootloader编译时间字符串
+ */
+export function parseBLCompileTimeString(data) {
+    if (data.length < 2) return null;
+    
+    // WebHID API 接收的数据不包含 Report ID
+    // 数据格式: [Data Length][Command Type][BL String...]
+    // 检查 Command type (0x17)
+    if (data[1] !== 0x17) {
+        console.log('解析Bootloader编译时间失败: Command type 不匹配',
+            '期望 Command=0x17,',
+            '实际 Command=0x' + data[1].toString(16));
+        return null;
+    }
+    
+    // 从第2字节开始读取字符串，直到遇到 \0
+    const chars = [];
+    for (let i = 2; i < data.length && data[i] !== 0; i++) {
+        chars.push(String.fromCharCode(data[i]));
+    }
+    return chars.join('');
+}
+
+/**
  * 检查响应是否成功
  * @param {Uint8Array} data - 接收到的数据（WebHID API 返回的数据不包含 Report ID）
  * @param {number} expectedCmd - 预期的命令类型

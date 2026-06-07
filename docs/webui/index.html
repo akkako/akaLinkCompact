@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>akaLink CMSIS-DAP 配置工具</title>
+    <title>akaLink Compact 配置工具</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
         <!-- 标题栏 -->
         <header class="header">
             <div class="header-left">
-                <h1>akaLink CMSIS-DAP</h1>
+                <h1>akaLink Compact</h1>
                 <span class="subtitle">配置工具</span>
             </div>
             <div class="device-status">
@@ -50,8 +50,20 @@
                     <span id="deviceFWVersion">--</span>
                 </div>
                 <div class="info-item">
-                    <label>Bootloader版本:</label>
+                    <label>Bootloader 版本:</label>
                     <span id="deviceBLVersion">--</span>
+                </div>
+                <div class="info-item">
+                    <label>硬件生产日期:</label>
+                    <span id="deviceHWProdTime">--</span>
+                </div>
+                <div class="info-item">
+                    <label>固件编译时间:</label>
+                    <span id="deviceFWCompileTime">--</span>
+                </div>
+                <div class="info-item">
+                    <label>Bootloader 编译时间:</label>
+                    <span id="deviceBLCompileTime">--</span>
                 </div>
             </div>
         </section>

@@ -7,11 +7,12 @@
 #include "sys_define.h"
 #include "ch32v30x_rcc.h"
 #include "crc32.h"
+#include "drv_usb.h"
 
-uint8_t g_app_download_finished = 0;
-uint8_t g_app_verify_state = 0;
-uint8_t g_app_strap_state = 0;
-uint8_t g_app_exception_reset = 0;
+volatile uint8_t g_app_download_finished = 0;
+volatile uint8_t g_app_verify_state = 0;
+volatile uint8_t g_app_strap_state = 0;
+volatile uint8_t g_app_exception_reset = 0;
 
 extern void usb_msc_init (uint8_t busid, uintptr_t reg_base);
 
@@ -47,6 +48,7 @@ static inline void check_exception_reset (void) {
 }
 
 static inline void jump_to_app (void) {
+    drv_usb_enable_enum(0);
     NVIC_DisableIRQ (USBHS_IRQn);
     NVIC_DisableIRQ (USBFS_IRQn);
     NVIC_EnableIRQ (Software_IRQn);
@@ -91,7 +93,10 @@ int main (void) {
 
     while (1) {
         if (g_app_download_finished == 1) {
-            drv_systick_delay_ms (1000);
+            drv_systick_delay_ms (2000);
+            drv_usb_enable_enum(0);
+            NVIC_DisableIRQ (USBHS_IRQn);
+            NVIC_DisableIRQ (USBFS_IRQn);
             NVIC_SystemReset();
         }
     }

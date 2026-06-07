@@ -19,7 +19,7 @@ class akaLinkConfigApp {
 
         // 初始化设备管理器
         this.deviceManager = new DeviceManager();
-        
+
         // 当前配置状态
         this.currentConfig = null;
         this.originalConfig = null;
@@ -30,10 +30,10 @@ class akaLinkConfigApp {
 
         // 绑定 UI 元素
         this.bindElements();
-        
+
         // 绑定事件
         this.bindEvents();
-        
+
         // 设置设备管理器回调
         this.setupCallbacks();
 
@@ -57,6 +57,9 @@ class akaLinkConfigApp {
         this.deviceHWVersion = document.getElementById('deviceHWVersion');
         this.deviceFWVersion = document.getElementById('deviceFWVersion');
         this.deviceBLVersion = document.getElementById('deviceBLVersion');
+        this.deviceHWProdTime = document.getElementById('deviceHWProdTime');
+        this.deviceFWCompileTime = document.getElementById('deviceFWCompileTime');
+        this.deviceBLCompileTime = document.getElementById('deviceBLCompileTime');
 
         // 配置项
         this.outputMode = document.getElementById('outputMode');
@@ -135,10 +138,10 @@ class akaLinkConfigApp {
     startVoltageUpdate() {
         // 先停止之前的定时器
         this.stopVoltageUpdate();
-        // 每 2 秒更新一次电压
+        // 每 4 秒更新一次电压
         this.voltageTimer = setInterval(() => {
             this.readVoltage();
-        }, 2000);
+        }, 4000);
     }
 
     /**
@@ -206,7 +209,7 @@ class akaLinkConfigApp {
 
         try {
             this.log('正在写入配置...', 'info');
-            
+
             // 写入配置
             const config = {
                 outputMode: parseInt(this.outputMode.value),
@@ -214,7 +217,7 @@ class akaLinkConfigApp {
                 v5Mode: parseInt(this.v5Mode.value),
                 clockMode: parseInt(this.clockMode.value)
             };
-            
+
             await this.deviceManager.setConfig(config);
             this.log('配置已写入', 'success');
 
@@ -289,7 +292,7 @@ class akaLinkConfigApp {
             clockMode: parseInt(this.clockMode.value)
         };
 
-        this.isConfigModified = 
+        this.isConfigModified =
             currentConfig.outputMode !== this.originalConfig.outputMode ||
             currentConfig.swdMode !== this.originalConfig.swdMode ||
             currentConfig.v5Mode !== this.originalConfig.v5Mode ||
@@ -334,6 +337,25 @@ class akaLinkConfigApp {
             const blVersion = await this.deviceManager.getBLVersion();
             this.deviceBLVersion.textContent = blVersion;
             this.log(`Bootloader版本: ${blVersion}`, 'success');
+
+            // 读取硬件生产日期
+            this.log('正在读取硬件生产日期...', 'info');
+            const hwProdTime = await this.deviceManager.getHWProdDate();
+            this.deviceHWProdTime.textContent = hwProdTime;
+            this.log(`硬件生产日期: ${hwProdTime}`, 'success');
+
+            // 读取固件编译时间
+            this.log('正在读取固件编译时间...', 'info');
+            const fwCompileTime = await this.deviceManager.getFWCompileTime();
+            this.deviceFWCompileTime.textContent = fwCompileTime;
+            this.log(`固件编译时间: ${fwCompileTime}`, 'success');
+
+            // 读取 Bootloader 编译时间
+            this.log('正在读取 Bootloader 编译时间...', 'info');
+            const blCompileTime = await this.deviceManager.getBLCompileTime();
+            this.deviceBLCompileTime.textContent = blCompileTime;
+            this.log(`Bootloader版本: ${blCompileTime}`, 'success');
+
 
             // 读取配置
             this.log('正在读取配置...', 'info');
@@ -403,6 +425,9 @@ class akaLinkConfigApp {
         this.deviceHWVersion.textContent = '--';
         this.deviceFWVersion.textContent = '--';
         this.deviceBLVersion.textContent = '--';
+        this.deviceHWProdTime.textContent = '--';
+        this.deviceFWCompileTime.textContent = '--';
+        this.deviceBLCompileTime.textContent = '--';
         this.outputMode.value = '0';
         this.swdMode.value = '0';
         this.v5Mode.value = '0';
@@ -475,12 +500,12 @@ class akaLinkConfigApp {
         this.modalTitle.textContent = title;
         this.modalMessage.textContent = message;
         this.confirmModal.style.display = 'flex';
-        
+
         // 移除旧的事件监听器
         const newConfirmBtn = this.modalConfirm.cloneNode(true);
         this.modalConfirm.parentNode.replaceChild(newConfirmBtn, this.modalConfirm);
         this.modalConfirm = newConfirmBtn;
-        
+
         this.modalConfirm.addEventListener('click', onConfirm);
     }
 

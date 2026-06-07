@@ -13,6 +13,9 @@ import {
     parseHWVersionString,
     parseFWVersionString,
     parseBLVersionString,
+    parseHWProdDateString,
+    parseFWCompileTimeString,
+    parseBLCompileTimeString,
     isResponseSuccess,
     sleep
 } from './utils.js';
@@ -615,6 +618,51 @@ export class DeviceManager {
         const bl = parseBLVersionString(response);
         if (!bl) {
             throw new Error('获取Bootloader版本号失败：响应数据无效');
+        }
+        return bl;
+    }
+
+    /**
+     * 获取硬件生产日期
+     * @returns {Promise<string>} 硬件生产日期字符串
+     */
+    async getHWProdDate() {
+        const packet = createHIDPacket(0x01, 0x01, 0x15);
+        const response = await this.sendAndWaitResponse(packet);
+        console.log('获取硬件生产日期 - 原始响应数据:', Array.from(response).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' '));
+        const hw = parseHWProdDateString(response);
+        if (!hw) {
+            throw new Error('获取硬件生产日期失败：响应数据无效');
+        }
+        return hw;
+    }
+
+    /**
+     * 获取固件编译时间
+     * @returns {Promise<string>} 固件编译时间字符串
+     */
+    async getFWCompileTime() {
+        const packet = createHIDPacket(0x01, 0x01, 0x16);
+        const response = await this.sendAndWaitResponse(packet);
+        console.log('获取固件编译时间 - 原始响应数据:', Array.from(response).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' '));
+        const fw = parseFWCompileTimeString(response);
+        if (!fw) {
+            throw new Error('获取固件编译时间失败：响应数据无效');
+        }
+        return fw;
+    }
+
+    /**
+     * 获取Bootloader编译时间
+     * @returns {Promise<string>} Bootloader编译时间字符串
+     */
+    async getBLCompileTime() {
+        const packet = createHIDPacket(0x01, 0x01, 0x17);
+        const response = await this.sendAndWaitResponse(packet);
+        console.log('获取Bootloader编译时间 - 原始响应数据:', Array.from(response).map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' '));
+        const bl = parseBLCompileTimeString(response);
+        if (!bl) {
+            throw new Error('获取Bootloader编译时间失败：响应数据无效');
         }
         return bl;
     }

@@ -5,6 +5,7 @@
 #include "ch32v30x_flash.h"
 #include "drv_bkp.h"
 #include "sys_config.h"
+#include "DAP_config.h"
 
 #define FLASH_PAGE_SIZE (256)
 #define APP_PARAM_ADDR_OFFSET ((uint32_t)0x08000000 + 128 * 1024 - FLASH_PAGE_SIZE)
@@ -19,6 +20,9 @@
 #define CMD_GET_HWVER (0x12)
 #define CMD_GET_FWVER (0x13)
 #define CMD_GET_BLVER (0x14)
+#define CMD_GET_HW_PROD_DATE (0x15)
+#define CMD_GET_FW_COMPILE_DATE (0x16)
+#define CMD_GET_BL_COMPILE_DATE (0x17)
 #define CMD_RESET_DEVICE (0xFE)
 #define CMD_ENTER_DFU (0xFF)
 
@@ -96,26 +100,9 @@ void app_param_proc_hid(uint8_t *req_hid, uint8_t *res_hid)
     }
     break;
     case CMD_GET_MODEL:
-        res_hid[0x01] = 0x13;
+        res_hid[0x01] = 1 + sizeof(DAP_STR_PRODUCT_NAME);
         res_hid[0x02] = CMD_GET_MODEL;
-        res_hid[0x03] = 'a';
-        res_hid[0x04] = 'k';
-        res_hid[0x05] = 'a';
-        res_hid[0x06] = 'L';
-        res_hid[0x07] = 'i';
-        res_hid[0x08] = 'n';
-        res_hid[0x09] = 'k';
-        res_hid[0x0A] = ' ';
-        res_hid[0x0B] = 'C';
-        res_hid[0x0C] = 'M';
-        res_hid[0x0D] = 'S';
-        res_hid[0x0E] = 'I';
-        res_hid[0x0F] = 'S';
-        res_hid[0x10] = '-';
-        res_hid[0x11] = 'D';
-        res_hid[0x12] = 'A';
-        res_hid[0x13] = 'P';
-        res_hid[0x14] = 0x00;
+        strcpy((char*)&res_hid[0x03], DAP_STR_PRODUCT_NAME);
         break;
     case CMD_GET_SERIAL:
         res_hid[0x01] = 0x0E;
@@ -137,29 +124,38 @@ void app_param_proc_hid(uint8_t *req_hid, uint8_t *res_hid)
     case CMD_GET_HWVER:
         res_hid[0x01] = 0x06;
         res_hid[0x02] = CMD_GET_HWVER;
-        res_hid[0x03] = 'A';
-        res_hid[0x04] = '.';
-        res_hid[0x05] = '0';
-        res_hid[0x06] = '1';
+        strncpy((char*)&res_hid[0x03], (const char*)HARDWARE_VER_STR_ADDR, 4);
         res_hid[0x07] = 0x00;
         break;
     case CMD_GET_FWVER:
         res_hid[0x01] = 0x06;
         res_hid[0x02] = CMD_GET_FWVER;
-        res_hid[0x03] = '1';
-        res_hid[0x04] = '.';
-        res_hid[0x05] = '1';
-        res_hid[0x06] = '4';
+        strncpy((char*)&res_hid[0x03], (const char*)APPLICATION_VER_STR_ADDR, 4);
         res_hid[0x07] = 0x00;
         break;
     case CMD_GET_BLVER:
         res_hid[0x01] = 0x06;
         res_hid[0x02] = CMD_GET_BLVER;
-        res_hid[0x03] = '5';
-        res_hid[0x04] = '.';
-        res_hid[0x05] = '1';
-        res_hid[0x06] = '4';
+        strncpy((char*)&res_hid[0x03], (const char*)BOOTLOADER_VER_STR_ADDR, 4);
         res_hid[0x07] = 0x00;
+        break;
+    case CMD_GET_HW_PROD_DATE:
+        res_hid[0x01] = 0x15;
+        res_hid[0x02] = CMD_GET_HW_PROD_DATE;
+        strncpy((char*)&res_hid[0x03], (const char*)HARDWARE_PROD_TS_STR_ADDR, 19);
+        res_hid[0x16] = 0x00;
+        break;
+    case CMD_GET_FW_COMPILE_DATE:
+        res_hid[0x01] = 0x15;
+        res_hid[0x02] = CMD_GET_FW_COMPILE_DATE;
+        strncpy((char*)&res_hid[0x03], (const char*)APPLICATION_TS_STR_ADDR, 19);
+        res_hid[0x16] = 0x00;
+        break;
+    case CMD_GET_BL_COMPILE_DATE:
+        res_hid[0x01] = 0x15;
+        res_hid[0x02] = CMD_GET_BL_COMPILE_DATE;
+        strncpy((char*)&res_hid[0x03], (const char*)BOOTLOADER_TS_STR_ADDR, 19);
+        res_hid[0x16] = 0x00;
         break;
     case CMD_SAVE_CONFIG:
         app_param_save();
