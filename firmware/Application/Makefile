@@ -37,6 +37,7 @@ C_INCLUDES += -I../Middleware/CherryUSB/common
 C_INCLUDES += -I../Middleware/CherryUSB/core
 C_INCLUDES += -I../Middleware/CherryUSB/class/hid
 C_INCLUDES += -I../Middleware/CherryUSB/class/cdc
+C_INCLUDES += -I../Middleware/CherryUSB/class/msc
 C_INCLUDES += -I../Middleware/CherryUSB/port/ch32/ch32hs
 
 C_INCLUDES += -I../Middleware/CherryRB
@@ -52,6 +53,7 @@ C_SOURCES += $(wildcard dap/*.c)
 C_SOURCES += $(wildcard ../Middleware/CherryRB/*.c)
 C_SOURCES += $(wildcard ../Middleware/CherryUSB/class/cdc/*.c)
 C_SOURCES += $(wildcard ../Middleware/CherryUSB/class/hid/*.c)
+C_SOURCES += $(wildcard ../Middleware/CherryUSB/class/msc/*.c)
 C_SOURCES += $(wildcard ../Middleware/CherryUSB/port/ch32/ch32hs/*.c)
 C_SOURCES += $(wildcard ../Middleware/CherryUSB/core/*.c)
 
