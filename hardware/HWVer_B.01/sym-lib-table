@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "akaLinkCompact")(type "KiCad")(uri "${KIPRJMOD}/akaLinkCompact.kicad_sym")(options "")(descr ""))
+)
