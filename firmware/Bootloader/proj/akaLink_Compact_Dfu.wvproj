@@ -669,7 +669,7 @@
 		"program": true,
 		"verify": true,
 		"reset": true,
-		"sdiPrintf": true,
+		"sdiPrintf": false,
 		"disablepowerout": false,
 		"clearcodeflash": false,
 		"disablecodeprotect": false,
@@ -741,8 +741,8 @@
 			"showDebugOutputTimestamps": true
 		},
 		"reserve": {
-			"PROGRAM_NAME": "obj/akaLink.elf",
-			"PROJECT_ATTR": "akaLink",
+			"PROGRAM_NAME": "obj/akaLink_Compact_Dfu.elf",
+			"PROJECT_ATTR": "akaLink_Compact_Dfu",
 			"PROJECT_BUILD_CONFIG_AUTO_ATTR": true,
 			"PROJECT_BUILD_CONFIG_ID_ATTR": "",
 			"ATTR_BUILD_BEFORE_LAUNCH_ATTR": 2,

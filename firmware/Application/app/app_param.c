@@ -8,7 +8,7 @@
 #include "DAP_config.h"
 
 #define FLASH_PAGE_SIZE (256)
-#define APP_PARAM_ADDR_OFFSET ((uint32_t)0x08000000 + 128 * 1024 - FLASH_PAGE_SIZE)
+#define APP_PARAM_ADDR_OFFSET ((uint32_t)0x0801FF00)
 
 #define CMD_NOT_SUPPORT (0x00)
 #define CMD_GET_CONFIG (0x01)

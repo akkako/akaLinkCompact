@@ -19,16 +19,16 @@ bl_ver_str = '1.02'
 hw_ver_str = 'A.01'
 
 # 地址与长度常量
-FIRMWARE_MAX_LEN = 0x46E4      # 固件最大长度：28388 bytes
-BL_VER_OFFSET    = 0x46E4      # 版本字符串偏移
+FIRMWARE_MAX_LEN = 0x3EE4      # 固件最大长度：16100 bytes
+BL_VER_OFFSET    = 0x3EE4      # 版本字符串偏移
 BL_VER_LEN       = 8           # 版本字符串长度
-TIME_OFFSET      = 0x46EC      # 编译时间偏移
+TIME_OFFSET      = 0x3EEC      # 编译时间偏移
 TIME_LEN         = 20          # 编译时间总长度（含末尾 0x00）
-TOTAL_SIZE       = 0x4800
+TOTAL_SIZE       = 0x4000
 
-HW_VER_OFFSET    = 0x4700      # 硬件版本字符串偏移
+HW_VER_OFFSET    = 0x3F00      # 硬件版本字符串偏移
 HW_VER_LEN       = 8           # 硬件版本字符串长度
-PROD_TIME_OFFSET = 0x4708      # 硬件生产时间
+PROD_TIME_OFFSET = 0x3F08      # 硬件生产时间
 PROD_TIME_LEN    = 20          # 硬件生产时间总长度（含末尾 0x00）
 
 # 获取当前时间

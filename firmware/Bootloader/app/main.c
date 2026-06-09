@@ -58,7 +58,7 @@ static inline void jump_to_app (void) {
 void SW_Handler (void) __attribute__ ((interrupt ("WCH-Interrupt-fast")));
 
 void SW_Handler (void) {
-    __asm ("li  a6, 0x4900");
+    __asm ("li  a6, 0x4100");
     __asm ("jr  a6");
 
     while (1);

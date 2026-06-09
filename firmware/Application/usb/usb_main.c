@@ -812,13 +812,11 @@ void usbd_msc_get_cap (uint8_t busid, uint8_t lun, uint32_t *block_num, uint32_t
 }
 
 int usbd_msc_sector_read (uint8_t busid, uint8_t lun, uint32_t sector, uint8_t *buffer, uint32_t length) {
-    printf("[msc] read %d, 0x%x, %d\r\n", sector, (uint32_t)buffer, length);
     drv_msc_read (sector, buffer, length);
     return 0;
 }
 
 int usbd_msc_sector_write (uint8_t busid, uint8_t lun, uint32_t sector, uint8_t *buffer, uint32_t length) {
-    printf("[msc] write %d, 0x%x, %d\r\n", sector, (uint32_t)buffer, length);
     drv_msc_write (sector, buffer, length);
     return 0;
 }
