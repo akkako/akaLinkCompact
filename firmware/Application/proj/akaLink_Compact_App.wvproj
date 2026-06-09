@@ -54,7 +54,7 @@
 				"name": "*.wvproj"
 			}
 		],
-		"projectName": "akaLink",
+		"projectName": "akaLink_Compact_App",
 		"architecture": "RISC-V",
 		"projectType": "c"
 	},
@@ -173,7 +173,8 @@
 							"${project}/../../Middleware/CherryUSB/class/cdc",
 							"${project}/../../Middleware/CherryUSB/port/ch32/ch32hs",
 							"${project}/../../Middleware/CherryRB",
-							"${project}/../sys"
+							"${project}/../sys",
+							"${project}/../../Middleware/CherryUSB/class/msc"
 						],
 						"include_system_paths": [],
 						"include_files": []
@@ -660,9 +661,9 @@
 	"flashConfig": {
 		"mcutype": "CH32V30x",
 		"address": "0x08000000",
-		"target_path": "obj\\akaLink.hex",
+		"target_path": "obj\\akaLink_Compact_App.bin",
 		"clkSpeed": "High",
-		"debug_interface_mode": "1-wire serial",
+		"debug_interface_mode": "",
 		"erase": false,
 		"program": true,
 		"verify": true,
@@ -739,8 +740,8 @@
 			"showDebugOutputTimestamps": true
 		},
 		"reserve": {
-			"PROGRAM_NAME": "obj/akaLink.elf",
-			"PROJECT_ATTR": "akaLink",
+			"PROGRAM_NAME": "obj/akaLink_Compact_App.elf",
+			"PROJECT_ATTR": "akaLink_Compact_App",
 			"PROJECT_BUILD_CONFIG_AUTO_ATTR": true,
 			"PROJECT_BUILD_CONFIG_ID_ATTR": "",
 			"ATTR_BUILD_BEFORE_LAUNCH_ATTR": 2,

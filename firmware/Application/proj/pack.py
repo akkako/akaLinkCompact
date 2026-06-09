@@ -19,7 +19,7 @@ desc_str = 'CMSIS-DAP v2.1'
 fw_ver_str = '0.02'
 
 # 地址与长度常量
-FIRMWARE_MAX_LEN  = 0x17F00     # 固件最大长度：98048 bytes
+FIRMWARE_MAX_LEN  = 0x12600     # 固件最大长度：98048 bytes
 
 APP_LENGTH_OFFSET = 0x0000      # 固件长度偏移
 APP_LENGTH_LEN    = 4           # 固件长度长度

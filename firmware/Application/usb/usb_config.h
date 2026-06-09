@@ -74,7 +74,7 @@
 #endif
 
 #ifndef CONFIG_USBDEV_EP0_STACKSIZE
-#define CONFIG_USBDEV_EP0_STACKSIZE 2048
+#define CONFIG_USBDEV_EP0_STACKSIZE 512
 #endif
 
 #ifndef CONFIG_USBDEV_MSC_MAX_LUN
@@ -108,7 +108,7 @@
 #endif
 
 #ifndef CONFIG_USBDEV_MSC_STACKSIZE
-#define CONFIG_USBDEV_MSC_STACKSIZE 2048
+#define CONFIG_USBDEV_MSC_STACKSIZE 512
 #endif
 
 /* ================ USB Device Port Configuration ================*/

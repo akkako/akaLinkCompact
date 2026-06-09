@@ -3,6 +3,7 @@
 
 #include "usbd_core.h"
 #include "usbd_cdc.h"
+#include "usbd_msc.h"
 #include "usbd_hid.h"
 #include "chry_ringbuffer.h"
 #include "DAP_config.h"
@@ -17,8 +18,14 @@
 #define CDC_OUT_EP 0x04
 #define CDC_INT_EP 0x85
 
+
+// MSC 端点
+#define MSC_IN_EP 0x86
+#define MSC_OUT_EP 0x06
+
+
 // HID 控制端点
-#define HID_IN_EP  0x86
+#define HID_IN_EP  0x87
 #define HID_OUT_EP 0x07
 
 #define USBD_VID           0x0D28
