@@ -366,7 +366,7 @@ void usbd_event_handler (uint8_t busid, uint8_t event) {
     case USBD_EVENT_CONFIGURED:
         /* 开始端点数据接收 */
         USB_RequestIdle = 0U;
-        usbd_ep_start_read (0, DAP_OUT_EP, USB_Request[0], USB_PACKET_SIZE);
+        usbd_ep_start_read (0, DAP_OUT_EP, USB_Request[0], DAP_PACKET_SIZE);
         usbd_ep_start_read (0, CDC_OUT_EP, usb_rx_buffer, USB_PACKET_SIZE);
         usbd_ep_start_read (0, HID_OUT_EP, hid_rx_buffer, HID_PACKET_SIZE);
         break;

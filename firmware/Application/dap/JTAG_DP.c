@@ -68,8 +68,6 @@
     tdo = PIN_TDO_IN();           \
     PIN_DELAY()
 
-#if (DAP_JTAG != 0)
-
 
 #if 0
 // Generate JTAG Sequence
@@ -403,5 +401,3 @@ uint8_t JTAG_Transfer (uint32_t request, uint32_t *data) {
     return JTAG_Transfer_Opt (request, data);
 }
 
-
-#endif /* (DAP_JTAG != 0) */

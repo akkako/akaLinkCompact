@@ -173,7 +173,6 @@ typedef struct {
         uint8_t turnaround;  // Turnaround period
         uint8_t data_phase;  // Always generate Data Phase
     } swd_conf;
-#if (DAP_JTAG != 0)
     struct {                                   // JTAG Device Chain
         uint8_t count;                         // Number of devices
         uint8_t index;                         // Device index (device at TDO has index 0)
@@ -183,7 +182,6 @@ typedef struct {
         uint16_t ir_after[DAP_JTAG_DEV_CNT];   // Bits after IR
 #endif
     } jtag_dev;
-#endif
 } DAP_Data_t;
 
 extern DAP_Data_t DAP_Data;  // DAP Data
@@ -193,15 +191,13 @@ extern "C" {
 #endif
 
 // Functions
-extern void SWJ_Sequence (uint32_t count, const uint8_t *data);
-extern void SWD_Sequence (uint32_t info, const uint8_t *swdo, uint8_t *swdi);
+
 extern void JTAG_Sequence (uint32_t info, const uint8_t *tdi, uint8_t *tdo);
 extern void JTAG_IR (uint32_t ir);
 extern uint32_t JTAG_ReadIDCode (void);
 extern void JTAG_WriteAbort (uint32_t data);
 extern uint8_t JTAG_Transfer (uint32_t request, uint32_t *data);
-extern uint8_t SWD_Read (uint32_t request, uint32_t *data);
-extern uint8_t SWD_Write (uint32_t request, uint32_t *data);
+
 
 extern uint32_t DAP_ProcessVendorCommand (const uint8_t *request, uint8_t *response);
 extern uint32_t DAP_ProcessCommand (const uint8_t *request, uint8_t *response);
@@ -211,10 +207,39 @@ extern void DAP_Setup (uint8_t support_jtag);
 
 void Set_Clock_Delay (uint32_t clock);
 
+
+extern void SWJ_Sequence (uint32_t count, const uint8_t *data);
+extern void SWD_Sequence (uint32_t info, const uint8_t *swdo, uint8_t *swdi);
+extern uint8_t SWD_Read (uint8_t header, uint32_t *data);
+extern uint8_t SWD_Write (uint8_t header, uint32_t *data);
+
+/********************* IO Function *********************/
+
+extern void SWJ_Sequence_GPIO_Fast(uint32_t count, const uint8_t *data);
+extern void SWD_Sequence_GPIO_Fast(uint32_t info, const uint8_t *swdo, uint8_t *swdi);
+extern uint8_t SWD_Read_GPIO_Fast(uint8_t header, uint32_t *data);
+extern uint8_t SWD_Write_GPIO_Fast(uint8_t header, uint32_t *data);
+
+extern void SWJ_Sequence_GPIO(uint32_t count, const uint8_t *data);
+extern void SWD_Sequence_GPIO(uint32_t info, const uint8_t *swdo, uint8_t *swdi);
+extern uint8_t SWD_Read_GPIO(uint8_t header, uint32_t *data);
+extern uint8_t SWD_Write_GPIO(uint8_t header, uint32_t *data);
+
+extern void SWJ_Sequence_SPI_Fast(uint32_t count, const uint8_t *data);
+extern void SWD_Sequence_SPI_Fast(uint32_t info, const uint8_t *swdo, uint8_t *swdi);
+extern uint8_t SWD_Read_SPI_Fast(uint8_t header, uint32_t *data);
+extern uint8_t SWD_Write_SPI_Fast(uint8_t header, uint32_t *data);
+
+extern void SWJ_Sequence_SPI(uint32_t count, const uint8_t *data);
+extern void SWD_Sequence_SPI(uint32_t info, const uint8_t *swdo, uint8_t *swdi);
+extern uint8_t SWD_Read_SPI(uint8_t header, uint32_t *data);
+extern uint8_t SWD_Write_SPI(uint8_t header, uint32_t *data);
+
+
 // Fixed delay for fast clock generation
-#ifndef DELAY_FAST_CYCLES
+// #ifndef DELAY_FAST_CYCLES
 #define DELAY_FAST_CYCLES 1U  // Number of cycles: 0..3
-#endif
+// #endif
 __STATIC_FORCEINLINE void PIN_DELAY_FAST (void) {
 #if (DELAY_FAST_CYCLES >= 1U)
     __NOP();
