@@ -1856,6 +1856,7 @@ void DAP_Setup(uint8_t support_jtag)
     {
         DAP_Data.swd_spi_sim = 0;
     }
+    DAP_Data.fast_clock = 1;
     DAP_Data.debug_port = 0U;
     DAP_Data.transfer.idle_cycles = 0U;
     DAP_Data.transfer.retry_count = 100U;
@@ -1866,7 +1867,6 @@ void DAP_Setup(uint8_t support_jtag)
     DAP_Data.support_jtag = support_jtag;
     DAP_Data.jtag_dev.count = 0U;
 
-    // Sets DAP_Data.fast_clock and DAP_Data.clock_delay.
     Set_Clock_Delay(DAP_DEFAULT_SWJ_CLOCK);
 
     DAP_SETUP(); // Device specific setup

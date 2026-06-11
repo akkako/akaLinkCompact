@@ -265,6 +265,7 @@ uint8_t SWD_Read_SPI(uint8_t header, uint32_t *data)
 
 uint8_t SWD_Write_SPI(uint8_t header, uint32_t *data)
 {
+#if 0
     register uint32_t ack;
     register uint32_t ack1;
     register uint32_t ack2;
@@ -360,4 +361,7 @@ uint8_t SWD_Write_SPI(uint8_t header, uint32_t *data)
         PIN_SWDIR_OUTPUT();
         return ((uint8_t)ack);
     }
+#else
+    return 0;
+#endif
 }
