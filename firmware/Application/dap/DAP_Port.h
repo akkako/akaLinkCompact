@@ -198,8 +198,6 @@ __STATIC_INLINE void PORT_SWD_SETUP(void)
     GPIO_InitStruct.GPIO_Pin = SWDI_PIN | JTDI_PIN | JTDO_PIN;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(SWD_GPIO, &GPIO_InitStruct);
-
-    drv_spi_init(5000000);
 }
 
 /** 禁用调试接口引脚输出
@@ -269,6 +267,12 @@ __STATIC_FORCEINLINE uint32_t PIN_SWDIO_TMS_IN(void)
 {
     return GPIO_ReadInputDataBit(SWD_GPIO, SWDI_PIN);
     // return SWD_GPIO->INDR & SWDI_PIN ? 1:0;
+}
+
+__STATIC_FORCEINLINE uint32_t PIN_SWDIO_TMS_IN2(void)
+{
+    // return GPIO_ReadInputDataBit(SWD_GPIO, SWDI_PIN);
+    return SWD_GPIO->INDR & SWDI_PIN ? 0x80000000:0;
 }
 
 /**

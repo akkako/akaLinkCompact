@@ -28,7 +28,10 @@ static const char DAP_FW_Ver[] = DAP_FW_VER;
 //   clock:    requested SWJ frequency in Hertz
 void Set_Clock_Delay(uint32_t clock)
 {
-    drv_spi_init(clock);
+    if (DAP_Data.swd_spi_sim)
+    {
+        drv_spi_init(clock);
+    }
 }
 
 // Get DAP Information

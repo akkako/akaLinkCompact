@@ -52,6 +52,11 @@
 				"parentLogicPath": "",
 				"type": "file",
 				"name": "*.wvproj"
+			},
+			{
+				"parentLogicPath": "dap",
+				"type": "file",
+				"name": "SWD_Write_SPI_Fast.S"
 			}
 		],
 		"projectName": "akaLink_Compact_App",
@@ -325,9 +330,9 @@
 				},
 				"createList": {
 					"enabled": true,
-					"display_source": false,
-					"display_all_headers": true,
-					"demangle_names": true,
+					"display_source": true,
+					"display_all_headers": false,
+					"demangle_names": false,
 					"display_debug_info": false,
 					"disassemble": true,
 					"display_file_headers": false,
@@ -663,7 +668,7 @@
 		"address": "0x08004000",
 		"target_path": "obj\\akaLink_Compact_App_pack.bin",
 		"clkSpeed": "High",
-		"debug_interface_mode": "",
+		"debug_interface_mode": "1-wire serial",
 		"erase": false,
 		"program": true,
 		"verify": true,
