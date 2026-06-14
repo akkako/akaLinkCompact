@@ -265,34 +265,74 @@ uint8_t SWD_Read_SPI_Fast(uint8_t header, uint32_t *data)
 
 uint8_t SWD_Write_SPI_Fast(uint8_t header, uint32_t *data)
 {
-    register uint32_t ack;
-    register uint32_t ack1;
-    register uint32_t ack2;
-    register uint8_t parity;
-    register uint8_t turn = DAP_Data.swd_conf.turnaround;
-    register uint8_t n;
+    uint32_t ack;
+    uint32_t ack1;
+    uint32_t ack2;
+    uint8_t parity;
+    uint8_t turn = DAP_Data.swd_conf.turnaround;
+    uint8_t n;
 
     /* 发送 8 bit 包头 */
-    drv_spi_gpio_mux_spi();
-    drv_spi_tx(header);
-    drv_spi_dma_tx_preset((uint8_t *)data, 4);
-    PIN_SWCLK_TCK_CLR();
-    drv_spi_tx_wait();
-    drv_spi_gpio_mux_gpio_in();
+    // drv_spi_gpio_mux_spi();
+    GPIOB->CFGHR = 0x38338B44;
+    // drv_spi_tx(header);
+    SPI2->DATAR = header;
+    // drv_spi_dma_tx_preset((uint8_t *)data, 4);
+    DMA1_Channel5->CNTR = 4;
+    DMA1_Channel5->MADDR = (uint32_t)data;
+    // PIN_SWCLK_TCK_CLR();
+    SWD_GPIO->BCR = SWCK_PIN;
+    // drv_spi_tx_wait();
+    while ((SPI2->STATR & SPI_I2S_FLAG_BSY))
+        ;
+    (void)(SPI2->DATAR);
+    // drv_spi_gpio_mux_gpio_in();
+    GPIOB->CFGHR = 0x48338B44;
 
     /* 方向转换 */
-    PIN_SWDIR_INPUT();
-    PIN_SWCLK_TCK_SET();
+    // PIN_SWDIR_INPUT();
+    SWD_GPIO->BCR = SWDIR_PIN;
+    // PIN_SWCLK_TCK_SET();
+    SWD_GPIO->BSHR = SWCK_PIN;
 
     for (n = turn - 1; n; n--)
     {
-        SW_CLOCK_CYCLE();
+        // PIN_SWCLK_TCK_CLR();
+        SWD_GPIO->BCR = SWCK_PIN;
+        // PIN_DELAY();
+        __NOP();
+        // PIN_SWCLK_TCK_SET();
+        SWD_GPIO->BSHR = SWCK_PIN;
     }
 
     /* 读取目标 ACK */
-    ack = SW_READ_BIT_OPT();
-    ack1 = SW_READ_BIT_OPT();
-    ack2 = SW_READ_BIT_OPT();
+    // PIN_SWCLK_TCK_CLR();
+    SWD_GPIO->BCR = SWCK_PIN;
+    // ack = PIN_SWDIO_IN();
+    ack = (SWD_GPIO->INDR & SWDI_PIN) >> 13;
+    // PIN_SWCLK_TCK_SET();
+    SWD_GPIO->BSHR = SWCK_PIN;
+
+    __NOP();
+
+    // PIN_SWCLK_TCK_CLR();
+    SWD_GPIO->BCR = SWCK_PIN;
+    // ack = PIN_SWDIO_IN();
+    ack1 = (SWD_GPIO->INDR & SWDI_PIN) >> 13;
+    // PIN_SWCLK_TCK_SET();
+    SWD_GPIO->BSHR = SWCK_PIN;
+
+    __NOP();
+
+    // PIN_SWCLK_TCK_CLR();
+    SWD_GPIO->BCR = SWCK_PIN;
+    // ack = PIN_SWDIO_IN();
+    ack2 = (SWD_GPIO->INDR & SWDI_PIN) >> 13;
+    // PIN_SWCLK_TCK_SET();
+    SWD_GPIO->BSHR = SWCK_PIN;
+
+    __NOP();
+
     ack = (ack2 << 2) | (ack1 << 1) | (ack);
 
     if (ack == DAP_TRANSFER_OK)
@@ -300,17 +340,40 @@ uint8_t SWD_Write_SPI_Fast(uint8_t header, uint32_t *data)
         /* 方向调转 */
         for (n = turn; n; n--)
         {
-            SW_CLOCK_CYCLE();
+            // PIN_SWCLK_TCK_CLR();
+            SWD_GPIO->BCR = SWCK_PIN;
+            // PIN_DELAY();
+            __NOP();
+            // PIN_SWCLK_TCK_SET();
+            SWD_GPIO->BSHR = SWCK_PIN;
         }
 
         /* 写 32 位数据 */
-        drv_spi_gpio_mux_spi();
-        PIN_SWDIR_OUTPUT();
-        drv_spi_dma_tx_start();
-        parity = GetParity(*data);
+        // drv_spi_gpio_mux_spi();
+        GPIOB->CFGHR = 0x38338B44;
+        // PIN_SWDIR_OUTPUT();
+        SWD_GPIO->BSHR = SWDIR_PIN;
+        // drv_spi_dma_tx_start();
+        DMA1_Channel5->CFGR = 0x2091;
+
+        // parity = GetParity(*data);
+        ack = *data;
+        ack ^= ack >> 16;
+        ack ^= ack >> 8;
+        ack ^= ack >> 4;
+        ack &= 0x0F;
+        parity = (0x6996 >> ack) & 1;
+
         n = DAP_Data.transfer.idle_cycles;
-        drv_spi_dma_wait_tx();
-        drv_spi_gpio_mux_gpio_out();
+        // drv_spi_dma_wait_tx();
+        while (!(DMA1->INTFR & DMA1_FLAG_TC5))
+            ;
+        while ((SPI2->STATR & SPI_I2S_FLAG_BSY))
+            ;
+        DMA1_Channel5->CFGR = 0;
+
+        // drv_spi_gpio_mux_gpio_out();
+        GPIOB->CFGHR = 0x38338B44;
         /* 写校验位 */
         SW_WRITE_BIT(parity);
 
