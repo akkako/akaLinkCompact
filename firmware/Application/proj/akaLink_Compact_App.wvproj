@@ -330,7 +330,7 @@
 				},
 				"createList": {
 					"enabled": true,
-					"display_source": true,
+					"display_source": false,
 					"display_all_headers": false,
 					"demangle_names": false,
 					"display_debug_info": false,

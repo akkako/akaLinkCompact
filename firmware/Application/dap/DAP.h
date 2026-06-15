@@ -218,7 +218,8 @@ extern uint8_t SWD_Write (uint8_t header, uint32_t *data);
 extern void SWJ_Sequence_GPIO_Fast(uint32_t count, const uint8_t *data);
 extern void SWD_Sequence_GPIO_Fast(uint32_t info, const uint8_t *swdo, uint8_t *swdi);
 extern uint8_t SWD_Read_GPIO_Fast(uint8_t header, uint32_t *data);
-extern uint8_t SWD_Write_GPIO_Fast(uint8_t header, uint32_t *data);
+// extern uint8_t SWD_Write_GPIO_Fast(uint8_t header, uint32_t *data);
+extern uint8_t SWD_Write_GPIO_Fast(uint8_t header, uint8_t turnaround, uint8_t data_phase, uint8_t idle_cycles, uint32_t *data);
 
 extern void SWJ_Sequence_GPIO(uint32_t count, const uint8_t *data);
 extern void SWD_Sequence_GPIO(uint32_t info, const uint8_t *swdo, uint8_t *swdi);

@@ -478,8 +478,7 @@ uint8_t SWD_Write_GPIO_Fast(uint8_t header, uint32_t *data)
         return ((uint8_t)ack);
     }
 }
-#else
-uint8_t SWD_Write_GPIO_Fast(uint8_t header, uint32_t *data)
+uint8_t SWD_Write_GPIO_Fast1(uint8_t header, uint32_t *data)
 {
     uint32_t ack;
     uint32_t bit;
@@ -581,6 +580,133 @@ uint8_t SWD_Write_GPIO_Fast(uint8_t header, uint32_t *data)
     {
         /* Protocol error */
         for (n = turn + 32U + 1U; n; n--)
+        {
+            SW_CLOCK_CYCLE(); /* Back off data phase */
+        }
+        PIN_SWDIO_OUT_ENABLE();
+        PIN_SWDIO_OUT(1U);
+        PIN_SWDIR_OUTPUT();
+        return ((uint8_t)ack);
+    }
+}
+#else 
+
+#define R32_GPIOB_CFGLR (0x40010C00)
+#define R32_GPIOB_CFGHR (0x40010C04)
+#define R32_GPIOB_INDR (0x40010C08)
+#define R32_GPIOB_OUTDR (0x40010C0C)
+#define R32_GPIOB_BSHR (0x40010C10)
+#define R32_GPIOB_BCR (0x40010C14)
+
+uint8_t SWD_Write_GPIO_Fast1(uint8_t header, uint8_t turnaround, uint8_t data_phase, uint8_t idle_cycles, uint32_t *data)
+{
+    uint32_t ack;
+    uint32_t bit;
+    uint32_t val;
+    uint8_t parity;
+    uint8_t n;
+
+    /* 发送 8 bit 包头 */
+    // REPEAT_8(SEND_HEAD_BIT());
+
+
+    
+    PIN_SWDIO_OUT(header); 
+    PIN_SWCLK_TCK_CLR();   
+    header >>= 1;          
+    PIN_SWCLK_TCK_SET();
+
+
+    drv_spi_gpio_mux_gpio_in();
+
+    /* 方向转换 */
+    PIN_SWDIR_INPUT();
+
+    for (n = turnaround; n; n--)
+    {
+        SW_CLOCK_CYCLE();
+    }
+
+    /* 读取目标 ACK */
+    PIN_SWCLK_TCK_CLR();
+    PIN_DELAY();
+    bit = PIN_SWDIO_IN();
+    PIN_SWCLK_TCK_SET();
+    ack = bit << 0;
+
+    PIN_SWCLK_TCK_CLR();
+    PIN_DELAY();
+    bit = PIN_SWDIO_IN();
+    PIN_SWCLK_TCK_SET();
+    ack |= bit << 1;
+
+    PIN_SWCLK_TCK_CLR();
+    PIN_DELAY();
+    bit = PIN_SWDIO_IN();
+    PIN_SWCLK_TCK_SET();
+    ack |= bit << 2;
+
+    if (ack == DAP_TRANSFER_OK)
+    {
+        /* 方向调转 */
+        for (n = turnaround; n; n--)
+        {
+            SW_CLOCK_CYCLE();
+        }
+
+        /* 写 32 位数据 */
+        drv_spi_gpio_mux_gpio_out();
+        PIN_SWDIR_OUTPUT();
+        val = *data;
+        parity = GetParity(val);
+
+        REPEAT_32(SEND_DATA_BIT());
+
+        /* 写校验位 */
+        // SW_WRITE_BIT(parity);
+        PIN_SWDIO_OUT(parity);
+        PIN_SWCLK_TCK_CLR();
+        n = idle_cycles;
+        PIN_SWCLK_TCK_SET();
+
+        /* 传输空闲时钟 */
+        if (n)
+        {
+            PIN_SWDIO_OUT(0U);
+            for (; n; n--)
+            {
+                SW_CLOCK_CYCLE();
+            }
+        }
+
+        /* SWDIO 切换输出 */
+        PIN_SWDIO_OUT(1U);
+        return ((uint8_t)ack);
+    }
+    else if ((ack == DAP_TRANSFER_WAIT) || (ack == DAP_TRANSFER_FAULT))
+    {
+        /* WAIT or FAULT response */
+        for (n = turnaround; n; n--)
+        {
+            SW_CLOCK_CYCLE();
+        }
+        PIN_SWDIO_OUT_ENABLE();
+        PIN_SWDIR_OUTPUT();
+        if (data_phase)
+        {
+            PIN_SWDIO_OUT(0U);
+            for (n = 32U + 1U; n; n--)
+            {
+                SW_CLOCK_CYCLE(); /* Dummy Write WDATA[0:31] + Parity */
+            }
+        }
+        PIN_SWDIO_OUT(1U);
+        return ((uint8_t)ack);
+    }
+    else
+    {
+        /* Protocol error */
+        for (n = turnaround + 32U + 1U; n; n--)
         {
             SW_CLOCK_CYCLE(); /* Back off data phase */
         }

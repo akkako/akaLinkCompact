@@ -120,7 +120,7 @@ uint8_t SWD_Write(uint8_t header, uint32_t *data)
     {
         if (DAP_Data.fast_clock)
         {
-            return SWD_Write_GPIO_Fast(header, data);
+            return SWD_Write_GPIO_Fast(header, DAP_Data.swd_conf.turnaround, DAP_Data.swd_conf.data_phase, DAP_Data.transfer.idle_cycles, data);
         }
         else
         {

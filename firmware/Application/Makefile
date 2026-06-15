@@ -66,6 +66,7 @@ AS_INCLUDES +=
 
 # 汇编源文件（starup）
 ASM_SOURCES += ./sys/startup_ch32v30x_D8C.s
+ASM_SOURCES += ./dap/SWD_Write_GPIO_Fast.s
 
 # 链接库
 LIBS += -lc -lm -lnosys
