@@ -79,71 +79,18 @@ SWD_Write_GPIO_Fast:
     sw      t1, 0(t0)                       # generate clock rising and data holding
     srli    a0, a0, 1                       # logic right shift for next send
 
-#=========== send header bit 1 ===========
+#=========== send header bit 1-6 ===========
+.rept 6
     andi    t5, a0, 1                       # save LSB in t5
-    bnez    t5, .header_bit1_set            # jump to .header_bitx_set
+    bnez    t5, 1f            # jump to .header_bitx_set
     sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .header_bit1_end                # jump to .header_bitx_end
-.header_bit1_set:
+    j       2f                # jump to .header_bitx_end
+1:
     sw      t2, 0(t0)                       # generate clock falling and data 1
-.header_bit1_end:
+2:
     sw      t1, 0(t0)                       # generate clock rising and data holding
     srli    a0, a0, 1                       # logic right shift for next send
-
-#=========== send header bit 2 ===========
-    andi    t5, a0, 1                       # save LSB in t5
-    bnez    t5, .header_bit2_set            # jump to .header_bitx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .header_bit2_end                # jump to .header_bitx_end
-.header_bit2_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.header_bit2_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    a0, a0, 1                       # logic right shift for next send
-
-#=========== send header bit 3 ===========
-    andi    t5, a0, 1                       # save LSB in t5
-    bnez    t5, .header_bit3_set            # jump to .header_bitx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .header_bit3_end                # jump to .header_bitx_end
-.header_bit3_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.header_bit3_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    a0, a0, 1                       # logic right shift for next send
-
-#=========== send header bit 4 ===========
-    andi    t5, a0, 1                       # save LSB in t5
-    bnez    t5, .header_bit4_set            # jump to .header_bitx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .header_bit4_end                # jump to .header_bitx_end
-.header_bit4_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.header_bit4_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    a0, a0, 1                       # logic right shift for next send
-
-#=========== send header bit 5 ===========
-    andi    t5, a0, 1                       # save LSB in t5
-    bnez    t5, .header_bit5_set            # jump to .header_bitx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .header_bit5_end                # jump to .header_bitx_end
-.header_bit5_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.header_bit5_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    a0, a0, 1                       # logic right shift for next send
-
-#=========== send header bit 6 ===========
-    andi    t5, a0, 1                       # save LSB in t5
-    bnez    t5, .header_bit6_set            # jump to .header_bitx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .header_bit6_end                # jump to .header_bitx_end
-.header_bit6_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.header_bit6_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    a0, a0, 1                       # logic right shift for next send
+.endr
 
 #=========== send header bit 7 ===========  # bit7 is always 1
     // andi    t5, a0, 1                       # save LSB in t5
@@ -156,7 +103,6 @@ SWD_Write_GPIO_Fast:
     sw      t1, 0(t0)                       # generate clock rising and data holding
 
 #=========== turnaround ===========
-
     li      t4, R32_GPIOB_CFGHR
     li      t5, CFG_INPUT_MASK
     sw      t5, 0(t4)  
@@ -195,9 +141,9 @@ SWD_Write_GPIO_Fast:
     sw      t2, 0(t0)                       # generate clock falling
     sw      t1, 0(t0)                       # generate clock rising
 
-    li      t5, CFG_OUTPUT_MASK
+    li      t5, CFG_OUTPUT_MASK             # swdio config input
     sw      t5, 0(t4)  
-    li      t5, DIR_OUTPUT_MASK
+    li      t5, DIR_OUTPUT_MASK             # swdir switch input
     sw      t5, 0(t0)
 
 #=========== check ack and branch ===========
@@ -214,386 +160,57 @@ SWD_Write_GPIO_Fast:
     lw      t4, 0(a4)      # load 32-bit data in t4
     mv      a5, t4
 #=========== calc parity bit ===========
-    srli    a6,a5,16
-    xor     a6,a6,a5
-    srli    a5,a6,8
-    xor     a5,a5,a6
-    srli    a6,a5,4
-    xor     a6,a6,a5
-    li      a5,28672
-    andi    a6,a6,15
-    addi    a5,a5,-1642
-    sra     a5,a5,a6
-    andi    a5,a5,1
+    srli    a6, a5, 16
+    xor     a5, a5, a6      # 32 -- 16
+    srli    a6, a5, 8
+    xor     a5, a5, a6      # 16 -- 8
+    srli    a6, a5, 4
+    xor     a5, a5, a6      # 8 -- 4
+    srli    a6, a5, 2
+    xor     a5, a5, a6      # 4 -- 2
+    srli    a6, a5, 1
+    xor     a5, a5, a6      # 2 -- 1
+#    andi    a5, a5, 1       # clear
 # parity bit store in a5
 
 .lable_send_data:
-#=========== send data bit 0 ===========
+#=========== send data bit 0-30 ===========
+.rept 31
     andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b0_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b0_end              # jump to .lable_data_bx_end
-.lable_data_b0_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b0_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
+    bnez    t5, 1f                          # jump to bit set
+    sw      t3, 0(t0)                       # clock falling and data 0
+    j       2f                              # jump to bit end
+1:
+    sw      t2, 0(t0)                       # clock falling and data 1
+2:
+    sw      t1, 0(t0)                       # clock rising and data holding
     srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 1 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b1_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b1_end              # jump to .lable_data_bx_end
-.lable_data_b1_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b1_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 2 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b2_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b2_end              # jump to .lable_data_bx_end
-.lable_data_b2_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b2_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 3 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b3_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b3_end              # jump to .lable_data_bx_end
-.lable_data_b3_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b3_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 4 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b4_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b4_end              # jump to .lable_data_bx_end
-.lable_data_b4_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b4_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 5 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b5_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b5_end              # jump to .lable_data_bx_end
-.lable_data_b5_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b5_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 6 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b6_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b6_end              # jump to .lable_data_bx_end
-.lable_data_b6_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b6_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 7 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b7_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b7_end              # jump to .lable_data_bx_end
-.lable_data_b7_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b7_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 1 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b8_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b8_end              # jump to .lable_data_bx_end
-.lable_data_b8_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b8_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 9 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b9_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b9_end              # jump to .lable_data_bx_end
-.lable_data_b9_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b9_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 10 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b10_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b10_end              # jump to .lable_data_bx_end
-.lable_data_b10_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b10_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 11 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b11_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b11_end              # jump to .lable_data_bx_end
-.lable_data_b11_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b11_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 12 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b12_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b12_end              # jump to .lable_data_bx_end
-.lable_data_b12_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b12_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 13 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b13_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b13_end              # jump to .lable_data_bx_end
-.lable_data_b13_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b13_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 14 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b14_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b14_end              # jump to .lable_data_bx_end
-.lable_data_b14_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b14_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 15 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b15_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b15_end              # jump to .lable_data_bx_end
-.lable_data_b15_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b15_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 16 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b16_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b16_end              # jump to .lable_data_bx_end
-.lable_data_b16_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b16_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 17 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b17_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b17_end              # jump to .lable_data_bx_end
-.lable_data_b17_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b17_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 18 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b18_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b18_end              # jump to .lable_data_bx_end
-.lable_data_b18_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b18_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 19 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b19_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b19_end              # jump to .lable_data_bx_end
-.lable_data_b19_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b19_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 20 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b20_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b20_end              # jump to .lable_data_bx_end
-.lable_data_b20_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b20_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 21 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b21_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b21_end              # jump to .lable_data_bx_end
-.lable_data_b21_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b21_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 22 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b22_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b22_end              # jump to .lable_data_bx_end
-.lable_data_b22_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b22_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 23 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b23_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b23_end              # jump to .lable_data_bx_end
-.lable_data_b23_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b23_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 24 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b24_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b24_end              # jump to .lable_data_bx_end
-.lable_data_b24_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b24_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 25 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b25_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b25_end              # jump to .lable_data_bx_end
-.lable_data_b25_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b25_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 26 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b26_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b26_end              # jump to .lable_data_bx_end
-.lable_data_b26_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b26_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 27 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b27_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b27_end              # jump to .lable_data_bx_end
-.lable_data_b27_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b27_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 28 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b28_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b28_end              # jump to .lable_data_bx_end
-.lable_data_b28_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b28_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 29 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b29_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b29_end              # jump to .lable_data_bx_end
-.lable_data_b29_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b29_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
-
-#=========== send data bit 30 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b30_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b30_end              # jump to .lable_data_bx_end
-.lable_data_b30_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b30_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    t4, t4, 1                       # logic right shift for next send
+.endr
 
 #=========== send data bit 31 ===========
     andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, .lable_data_b31_set          # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_data_b31_end              # jump to .lable_data_bx_end
-.lable_data_b31_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_data_b31_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
+    bnez    t5, 1f                          # jump to bit set
+    sw      t3, 0(t0)                       # clock falling and data 0
+    j       2f                              # jump to bit end
+1:
+    sw      t2, 0(t0)                       # clock falling and data 1
+2:
+    sw      t1, 0(t0)                       # clock rising and data holding
 
 #=========== send parity bit ===========
-    bnez    a5, .lable_parity_set           # jump to .lable_data_bx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       .lable_parity_end              # jump to .lable_data_bx_end
-.lable_parity_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.lable_parity_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-
+    andi    a5, a5, 1
+    bnez    a5, 1f                          # jump to bit set
+    sw      t3, 0(t0)                       # clock falling and data 0
+    j       2f                              # jump to bit end
+1:
+    sw      t2, 0(t0)                       # clock falling and data 1
+2:
+    sw      t1, 0(t0)                       # clock rising and data holding
 
 .lable_ack_wait:
 .lable_ack_fault:
 .lable_ack_error:
-
-    li      t1, DATA_OUT_HIGH_MASK
-    sw      t1, 0(t0)                       # output data high
+    li      t4, DATA_OUT_HIGH_MASK
+    sw      t4, 0(t0)                       # output data high
 
     ret
