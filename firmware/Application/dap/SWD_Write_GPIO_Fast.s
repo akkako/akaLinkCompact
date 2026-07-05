@@ -1,20 +1,22 @@
 
-    .equ R32_GPIOB_CFGLR, 0x40010C00
-    .equ R32_GPIOB_CFGHR, 0x40010C04
-    .equ R32_GPIOB_INDR, 0x40010C08
-    .equ R32_GPIOB_OUTDR, 0x40010C0C
-    .equ R32_GPIOB_BSHR, 0x40010C10
-    .equ R32_GPIOB_BCR, 0x40010C14
-
 # SWCLK -- PB13
 # SWDO  -- PB15
 # SWDI  -- PB14
 # SWDIR -- PB12
 
-    .equ CLK_RISING_ONLY_MASK, 0x00002000
-    .equ CLK_FALLING_HIGH_MASK, 0x20008000
-    .equ CLK_FALLING_LOW_MASK, 0xA0000000
-    .equ DATA_OUT_HIGH_MASK, 0x00008000
+    .equ GPIOB_BASE, 0x40010C00
+
+    .equ CFGLR_OS, 0x00
+    .equ CFGHR_OS, 0x04
+    .equ INDR_OS, 0x08
+    .equ OUTDR_OS, 0x0C
+    .equ BSHR_OS, 0x10
+    .equ BCR_OS, 0x14
+
+    .equ SWCLK_HIGH_MASK, 0x00002000
+    .equ SWCLK_LOW_MASK, 0x20000000
+    .equ SWDIO_HIGH_MASK, 0x00008000
+    .equ SWDIO_LOW_MASK, 0x80000000
 
     .equ CFG_INPUT_MASK, 0x44334444
     .equ CFG_OUTPUT_MASK, 0x34334444
@@ -55,7 +57,7 @@
 # a6 -- parity calculate temp
 # a7 -- Unused
 # t0 -- R32_GPIOB_BSHR address
-# t1 -- CLK_RISING_ONLY_MASK preset
+# t1 -- SWCLK_HIGH_MASK preset
 # t2 -- CLK_FALLING_HIGH_MASK preset
 # t3 -- CLK_FALLING_LOW_MASK preset
 # t4 -- Temporary
@@ -63,88 +65,60 @@
 # t6 -- Temporary
 
 SWD_Write_GPIO_Fast:
-    li      t0, R32_GPIOB_BSHR              # preload BSHR address
-    li      t1, CLK_RISING_ONLY_MASK        # clock rising and data hold preset
-    li      t2, CLK_FALLING_HIGH_MASK       # clock falling and data high preset
-    li      t3, CLK_FALLING_LOW_MASK        # clock falling and data low preset
+    li      t0, GPIOB_BASE                  # preload GPIOB Base address
+    li      t1, SWCLK_HIGH_MASK             # clock rising and data hold preset
+    li      t2, SWCLK_LOW_MASK              # clock falling and data high preset
+    li      t3, SWDIO_LOW_MASK              # clock falling and data low preset
 
-#=========== send header bit 0 ===========  # bit0 is always 1
-    // andi    t5, a0, 1                       # save LSB in t5
-    // bnez    t5, .header_bit0_set            # jump to .header_bitx_set
-    // sw      t3, 0(t0)                       # generate clock falling and data 0
-    // j       .header_bit0_end                # jump to .header_bitx_end
-.header_bit0_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.header_bit0_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
+#=========== send header bits ===========
+.rept 8
+    andi    t4, a0, 1                       # save LSB in t4
+    slli    t5, t4, 4                       # t5 = t4 ? 16 : 0 
+    srl     t4, t3, t5                      # t4 = t5 ? BIT15 : BIT31
+    or      t4, t4, t2                      # merge 
+    sw      t4, BSHR_OS(t0)
     srli    a0, a0, 1                       # logic right shift for next send
-
-#=========== send header bit 1-6 ===========
-.rept 6
-    andi    t5, a0, 1                       # save LSB in t5
-    bnez    t5, 1f            # jump to .header_bitx_set
-    sw      t3, 0(t0)                       # generate clock falling and data 0
-    j       2f                # jump to .header_bitx_end
-1:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-2:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-    srli    a0, a0, 1                       # logic right shift for next send
+    sw      t1, BSHR_OS(t0)                 # clock rising and data holding
 .endr
-
-#=========== send header bit 7 ===========  # bit7 is always 1
-    // andi    t5, a0, 1                       # save LSB in t5
-    // bnez    t5, .header_bit7_set            # jump to .header_bitx_set
-    // sw      t3, 0(t0)                       # generate clock falling and data 0
-    // j       .header_bit7_end                # jump to .header_bitx_end
-.header_bit7_set:
-    sw      t2, 0(t0)                       # generate clock falling and data 1
-.header_bit7_end:
-    sw      t1, 0(t0)                       # generate clock rising and data holding
-
 #=========== turnaround ===========
-    li      t4, R32_GPIOB_CFGHR
-    li      t5, CFG_INPUT_MASK
-    sw      t5, 0(t4)  
-    li      t5, DIR_INPUT_MASK
-    sw      t5, 0(t0)
+    li      t4, CFG_INPUT_MASK
+    sw      t4, CFGHR_OS(t0)  
+    li      t4, DIR_INPUT_MASK
+    sw      t4, BSHR_OS(t0)
 
-    sw      t2, 0(t0)                       # generate clock falling
-    sw      t1, 0(t0)                       # generate clock rising and data sampling
-
+    sw      t2, BSHR_OS(t0)                 # generate clock falling
+    sw      t1, BSHR_OS(t0)                 # generate clock rising and data sampling
 #=========== sampling ack ===========
-    li      a0, 0 
-    li      t6, R32_GPIOB_INDR              # R32_GPIOB_INDR address preset
+    // li      a0, 0 
+    sw      t2, BSHR_OS(t0)                 # generate clock falling
+    lw      t4, INDR_OS(t0)                 # read INDR to t4
+    sw      t1, BSHR_OS(t0)                 # generate clock rising
+    srli    t4, t4, 14                      # move useful bit to bit 0
+    andi    t4, t4, 1                       # clear other bit
+    or      a0, a0, t4                      # save to a0
 
-    sw      t2, 0(t0)                       # generate clock falling
-    lw      t5, 0(t6)                       # read INDR to t5
-    sw      t1, 0(t0)                       # generate clock rising
-    srli    t5, t5, 14                      # move useful bit to bit 0
-    andi    t5, t5, 1                       # clear other bit
-    or      a0, a0, t5                      # save to a0
+    sw      t2, BSHR_OS(t0)                 # generate clock falling
+    lw      t4, INDR_OS(t0)                 # read INDR to t4
+    sw      t1, BSHR_OS(t0)                 # generate clock rising
+    srli    t4, t4, 13                      # move useful bit to bit 1
+    andi    t4, t4, 2                       # clear other bit
+    or      a0, a0, t4                      # save to a0
 
-    sw      t2, 0(t0)                       # generate clock falling
-    lw      t5, 0(t6)                       # read INDR to t5
-    sw      t1, 0(t0)                       # generate clock rising
-    srli    t5, t5, 13                      # move useful bit to bit 1
-    andi    t5, t5, 2                       # clear other bit
-    or      a0, a0, t5                      # save to a0
-
-    sw      t2, 0(t0)                       # generate clock falling
-    lw      t5, 0(t6)                       # read INDR to t5
-    sw      t1, 0(t0)                       # generate clock rising
-    srli    t5, t5, 12                      # move useful bit to bit 2
-    andi    t5, t5, 4                       # clear other bit
-    or      a0, a0, t5                      # save to a0
-
+    sw      t2, BSHR_OS(t0)                 # generate clock falling
+    lw      t4, INDR_OS(t0)                 # read INDR to t4
+    sw      t1, BSHR_OS(t0)                 # generate clock rising
+    srli    t4, t4, 12                      # move useful bit to bit 2
+    andi    t4, t4, 4                       # clear other bit
+    or      a0, a0, t4                      # save to a0
 #=========== turnaround ===========
-    sw      t2, 0(t0)                       # generate clock falling
-    sw      t1, 0(t0)                       # generate clock rising
+    sw      t2, BSHR_OS(t0)                       # generate clock falling
 
     li      t5, CFG_OUTPUT_MASK             # swdio config input
-    sw      t5, 0(t4)  
+    sw      t5, CFGHR_OS(t0)  
     li      t5, DIR_OUTPUT_MASK             # swdir switch input
-    sw      t5, 0(t0)
+    sw      t5, BSHR_OS(t0)
+
+    sw      t1, BSHR_OS(t0)                       # generate clock rising
 
 #=========== check ack and branch ===========
     li      t6, ACK_OK_MASK                 # ACK_OK
@@ -174,43 +148,28 @@ SWD_Write_GPIO_Fast:
 # parity bit store in a5
 
 .lable_send_data:
-#=========== send data bit 0-30 ===========
-.rept 31
+#=========== send data bit 0-31 ===========
+.rept 32
     andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, 1f                          # jump to bit set
-    sw      t3, 0(t0)                       # clock falling and data 0
-    j       2f                              # jump to bit end
-1:
-    sw      t2, 0(t0)                       # clock falling and data 1
-2:
-    sw      t1, 0(t0)                       # clock rising and data holding
+    slli    t6, t5, 4                       # t6 = t5 ? 16 : 0 
+    srl     t5, t3, t6                      # t5 = t6 ? BIT15 : BIT31
+    or      t5, t5, t2                      # merge 
+    sw      t5, BSHR_OS(t0)                 # clock falling and data driving
     srli    t4, t4, 1                       # logic right shift for next send
+    sw      t1, BSHR_OS(t0)                 # clock rising and data holding
 .endr
-
-#=========== send data bit 31 ===========
-    andi    t5, t4, 1                       # save LSB in t5
-    bnez    t5, 1f                          # jump to bit set
-    sw      t3, 0(t0)                       # clock falling and data 0
-    j       2f                              # jump to bit end
-1:
-    sw      t2, 0(t0)                       # clock falling and data 1
-2:
-    sw      t1, 0(t0)                       # clock rising and data holding
-
 #=========== send parity bit ===========
-    andi    a5, a5, 1
-    bnez    a5, 1f                          # jump to bit set
-    sw      t3, 0(t0)                       # clock falling and data 0
-    j       2f                              # jump to bit end
-1:
-    sw      t2, 0(t0)                       # clock falling and data 1
-2:
-    sw      t1, 0(t0)                       # clock rising and data holding
+    andi    t5, a5, 1                       # save LSB in t5
+    slli    t6, t5, 4                       # t6 = t5 ? 16 : 0 
+    srl     t5, t3, t6                      # t5 = t6 ? BIT15 : BIT31
+    or      t5, t5, t2                      # merge 
+    sw      t5, BSHR_OS(t0)
+    sw      t1, BSHR_OS(t0)                 # clock rising and data holding
 
 .lable_ack_wait:
 .lable_ack_fault:
 .lable_ack_error:
-    li      t4, DATA_OUT_HIGH_MASK
-    sw      t4, 0(t0)                       # output data high
+    li      t4, SWDIO_HIGH_MASK
+    sw      t4, BSHR_OS(t0)                       # output data high
 
     ret
