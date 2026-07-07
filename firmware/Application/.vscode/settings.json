@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "dap_config.h": "c"
+        "dap_config.h": "c",
+        "usb_main.h": "c"
     }
 }

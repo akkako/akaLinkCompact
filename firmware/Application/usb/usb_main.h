@@ -9,6 +9,10 @@
 #include "DAP_config.h"
 #include "DAP.h"
 
+#define USB_USE_MSC (0)
+#define USB_USE_WEBUSB (1)
+#define USB_USE_HID (1)
+
 // DAP WinUSB 端点
 #define DAP_IN_EP  0x81
 #define DAP_OUT_EP 0x02
@@ -18,15 +22,18 @@
 #define CDC_OUT_EP 0x04
 #define CDC_INT_EP 0x85
 
-
-// MSC 端点
-#define MSC_IN_EP 0x86
-#define MSC_OUT_EP 0x06
-
-
+#if USB_USE_HID
 // HID 控制端点
-#define HID_IN_EP  0x87
-#define HID_OUT_EP 0x07
+#define HID_IN_EP  0x86
+#define HID_OUT_EP 0x06
+#endif
+
+#if USB_USE_MSC
+// MSC 端点
+#define MSC_IN_EP 0x87
+#define MSC_OUT_EP 0x07
+#endif
+
 
 #define USBD_VID           0x0D28
 #define USBD_PID           0x0204

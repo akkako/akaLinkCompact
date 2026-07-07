@@ -3,10 +3,9 @@
 #include "app_param.h"
 
 #define CMSIS_DAP_INTERFACE_SIZE (9 + 7 + 7)
+
 #define CUSTOM_HID_LEN (9 + 9 + 7 + 7)
-
 #define HIDRAW_INTERVAL 4
-
 #define HID_CUSTOM_REPORT_DESC_SIZE 53
 
 #define USBD_WINUSB_VENDOR_CODE 0x20
@@ -31,15 +30,15 @@
                                USBD_WINUSB_DESC_LEN * USBD_WINUSB_ENABLE)
 
 #define USB_CONFIG_SIZE (9 + CMSIS_DAP_INTERFACE_SIZE + CDC_ACM_DESCRIPTOR_LEN + \
-                         CUSTOM_HID_LEN +                                        \
-                         MSC_DESCRIPTOR_LEN + USBD_WEBUSB_ENABLE * 9)
+                         (CUSTOM_HID_LEN * USB_USE_HID) +                        \
+                         (MSC_DESCRIPTOR_LEN * USB_USE_MSC) +                    \
+                         (USBD_WEBUSB_ENABLE * 9))
 
-#define INTF_NUM (1 + 2 + 1 + 1 + 1)
+#define INTF_NUM (1 + 2 + USB_USE_HID + USB_USE_MSC + USB_USE_WEBUSB)
 
-#define HID_INTF_NUM (3)
-#define MSC_INTF_NUM (3 + 1)
-
-#define WEBUSB_INTF_NUM (3 + 1 + 1)
+#define HID_INTF_NUM (2 + USB_USE_HID)
+#define MSC_INTF_NUM (HID_INTF_NUM + USB_USE_MSC)
+#define WEBUSB_INTF_NUM (MSC_INTF_NUM + USB_USE_WEBUSB)
 
 #define USB_PACKET_SIZE (512)
 
@@ -150,6 +149,8 @@ const uint8_t USBD_WebUSBURLDescriptor[URL_DESCRIPTOR_LENGTH] = {
     WEBUSB_URL_TYPE,
     WEBUSB_URL_SCHEME_HTTPS,
     WEBUSB_URL_STRINGS};
+
+#if USB_USE_HID
 // clang-format offF
 #define HID_DESC()                                                                                                                       \
     /************** Descriptor of Custom interface *****************/                                                                    \
@@ -184,6 +185,7 @@ const uint8_t USBD_WebUSBURLDescriptor[URL_DESCRIPTOR_LENGTH] = {
         WBVAL (HID_PACKET_SIZE),                           /* wMaxPacketSize: 4 Byte max */                                              \
         HIDRAW_INTERVAL                                    /* bInterval: Polling Interval */
 // clang-format on
+#endif
 
 static const uint8_t device_descriptor[] = {
     USB_DEVICE_DESCRIPTOR_INIT (USB_2_1, 0xEF, 0x02, 0x01, USBD_VID, USBD_PID, 0x0100, 0x01),
@@ -199,10 +201,14 @@ static const uint8_t config_descriptor[] = {
     USB_ENDPOINT_DESCRIPTOR_INIT (DAP_IN_EP, USB_ENDPOINT_TYPE_BULK, USB_PACKET_SIZE, 0x00),
     /* CDC Config Macro */
     CDC_ACM_DESCRIPTOR_INIT (0x01, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, USB_PACKET_SIZE, 0x00),
+#if USB_USE_HID
     /* Custom HID */
     HID_DESC(),
+#endif
+#if USB_USE_MSC
     /* Custom MSC */
     MSC_DESCRIPTOR_INIT (MSC_INTF_NUM, MSC_OUT_EP, MSC_IN_EP, USB_PACKET_SIZE, 0x00),
+#endif
     /* WebUSB */
     USB_INTERFACE_DESCRIPTOR_INIT (WEBUSB_INTF_NUM, 0x00, 0x00, 0xff, 0x00, 0x00, 0x04),
 };
@@ -217,14 +223,19 @@ static const uint8_t other_speed_config_descriptor[] = {
     USB_ENDPOINT_DESCRIPTOR_INIT (DAP_IN_EP, USB_ENDPOINT_TYPE_BULK, USB_PACKET_SIZE, 0x00),
     /* CDC Config Macro */
     CDC_ACM_DESCRIPTOR_INIT (0x01, CDC_INT_EP, CDC_OUT_EP, CDC_IN_EP, USB_PACKET_SIZE, 0x00),
+#if USB_USE_HID
     /* Custom HID */
     HID_DESC(),
+#endif
+#if USB_USE_MSC
     /* Custom MSC */
     MSC_DESCRIPTOR_INIT (MSC_INTF_NUM, MSC_OUT_EP, MSC_IN_EP, USB_PACKET_SIZE, 0x00),
+#endif
     /* WebUSB */
     USB_INTERFACE_DESCRIPTOR_INIT (WEBUSB_INTF_NUM, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00),
 };
 
+#if USB_USE_HID
 // clang-format off
 /*!< custom hid report descriptor */
 const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
@@ -260,6 +271,7 @@ const uint8_t hid_custom_report_desc[HID_CUSTOM_REPORT_DESC_SIZE] = {
     0xC0 /*     END_COLLECTION	             */
 };
 // clang-format on
+#endif
 
 char serial_number_dynamic[36] = "123456789ABCDEF";  // Dynamic serial number
 
@@ -340,10 +352,12 @@ static volatile uint8_t usbrx_full_flag = 0;
 static volatile uint8_t usbtx_finished_flag = 0;
 static volatile uint8_t uarttx_finished_flag = 0;
 
+#if USB_USE_HID
 // Custom HID
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t hid_rx_buffer[HID_PACKET_SIZE];
 USB_NOCACHE_RAM_SECTION USB_MEM_ALIGNX uint8_t hid_tx_buffer[HID_PACKET_SIZE];
 static volatile uint8_t hid_busy_flag = 0;
+#endif
 
 void usbd_event_handler (uint8_t busid, uint8_t event) {
     (void)busid;
@@ -353,7 +367,9 @@ void usbd_event_handler (uint8_t busid, uint8_t event) {
         usbtx_finished_flag = 0;
         uarttx_finished_flag = 0;
         config_uart_transfer = 0;
+#if USB_USE_HID
         hid_busy_flag = 0;
+#endif
         break;
     case USBD_EVENT_CONNECTED:
         break;
@@ -368,7 +384,9 @@ void usbd_event_handler (uint8_t busid, uint8_t event) {
         USB_RequestIdle = 0U;
         usbd_ep_start_read (0, DAP_OUT_EP, USB_Request[0], DAP_PACKET_SIZE);
         usbd_ep_start_read (0, CDC_OUT_EP, usb_rx_buffer, USB_PACKET_SIZE);
+#if USB_USE_HID
         usbd_ep_start_read (0, HID_OUT_EP, hid_rx_buffer, HID_PACKET_SIZE);
+#endif
         break;
     case USBD_EVENT_SET_REMOTE_WAKEUP:
         break;
@@ -494,6 +512,7 @@ void usbd_cdc_acm_bulk_in (uint8_t busid, uint8_t ep, uint32_t nbytes) {
     }
 }
 
+#if USB_USE_HID
 void usbd_hid_custom_notify_handler (uint8_t busid, uint8_t event, void *arg) {
     (void)busid;
     (void)event;
@@ -521,6 +540,8 @@ void usbd_hid_custom_in_callback (uint8_t busid, uint8_t ep, uint32_t nbytes) {
 
     hid_busy_flag = 0;
 }
+#endif
+
 
 struct usbd_endpoint dap_out_ep = {
     .ep_addr = DAP_OUT_EP,
@@ -538,6 +559,7 @@ struct usbd_endpoint cdc_in_ep = {
     .ep_addr = CDC_IN_EP,
     .ep_cb = usbd_cdc_acm_bulk_in};
 
+#if USB_USE_HID
 struct usbd_endpoint hid_custom_in_ep = {
     .ep_addr = HID_IN_EP,
     .ep_cb = usbd_hid_custom_in_callback,
@@ -547,12 +569,17 @@ struct usbd_endpoint hid_custom_out_ep = {
     .ep_addr = HID_OUT_EP,
     .ep_cb = usbd_hid_custom_out_callback,
 };
+#endif
 
 struct usbd_interface dap_intf;
 struct usbd_interface intf1;
 struct usbd_interface intf2;
+#if USB_USE_HID
 struct usbd_interface hid_intf;
+#endif
+#if USB_USE_MSC
 struct usbd_interface msc_intf;
+#endif
 
 struct usb_msosv2_descriptor msosv2_desc = {
     .vendor_code = USBD_WINUSB_VENDOR_CODE,
@@ -598,15 +625,19 @@ void chry_dap_init (uint8_t busid, uint32_t reg_base) {
     usbd_add_endpoint (0, &cdc_out_ep);
     usbd_add_endpoint (0, &cdc_in_ep);
 
+#if USB_USE_HID
     /*!< hid */
     usbd_add_interface (0, usbd_hid_init_intf (0, &hid_intf, hid_custom_report_desc, HID_CUSTOM_REPORT_DESC_SIZE));
     hid_intf.notify_handler = usbd_hid_custom_notify_handler;
     usbd_add_endpoint (0, &hid_custom_in_ep);
     usbd_add_endpoint (0, &hid_custom_out_ep);
+#endif
 
+#if USB_USE_MSC
     /*!< msc */
     usbd_msc_set_readonly (0, true);
     usbd_add_interface (busid, usbd_msc_init_intf (busid, &msc_intf, MSC_OUT_EP, MSC_IN_EP));
+#endif
 
     usbd_initialize (busid, reg_base, usbd_event_handler);
 }
@@ -803,6 +834,7 @@ void chry_dap_usb2uart_uart_send_bydma (uint8_t *data, uint16_t len) {
     drv_usb2uart_start_tx_dma (data, len);
 }
 
+#if USB_USE_MSC
 #include "drv_flash.h"
 #include <stdio.h>
 
@@ -820,3 +852,4 @@ int usbd_msc_sector_write (uint8_t busid, uint8_t lun, uint32_t sector, uint8_t 
     drv_msc_write (sector, buffer, length);
     return 0;
 }
+#endif

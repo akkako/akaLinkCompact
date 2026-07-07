@@ -27,6 +27,7 @@
 
 #include "DAP_Port.h"
 #include "DAP.h"
+#include <stdio.h>
 
 
 // JTAG Macros
@@ -38,88 +39,57 @@
 
 #define PIN_DELAY() PIN_DELAY_FAST()
 
-#define JTAG_CYCLE_TCK() \
-    PIN_TCK_CLR();       \
-    PIN_DELAY();         \
-    PIN_TCK_SET();       \
-    PIN_DELAY()
-
-#define JTAG_CYCLE_TDI(tdi) \
-    PIN_TDI_OUT (tdi);      \
-    PIN_TCK_CLR();          \
-    PIN_DELAY();            \
-    PIN_TCK_SET();          \
-    PIN_DELAY()
-
-#define JTAG_CYCLE_TDO(tdo) \
-    PIN_TCK_CLR();          \
-    PIN_DELAY();            \
-    PIN_DELAY();            \
-    PIN_TCK_SET();          \
-    tdo = PIN_TDO_IN();     \
-    PIN_DELAY()
-
-#define JTAG_CYCLE_TDIO(tdi, tdo) \
-    PIN_TDI_OUT (tdi);            \
-    PIN_TCK_CLR();                \
-    PIN_DELAY();                  \
-    PIN_DELAY();                  \
-    PIN_TCK_SET();                \
-    tdo = PIN_TDO_IN();           \
-    PIN_DELAY()
-
-
-#if 0
-// Generate JTAG Sequence
-//   info:   sequence information
-//   tdi:    pointer to TDI generated data
-//   tdo:    pointer to TDO captured data
-//   return: none
-void JTAG_Sequence (uint32_t info, const uint8_t *tdi, uint8_t *tdo) {
-    uint32_t i_val;
-    uint32_t o_val;
-    uint32_t bit;
-    uint32_t n, k;
-
-    n = info & JTAG_SEQUENCE_TCK;
-    if (n == 0U) {
-        n = 64U;
-    }
-
-    if (info & JTAG_SEQUENCE_TMS) {
-        PIN_TMS_SET();
-    } else {
-        PIN_TMS_CLR();
-    }
-
-    while (n) {
-        i_val = *tdi++;
-        o_val = 0U;
-        for (k = 8U; k && n; k--, n--) {
-            JTAG_CYCLE_TDIO (i_val, bit);
-            i_val >>= 1;
-            o_val >>= 1;
-            o_val |= bit << 7;
-        }
-        o_val >>= k;
-        if (info & JTAG_SEQUENCE_TDO) {
-            *tdo++ = (uint8_t)o_val;
-        }
-    }
+static inline void JTAG_CYCLE_TCK (void) {
+    PIN_TCK_CLR();
+    PIN_DELAY();
+    PIN_TCK_SET();
+    PIN_DELAY();
 }
-#else
+
+static inline void JTAG_CYCLE_TDI (uint32_t tdi) {
+    PIN_TDI_OUT (tdi);
+    PIN_TCK_CLR();
+    PIN_DELAY();
+    PIN_TCK_SET();
+    PIN_DELAY();
+}
+
+static inline uint32_t JTAG_CYCLE_TDO (void) {
+    uint32_t tdo;
+
+    PIN_TCK_CLR();
+    PIN_DELAY();
+    PIN_TCK_SET();
+    tdo = PIN_TDO_IN();
+    PIN_DELAY();
+
+    return tdo;
+}
+
+static inline uint32_t JTAG_CYCLE_TDIO (uint32_t tdi) {
+    uint32_t tdo;
+
+    PIN_TDI_OUT (tdi);
+    PIN_TCK_CLR();
+    PIN_DELAY();
+    PIN_DELAY();
+    PIN_TCK_SET();
+    tdo = PIN_TDO_IN();
+    PIN_DELAY();
+
+    return tdo;
+}
+
+void JTAG_Seq_Cycle_TDIO_8 (const uint8_t tdi);
+
 // Generate JTAG Sequence
 //   info:   sequence information
 //   tdi:    pointer to TDI generated data
 //   tdo:    pointer to TDO captured data
 //   return: none
 void JTAG_Sequence (uint32_t info, const uint8_t *tdi, uint8_t *tdo) {
-    register uint32_t n = info & JTAG_SEQUENCE_TCK;
-    register uint32_t i_val, o_val, bit, bits;
-
-    if (n == 0U) {
-        n = 64U;
-    }
+    uint32_t n = info & JTAG_SEQUENCE_TCK;
+    uint32_t i_val, o_val, bit;
 
     /* TMS 在整段序列中保持不变，提前设置 */
     if (info & JTAG_SEQUENCE_TMS) {
@@ -128,44 +98,164 @@ void JTAG_Sequence (uint32_t info, const uint8_t *tdi, uint8_t *tdo) {
         PIN_TMS_CLR();
     }
 
+    if (n == 1) {
+        // printf("JTAG Seq: %d\r\n", n);
+        if (info & JTAG_SEQUENCE_TDO) {
+            *tdo = JTAG_CYCLE_TDIO (*tdi);
+        } else {
+            JTAG_CYCLE_TDI (*tdi);
+        }
+        return;
+    }
+
+    if (n == 0U) {
+        n = 64U;
+    }
+
+
+    uint32_t loop = n / 8;
+    uint32_t remain = n % 8;
+
+    // printf("JTAG Seq: %d\r\n", n);
+
+
     if (info & JTAG_SEQUENCE_TDO) {
-        while (n) {
+        for (uint32_t i = 0; i < loop; i++) {
             i_val = *tdi++;
             o_val = 0U;
-            bits  = (n >= 8U) ? 8U : n;   /* 本次处理多少 bit（1~8） */
+            bit = JTAG_CYCLE_TDIO (i_val);
+            o_val |= (bit << 0);
+            i_val >>= 1;
+            bit = JTAG_CYCLE_TDIO (i_val);
+            o_val |= (bit << 1);
+            i_val >>= 1;
+            bit = JTAG_CYCLE_TDIO (i_val);
+            o_val |= (bit << 2);
+            i_val >>= 1;
+            bit = JTAG_CYCLE_TDIO (i_val);
+            o_val |= (bit << 3);
+            i_val >>= 1;
+            bit = JTAG_CYCLE_TDIO (i_val);
+            o_val |= (bit << 4);
+            i_val >>= 1;
+            bit = JTAG_CYCLE_TDIO (i_val);
+            o_val |= (bit << 5);
+            i_val >>= 1;
+            bit = JTAG_CYCLE_TDIO (i_val);
+            o_val |= (bit << 6);
+            i_val >>= 1;
+            bit = JTAG_CYCLE_TDIO (i_val);
+            o_val |= (bit << 7);
+            i_val >>= 1;
+            *tdo++ = (uint8_t)o_val;
+        }
 
-            if (bits > 0U) { JTAG_CYCLE_TDIO(i_val, bit); o_val |= (bit << 0); i_val >>= 1; }
-            if (bits > 1U) { JTAG_CYCLE_TDIO(i_val, bit); o_val |= (bit << 1); i_val >>= 1; }
-            if (bits > 2U) { JTAG_CYCLE_TDIO(i_val, bit); o_val |= (bit << 2); i_val >>= 1; }
-            if (bits > 3U) { JTAG_CYCLE_TDIO(i_val, bit); o_val |= (bit << 3); i_val >>= 1; }
-            if (bits > 4U) { JTAG_CYCLE_TDIO(i_val, bit); o_val |= (bit << 4); i_val >>= 1; }
-            if (bits > 5U) { JTAG_CYCLE_TDIO(i_val, bit); o_val |= (bit << 5); i_val >>= 1; }
-            if (bits > 6U) { JTAG_CYCLE_TDIO(i_val, bit); o_val |= (bit << 6); i_val >>= 1; }
-            if (bits > 7U) { JTAG_CYCLE_TDIO(i_val, bit); o_val |= (bit << 7); i_val >>= 1; }
+        if (remain) {
+            i_val = *tdi++;
+            o_val = 0U;
+
+            if (remain > 0U) {
+                bit = JTAG_CYCLE_TDIO (i_val);
+                o_val |= (bit << 0);
+                i_val >>= 1;
+            }
+            if (remain > 1U) {
+                bit = JTAG_CYCLE_TDIO (i_val);
+                o_val |= (bit << 1);
+                i_val >>= 1;
+            }
+            if (remain > 2U) {
+                bit = JTAG_CYCLE_TDIO (i_val);
+                o_val |= (bit << 2);
+                i_val >>= 1;
+            }
+            if (remain > 3U) {
+                bit = JTAG_CYCLE_TDIO (i_val);
+                o_val |= (bit << 3);
+                i_val >>= 1;
+            }
+            if (remain > 4U) {
+                bit = JTAG_CYCLE_TDIO (i_val);
+                o_val |= (bit << 4);
+                i_val >>= 1;
+            }
+            if (remain > 5U) {
+                bit = JTAG_CYCLE_TDIO (i_val);
+                o_val |= (bit << 5);
+                i_val >>= 1;
+            }
+            if (remain > 6U) {
+                bit = JTAG_CYCLE_TDIO (i_val);
+                o_val |= (bit << 6);
+                i_val >>= 1;
+            }
+            if (remain > 7U) {
+                bit = JTAG_CYCLE_TDIO (i_val);
+                o_val |= (bit << 7);
+                i_val >>= 1;
+            }
 
             *tdo++ = (uint8_t)o_val;
-            n -= bits;
         }
     } else {
-        while (n) {
+        for (uint32_t i = 0; i < loop; i++) {
             i_val = *tdi++;
-            bits  = (n >= 8U) ? 8U : n;
+            JTAG_CYCLE_TDI (i_val);
+            i_val >>= 1;
+            JTAG_CYCLE_TDI (i_val);
+            i_val >>= 1;
+            JTAG_CYCLE_TDI (i_val);
+            i_val >>= 1;
+            JTAG_CYCLE_TDI (i_val);
+            i_val >>= 1;
+            JTAG_CYCLE_TDI (i_val);
+            i_val >>= 1;
+            JTAG_CYCLE_TDI (i_val);
+            i_val >>= 1;
+            JTAG_CYCLE_TDI (i_val);
+            i_val >>= 1;
+            JTAG_CYCLE_TDI (i_val);
+            i_val >>= 1;
+        }
 
-            if (bits > 0U) { JTAG_CYCLE_TDI(i_val); i_val >>= 1; }
-            if (bits > 1U) { JTAG_CYCLE_TDI(i_val); i_val >>= 1; }
-            if (bits > 2U) { JTAG_CYCLE_TDI(i_val); i_val >>= 1; }
-            if (bits > 3U) { JTAG_CYCLE_TDI(i_val); i_val >>= 1; }
-            if (bits > 4U) { JTAG_CYCLE_TDI(i_val); i_val >>= 1; }
-            if (bits > 5U) { JTAG_CYCLE_TDI(i_val); i_val >>= 1; }
-            if (bits > 6U) { JTAG_CYCLE_TDI(i_val); i_val >>= 1; }
-            if (bits > 7U) { JTAG_CYCLE_TDI(i_val); i_val >>= 1; }
+        if (remain) {
+            i_val = *tdi++;
 
-            n -= bits;
+            if (remain > 0U) {
+                JTAG_CYCLE_TDI (i_val);
+                i_val >>= 1;
+            }
+            if (remain > 1U) {
+                JTAG_CYCLE_TDI (i_val);
+                i_val >>= 1;
+            }
+            if (remain > 2U) {
+                JTAG_CYCLE_TDI (i_val);
+                i_val >>= 1;
+            }
+            if (remain > 3U) {
+                JTAG_CYCLE_TDI (i_val);
+                i_val >>= 1;
+            }
+            if (remain > 4U) {
+                JTAG_CYCLE_TDI (i_val);
+                i_val >>= 1;
+            }
+            if (remain > 5U) {
+                JTAG_CYCLE_TDI (i_val);
+                i_val >>= 1;
+            }
+            if (remain > 6U) {
+                JTAG_CYCLE_TDI (i_val);
+                i_val >>= 1;
+            }
+            if (remain > 7U) {
+                JTAG_CYCLE_TDI (i_val);
+                i_val >>= 1;
+            }
         }
     }
 }
-#endif
-
 
 // JTAG Set IR
 //   ir:     IR value
@@ -229,11 +319,11 @@ static uint8_t JTAG_Transfer_Opt (uint32_t request, uint32_t *data) {
         JTAG_CYCLE_TCK(); /* Bypass before data */
     }
 
-    JTAG_CYCLE_TDIO (request >> 1, bit); /* Set RnW, Get ACK.0 */
+    bit = JTAG_CYCLE_TDIO (request >> 1); /* Set RnW, Get ACK.0 */
     ack = bit << 1;
-    JTAG_CYCLE_TDIO (request >> 2, bit); /* Set A2,  Get ACK.1 */
+    bit = JTAG_CYCLE_TDIO (request >> 2); /* Set A2,  Get ACK.1 */
     ack |= bit << 0;
-    JTAG_CYCLE_TDIO (request >> 3, bit); /* Set A3,  Get ACK.2 */
+    bit = JTAG_CYCLE_TDIO (request >> 3); /* Set A3,  Get ACK.2 */
     ack |= bit << 2;
 
     if (ack != DAP_TRANSFER_OK) {
@@ -247,21 +337,21 @@ static uint8_t JTAG_Transfer_Opt (uint32_t request, uint32_t *data) {
         /* Read Transfer */
         val = 0U;
         for (n = 31U; n; n--) {
-            JTAG_CYCLE_TDO (bit); /* Get D0..D30 */
+            bit = JTAG_CYCLE_TDO(); /* Get D0..D30 */
             val |= bit << 31;
             val >>= 1;
         }
         n = DAP_Data.jtag_dev.count - DAP_Data.jtag_dev.index - 1U;
         if (n) {
-            JTAG_CYCLE_TDO (bit); /* Get D31 */
+            bit = JTAG_CYCLE_TDO(); /* Get D31 */
             for (--n; n; n--) {
-                JTAG_CYCLE_TCK(); /* Bypass after data */
+                JTAG_CYCLE_TCK();   /* Bypass after data */
             }
             PIN_TMS_SET();
             JTAG_CYCLE_TCK(); /* Bypass & Exit1-DR */
         } else {
             PIN_TMS_SET();
-            JTAG_CYCLE_TDO (bit); /* Get D31 & Exit1-DR */
+            bit = JTAG_CYCLE_TDO(); /* Get D31 & Exit1-DR */
         }
         val |= bit << 31;
         if (data) {
@@ -295,9 +385,9 @@ exit:
     PIN_TDI_OUT (1U);
 
     /* Capture Timestamp */
-    if (request & DAP_TRANSFER_TIMESTAMP) {
-        DAP_Data.timestamp = TIMESTAMP_GET();
-    }
+    // if (request & DAP_TRANSFER_TIMESTAMP) {
+    //     DAP_Data.timestamp = TIMESTAMP_GET();
+    // }
 
     /* Idle cycles */
     n = DAP_Data.transfer.idle_cycles;
@@ -314,6 +404,8 @@ uint32_t JTAG_ReadIDCode (void) {
     uint32_t bit;
     uint32_t val;
     uint32_t n;
+    printf("JTAG IDCODE\r\n");
+
 
     PIN_TMS_SET();
     JTAG_CYCLE_TCK(); /* Select-DR-Scan */
@@ -327,12 +419,12 @@ uint32_t JTAG_ReadIDCode (void) {
 
     val = 0U;
     for (n = 31U; n; n--) {
-        JTAG_CYCLE_TDO (bit); /* Get D0..D30 */
+        bit = JTAG_CYCLE_TDO(); /* Get D0..D30 */
         val |= bit << 31;
         val >>= 1;
     }
     PIN_TMS_SET();
-    JTAG_CYCLE_TDO (bit); /* Get D31 & Exit1-DR */
+    bit = JTAG_CYCLE_TDO(); /* Get D31 & Exit1-DR */
     val |= bit << 31;
 
     JTAG_CYCLE_TCK(); /* Update-DR */
@@ -390,6 +482,7 @@ void JTAG_WriteAbort (uint32_t data) {
 //   ir:     IR value
 //   return: none
 void JTAG_IR (uint32_t ir) {
+    // printf("JTAG IR: 0x%08x\r\n", ir);
     JTAG_IR_Opt (ir);
 }
 
@@ -398,6 +491,6 @@ void JTAG_IR (uint32_t ir) {
 //   data:    DATA[31:0]
 //   return:  ACK[2:0]
 uint8_t JTAG_Transfer (uint32_t request, uint32_t *data) {
+    // printf("JTAG Trans: 0x%08x\r\n", request);
     return JTAG_Transfer_Opt (request, data);
 }
-

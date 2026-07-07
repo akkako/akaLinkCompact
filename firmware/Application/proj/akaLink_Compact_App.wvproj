@@ -15,7 +15,9 @@
 			"link": "WCH-Link",
 			"peripheral_version": "2.7",
 			"calibrateSupport": false,
-			"calibrateCommand": ""
+			"calibrateCommand": "",
+			"UIConfigSupport": false,
+			"externalFlashSupport": false
 		},
 		"linkedFolders": [
 			{
@@ -326,6 +328,7 @@
 					"copy_only_section_text": false,
 					"copy_only_section_data": false,
 					"copy_only_sections": [],
+					"create_algorithm_file": false,
 					"other_flags": ""
 				},
 				"createList": {
@@ -615,6 +618,7 @@
 					"copy_only_section_text": false,
 					"copy_only_section_data": false,
 					"copy_only_sections": [],
+					"create_algorithm_file": false,
 					"other_flags": ""
 				},
 				"createList": {
@@ -668,15 +672,17 @@
 		"address": "0x08004000",
 		"target_path": "obj\\akaLink_Compact_App_pack.bin",
 		"clkSpeed": "High",
-		"debug_interface_mode": "1-wire serial",
+		"debug_interface_mode": "",
 		"erase": false,
 		"program": true,
 		"verify": true,
 		"reset": true,
-		"sdiPrintf": false,
+		"sdiPrintf": true,
 		"disablepowerout": false,
 		"clearcodeflash": false,
 		"disablecodeprotect": false,
+		"flashType": "",
+		"asmFile_path": "",
 		"exepath": "",
 		"exearguments": ""
 	},

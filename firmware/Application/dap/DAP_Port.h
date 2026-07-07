@@ -173,7 +173,7 @@ __STATIC_INLINE void PORT_JTAG_SETUP(void)
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(SWD_GPIO, &GPIO_InitStruct);
 
-    drv_usb2uart_gpio_af_uart();
+    // drv_usb2uart_gpio_af_uart();
 }
 
 /** 初始化配置 SWD 引脚，并配置默认输出电平
