@@ -197,8 +197,8 @@ extern void JTAG_Sequence (uint32_t info, const uint8_t *tdi, uint8_t *tdo);
 extern void JTAG_IR (uint32_t ir);
 extern uint32_t JTAG_ReadIDCode (void);
 extern void JTAG_WriteAbort (uint32_t data);
-extern uint8_t JTAG_Transfer (uint32_t request, uint32_t *data);
-
+extern uint8_t JTAG_Transfer_Read(uint32_t request, uint32_t *data);
+extern uint8_t JTAG_Transfer_Write(uint32_t request, uint32_t *data);
 
 extern uint32_t DAP_ProcessVendorCommand (const uint8_t *request, uint8_t *response);
 extern uint32_t DAP_ProcessCommand (const uint8_t *request, uint8_t *response);
