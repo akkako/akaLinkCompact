@@ -77,7 +77,7 @@ uint8_t SWD_Read (uint8_t header, uint32_t *data) {
 uint8_t SWD_Write (uint8_t header, uint32_t *data) {
     if (DAP_Data.swd_spi_sim) {
         if (DAP_Data.fast_clock) {
-            return SWD_Write_GPIO_Fast (header, DAP_Data.swd_conf.turnaround, DAP_Data.swd_conf.data_phase, DAP_Data.transfer.idle_cycles, data);
+            return SWD_Write_SPI_Fast (header, data);
         } else {
             return SWD_Write_SPI (header, data);
         }

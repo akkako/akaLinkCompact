@@ -53,22 +53,32 @@ static inline uint32_t SW_READ_BIT_OPT()
     return bit;
 }
 
-// Generate SWJ Sequence
-//   count:  sequence bit count
-//   data:   pointer to sequence bit data
-//   return: none
+/**
+ * @brief 发送 SWJ 序列（只发不收）
+ * 
+ * @param count SWJ 序列数量（CLK 数）
+ * @param data SWJ 序列数据
+ */
 void SWJ_Sequence_SPI_Fast(uint32_t count, const uint8_t *data)
 {
+    // 采用分段发送的方式
+    // 将序列按8位进行拆分，如果末尾剩余发送数量不满8位，再使用GPIO进行模拟发送
+    // 一般来说，只需要发送Line Reset和JTAG2SWD序列，这两个序列都是8位对齐的，可以直接通过SPI发送完
+
     uint32_t val;
     uint32_t n;
+    uint32_t spi_transmit_remain_bits;
     uint32_t spi_transmit_bytes = 0;
-    uint32_t spi_transmit_remain_bits = 0;
 
+    // 计算SPI传输后，剩余的序列数量
     spi_transmit_remain_bits = count % 8;
 
+    // 发送的序列数大于8，则需要通过SPI进行发送
     if (count > 8)
     {
+        // SPI发送的数量
         spi_transmit_bytes = count / 8;
+        // 开始SPI发送
         drv_spi_gpio_mux_spi();
         drv_spi_dma_tx_preset((uint8_t *)data, spi_transmit_bytes);
         drv_spi_dma_tx_start();
@@ -79,6 +89,7 @@ void SWJ_Sequence_SPI_Fast(uint32_t count, const uint8_t *data)
     count = spi_transmit_remain_bits;
     data += spi_transmit_bytes;
 
+    // 如果有剩余序列，使用GPIO继续发送剩余部分
     val = 0U;
     n = 0U;
     while (count--)
@@ -102,11 +113,14 @@ void SWJ_Sequence_SPI_Fast(uint32_t count, const uint8_t *data)
     }
 }
 
-// Generate SWD Sequence
-//   info:   sequence information
-//   swdo:   pointer to SWDIO generated data
-//   swdi:   pointer to SWDIO captured data
-//   return: none
+/**
+ * @brief 产生 SWD 序列（同时收发）
+ * 
+ * @param info 序列信息（数量，接收/发送）
+ * @param swdo 输出序列数据
+ * @param swdi 输入序列数据
+ * @note 未发现上位机使用，暂时未优化，使用GPIO模拟
+ */
 void SWD_Sequence_SPI_Fast(uint32_t info, const uint8_t *swdo, uint8_t *swdi)
 {
     uint32_t val;
@@ -148,6 +162,13 @@ void SWD_Sequence_SPI_Fast(uint32_t info, const uint8_t *swdo, uint8_t *swdi)
     }
 }
 
+/**
+ * @brief SWD SPI 读函数
+ * 
+ * @param header 8 位 header
+ * @param data 32 位读数据
+ * @return uint8_t ACK 状态
+ */
 uint8_t SWD_Read_SPI_Fast(uint8_t header, uint32_t *data)
 {
     register uint32_t ack;
@@ -159,11 +180,14 @@ uint8_t SWD_Read_SPI_Fast(uint8_t header, uint32_t *data)
 
     uint32_t val = 0;
 
-    /* 发送 8 bit 包头 */
+    /* SPI 发送 8 bit 包头 */
     drv_spi_gpio_mux_spi();
     drv_spi_tx(header);
     drv_spi_dma_rx_preset((uint8_t *)&dummy, (uint8_t *)&val, 4);
-    PIN_SWCLK_TCK_CLR();
+    
+    // 提前输出下一个时钟低电平
+    PIN_SWCLK_TCK_CLR(); 
+    
     drv_spi_tx_wait();
     drv_spi_gpio_mux_gpio_in();
 

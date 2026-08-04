@@ -16,7 +16,7 @@
 /************************ DAP 相关配置 ************************/
 #define DAP_JTAG_DEV_CNT (8U)             // JTAG 扫描链最大设备数量（1~255）
 #define DAP_DEFAULT_PORT (1U)             // 默认接口模式（1 = SWD, 2 = JTAG）
-#define DAP_DEFAULT_SWJ_CLOCK (5000000U)  // 默认接口时钟频率（Hz）
+#define DAP_DEFAULT_SWJ_CLOCK (1000000U)  // 默认接口时钟频率（Hz）
 #define DAP_PACKET_SIZE (512U)            // DAP 包大小
 #define DAP_PACKET_COUNT (4U)             // DAP 包缓冲数量（2-255）
 #define TIMESTAMP_CLOCK (0U)              // 时间戳计时频率（Hz）（0 = 不支持）
